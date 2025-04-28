@@ -32,7 +32,7 @@ my_app/
 │   │   │   ├─ assets.dart             # Path ke gambar/icons
 │   │   │   └─ enums.dart              # Enum global (Role, Status, dll)
 │   │   │
-│   │   └─providers.dart               # Provider
+│   │   └─injection.dart               # Provider
 │   │   
 │   │
 │   │
