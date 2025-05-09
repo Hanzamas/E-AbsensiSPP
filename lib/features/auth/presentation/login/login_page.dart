@@ -12,158 +12,226 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _rememberMe = false;
+  DateTime? _lastBackPressTime;
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          // title: Text(
+          //   'Login',
+          //   style: TextStyle(color: Colors.grey.shade400),
+          // ),
         ),
-        child: SafeArea(
+        body: SafeArea(
           child: FadeIn(
-            child: Center(
-              child: Card(
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Title above logo
-                        Text(
-                          Strings.loginTitle,
-                          style: t.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 16),
-                        // Logo 300x300
-                        Image.asset(
-                          Assets.logo,
-                          width: 300,
-                          height: 300,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 16),
-                        // App name
-                        Text(
-                          Strings.appName,
-                          style: t.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        // Instruction
-                        Text(
-                          Strings.loginInstruction,
-                          textAlign: TextAlign.center,
-                          style: t.bodyMedium,
-                        ),
-                        const SizedBox(height: 24),
-                        // Email field
-                        TextField(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Image.asset(
+                        Assets.logo,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      Strings.loginTitle,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      Strings.loginSubtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: TextField(
+                          textAlignVertical: TextAlignVertical.center,
                           decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            labelText: Strings.emailHint,
-                            prefixIcon: const Icon(Icons.email),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            hintText: Strings.emailHint,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            prefixIcon: Icon(Icons.person, color: Colors.grey.shade600),
+                            isDense: true,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // Password field
-                        TextField(
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: TextField(
+                          textAlignVertical: TextAlignVertical.center,
                           obscureText: true,
                           decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            labelText: Strings.passwordHint,
-                            prefixIcon: const Icon(Icons.lock),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            hintText: Strings.passwordHint,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            prefixIcon: Icon(Icons.lock, color: Colors.grey.shade600),
+                            isDense: true,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        // Remember me
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: (v) =>
-                                  setState(() => _rememberMe = v ?? false),
-                            ),
-                            const SizedBox(width: 4),
-                            Text('Remember me', style: t.bodySmall),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Login button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            onPressed: () {
-                              // TODO: login action
-                            },
-                            child: Text(Strings.loginButton),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Terms & Conditions link
-                        Text.rich(
-                          TextSpan(
-                            text: Strings.agreeTermsText,
-                            style: t.bodySmall,
-                            children: [
-                              TextSpan(
-                                text: Strings.termsLinkText,
-                                style: t.bodySmall?.copyWith(
-                                  color: Theme.of(context).primaryColor,
-                                  decoration: TextDecoration.underline,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () => context.push('/terms'),
-                              ),
-                            ],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        // Register link
-                        TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: Text(
-                            '${Strings.noAccount} ${Strings.registerTitle}',
-                            style: t.bodyMedium,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () => context.go('/forgot-password'),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size(50, 30),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          Strings.forgotPassword,
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () {},
+                        child: Text(
+                          Strings.loginButton,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(color: Colors.black, fontSize: 14),
+                        children: [
+                          TextSpan(text: Strings.noAccount),
+                          TextSpan(
+                            text: Strings.registerLink,
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.go('/register'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      Strings.agreeText,
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(fontSize: 13, color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: Strings.termsText,
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.go('/terms-login'),
+                          ),
+                          TextSpan(text: Strings.andText),
+                          TextSpan(
+                            text: Strings.conditionsText,
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.go('/terms-login'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<bool> _onWillPop() async {
+    final now = DateTime.now();
+    if (_lastBackPressTime == null || 
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      _lastBackPressTime = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(Strings.exitConfirmMessage))
+      );
+      return false;
+    }
+    
+    return await _showExitConfirmDialog() ?? false;
+  }
+  
+  Future<bool?> _showExitConfirmDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(Strings.exitDialogTitle),
+        content: Text(Strings.exitDialogMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(Strings.exitDialogNo),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(Strings.exitDialogYes),
+          ),
+        ],
       ),
     );
   }
