@@ -26,6 +26,9 @@ class Strings {
   static const String confirmPasswordHint   = 'Konfirmasi Password';
   static const String registerInstruction   = 'Silakan daftar untuk melanjutkan.';
   static const String usernameHint          = 'Nama Pengguna';
+  static const String validateEmail         = 'Masukkan email valid';
+  static const String validateUsername      = 'Masukkan nama pengguna';
+  static const String validatePassword      = 'Password minimal 6 karakter';
   static const String nameHint              = 'Nama Lengkap';
   static const String agreeTermsText        = 'Saya setuju dengan';
   static const String agreeTermsText1       = 'Ketentuan';

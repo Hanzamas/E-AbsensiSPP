@@ -1,263 +1,237 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../cubit/auth_cubit.dart';
-import '../../../../core/constants/strings.dart';
 import '../../../../core/constants/assets.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/constants/strings.dart';
+import '../../../../shared/animations/fade_in.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
+  const LoginPage({Key? key}) : super(key: key);
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _storage = const FlutterSecureStorage();
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _handleLogin() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.read<AuthCubit>().login(
-        _usernameController.text,
-        _passwordController.text,
-      );
-    }
-  }
+  DateTime? _lastBackPressTime;
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) async {
-        if (state is AuthSuccess) {
-          final auth = state.auth;
-          if (auth.token.isNotEmpty) {
-            await _storage.write(key: 'token', value: auth.token);
-          }
-          
-          if (auth.isProfileCompleted) {
-            context.go('/student/home', extra: auth.username);
-          } else {
-            context.go('/profile-edit', extra: true);
-          }
-        } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
-        }
-      },
+    return WillPopScope(
+      onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          // title: Text(
+          //   'Login',
+          //   style: TextStyle(color: Colors.grey.shade400),
+          // ),
+        ),
         body: SafeArea(
-          child: Center(
+          child: FadeIn(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Form(
-                key: _formKey,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      Assets.logo,
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Image.asset(
+                        Assets.logo,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Text(
-                      'Login',
-                      style: const TextStyle(
-                        fontSize: 28,
+                      Strings.loginTitle,
+                      style: TextStyle(
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2196F3),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    // Input Email
-                    Container(
-                      margin: const EdgeInsets.only(top: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: TextFormField(
-                        controller: _usernameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Masukkan Username',
-                          prefixIcon: Icon(Icons.person_outline),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan Username';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Input Password
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: TextFormField(
-                        controller: _passwordController,
-                        decoration: const InputDecoration(
-                          hintText: 'Masukkan Password',
-                          prefixIcon: Icon(Icons.lock_outline),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                        obscureText: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan Password';
-                          }
-                          return null;
-                        },
+                        color: Colors.blue,
                       ),
                     ),
                     const SizedBox(height: 8),
+                    Text(
+                      Strings.loginSubtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: TextField(
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: InputDecoration(
+                            hintText: Strings.emailHint,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            prefixIcon: Icon(Icons.person, color: Colors.grey.shade600),
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: TextField(
+                          textAlignVertical: TextAlignVertical.center,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            hintText: Strings.passwordHint,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            prefixIcon: Icon(Icons.lock, color: Colors.grey.shade600),
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                    ),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton(
                         onPressed: () => context.go('/forgot-password'),
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        child: const Text(
-                          'lupa password?',
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size(50, 30),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          Strings.forgotPassword,
                           style: TextStyle(
-                            color: Color(0xFF2196F3),
-                            fontWeight: FontWeight.w500,
+                            color: Colors.blue,
+                            fontSize: 13,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    BlocBuilder<AuthCubit, AuthState>(
-                      builder: (context, state) {
-                        return SizedBox(
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: state is AuthLoading ? null : _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2196F3),
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: state is AuthLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text(
-                                    'MASUK',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                        );
-                      },
                     ),
                     const SizedBox(height: 16),
-                    Center(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Belum Punya Akun ? ',
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 14,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          children: [
-                            TextSpan(
-                              text: 'Daftar',
-                              style: const TextStyle(
-                                color: Color(0xFF2196F3),
-                                fontWeight: FontWeight.bold,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () => context.go('/register'),
-                            ),
-                          ],
+                        ),
+                        onPressed: () {},
+                        child: Text(
+                          Strings.loginButton,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Text.rich(
-                        TextSpan(
-                          text: 'Dengan memakai aplikasi ini, anda menyetujui ',
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 12,
+                    const SizedBox(height: 24),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(color: Colors.black, fontSize: 14),
+                        children: [
+                          TextSpan(text: Strings.noAccount),
+                          TextSpan(
+                            text: Strings.registerLink,
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.go('/register'),
                           ),
-                          children: [
-                            TextSpan(
-                              text: 'syarat',
-                              style: const TextStyle(
-                                color: Color(0xFF2196F3),
-                                decoration: TextDecoration.underline,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () => context.go('/terms-login'),
-                            ),
-                            const TextSpan(
-                              text: ' dan ',
-                            ),
-                            TextSpan(
-                              text: 'ketentuan',
-                              style: const TextStyle(
-                                color: Color(0xFF2196F3),
-                                decoration: TextDecoration.underline,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () => context.go('/terms-login'),
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 24),
+                    Text(
+                      Strings.agreeText,
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(fontSize: 13, color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: Strings.termsText,
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.go('/terms-login'),
+                          ),
+                          TextSpan(text: Strings.andText),
+                          TextSpan(
+                            text: Strings.conditionsText,
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.go('/terms-login'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<bool> _onWillPop() async {
+    final now = DateTime.now();
+    if (_lastBackPressTime == null || 
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      _lastBackPressTime = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(Strings.exitConfirmMessage))
+      );
+      return false;
+    }
+    
+    return await _showExitConfirmDialog() ?? false;
+  }
+  
+  Future<bool?> _showExitConfirmDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(Strings.exitDialogTitle),
+        content: Text(Strings.exitDialogMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(Strings.exitDialogNo),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(Strings.exitDialogYes),
+          ),
+        ],
       ),
     );
   }

@@ -88,7 +88,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Daftar',
+                      Strings.registerTitle,
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'silahkan masuk terlebih dahulu',
+                      Strings.registerSubtitle,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
@@ -122,14 +122,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: TextFormField(
                         controller: _usernameController,
                         decoration: const InputDecoration(
-                          hintText: 'Masukan Username',
+                          hintText: Strings.usernameHint,
                           prefixIcon: Icon(Icons.person_outline),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Masukkan Username';
+                            return Strings.validateUsername;
                           }
                           return null;
                         },
@@ -152,17 +152,17 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
-                          hintText: 'Masukkan Email',
+                          hintText: Strings.emailHint,
                           prefixIcon: Icon(Icons.email_outlined),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Masukkan email';
+                            return Strings.emailHint;
                           }
                           if (!value.contains('@')) {
-                            return 'Masukkan email valid';
+                            return Strings.validateEmail;
                           }
                           return null;
                         },
@@ -185,7 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: TextFormField(
                         controller: _passwordController,
                         decoration: const InputDecoration(
-                          hintText: 'Masukkan Password',
+                          hintText: Strings.passwordHint,
                           prefixIcon: Icon(Icons.lock_outline),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
@@ -193,10 +193,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Masukkan password';
+                            return Strings.passwordHint;
                           }
                           if (value.length < 6) {
-                            return 'Password minimal 6 karakter';
+                            return Strings.validatePassword;
                           }
                           return null;
                         },
@@ -218,11 +218,11 @@ class _RegisterPageState extends State<RegisterPage> {
                         Expanded(
                           child: Text.rich(
                             TextSpan(
-                              text: 'anda menyetujui ',
+                              text: Strings.agreeTermsText,
                               style: const TextStyle(fontSize: 14, color: Colors.black87),
                               children: [
                                 TextSpan(
-                                  text: 'syarat',
+                                  text: Strings.agreeTermsText2,
                                   style: const TextStyle(
                                     color: Color(0xFF2196F3),
                                     decoration: TextDecoration.underline,
@@ -232,7 +232,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 const TextSpan(text: ' dan '),
                                 TextSpan(
-                                  text: 'ketentuan',
+                                  text: Strings.agreeTermsText1,
                                   style: const TextStyle(
                                     color: Color(0xFF2196F3),
                                     decoration: TextDecoration.underline,
@@ -263,7 +263,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: state is AuthLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
                                 : const Text(
-                                    'DAFTAR',
+                                    Strings.registerButton,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -278,14 +278,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     Center(
                       child: RichText(
                         text: TextSpan(
-                          text: 'Sudah punya akun? ',
+                          text: Strings.haveAccount,
                           style: const TextStyle(
                             color: Colors.black87,
                             fontSize: 14,
                           ),
                           children: [
                             TextSpan(
-                              text: 'Login',
+                              text: Strings.loginLink,
                               style: const TextStyle(
                                 color: Color(0xFF2196F3),
                                 fontWeight: FontWeight.bold,
