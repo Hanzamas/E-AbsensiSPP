@@ -120,7 +120,7 @@ class AppRouter {
         name: 'profile-edit',
         pageBuilder: (ctx, state) => FadeTransitionPage(
           key: state.pageKey,
-          child: const ProfileEditPage(),
+          child: ProfileEditPage(isFromLogin: state.extra as bool? ?? false),
         ),
       ),
       GoRoute(

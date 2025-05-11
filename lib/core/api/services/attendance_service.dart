@@ -17,7 +17,7 @@ class AttendanceService {
 
   Future<Map<String, dynamic>> getAttendanceHistory() async {
     try {
-      final response = await _dio.get(ApiEndpoints.getAttendanceHistory);
+      final response = await _dio.get(ApiEndpoints.getAttendance);
       return response.data;
     } on DioException catch (e) {
       throw _handleError(e);

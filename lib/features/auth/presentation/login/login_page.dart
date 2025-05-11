@@ -48,10 +48,11 @@ class _LoginPageState extends State<LoginPage> {
           if (auth.token.isNotEmpty) {
             await _storage.write(key: 'token', value: auth.token);
           }
+          
           if (auth.isProfileCompleted) {
             context.go('/student/home', extra: auth.username);
           } else {
-            context.go('/profile-edit');
+            context.go('/profile-edit', extra: true);
           }
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(

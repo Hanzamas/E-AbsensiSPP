@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/assets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentHomePage extends StatefulWidget {
   final String fullname;
@@ -12,6 +13,39 @@ class StudentHomePage extends StatefulWidget {
 
 class _StudentHomePageState extends State<StudentHomePage> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndShowWelcomePopup();
+  }
+
+  Future<void> _checkAndShowWelcomePopup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasShownPopup = prefs.getBool('has_shown_welcome_popup') ?? false;
+
+    if (!hasShownPopup && mounted) {
+      // Show welcome popup
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Login Berhasil'),
+          content: const Text('Selamat datang kembali!'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                // Save that we've shown the popup
+                await prefs.setBool('has_shown_welcome_popup', true);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

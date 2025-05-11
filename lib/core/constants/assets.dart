@@ -14,4 +14,5 @@ class Assets {
   static String get splash => getAssetPath('images/splash.png');
   static String get absensi => getAssetPath('images/absensi.png');
   static String get spp => getAssetPath('images/spp.png');
+  static String get profile => getAssetPath('images/profile_sample.jpg');
 }
