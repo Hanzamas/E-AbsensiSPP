@@ -1,6 +1,17 @@
+import 'package:flutter/foundation.dart';
+
 class Assets {
-  // hapus "assets/" di depan:
-  static const String logo = 'images/illustrations/logo.png';
-  static const String splash  = 'images/splash.png';
-  // dst...
+  static String getAssetPath(String asset) {
+    if (kIsWeb) {
+      return asset.replaceFirst('assets/', '');
+    } else {
+      return 'assets/$asset';
+    }
+  }
+
+  // Penggunaan asset
+  static String get logo => getAssetPath('images/illustrations/logo.png');
+  static String get splash => getAssetPath('images/splash.png');
+  static String get absensi => getAssetPath('images/absensi.png');
+  static String get spp => getAssetPath('images/spp.png');
 }

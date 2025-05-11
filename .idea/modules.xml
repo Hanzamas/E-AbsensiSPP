@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/e_absensispp.iml" filepath="$PROJECT_DIR$/e_absensispp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/e_absensispp_android.iml" filepath="$PROJECT_DIR$/android/e_absensispp_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/e_absensi_spp.iml" filepath="$PROJECT_DIR$/e_absensi_spp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/e_absensi_spp_android.iml" filepath="$PROJECT_DIR$/android/e_absensi_spp_android.iml" />
     </modules>
   </component>
 </project>
