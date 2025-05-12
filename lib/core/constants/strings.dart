@@ -4,35 +4,34 @@ class Strings {
   static const String appDescription        = 'Aplikasi absensi SPP berbasis Flutter untuk sekolahmu.';
   
   // Login Page
-  static const String loginTitle            = 'Selamat Datang Kembali!';
-  static const String loginSubtitle         = 'Masuk untuk melanjutkan';
-  static const String loginButton           = 'Masuk';
+  static const String loginTitle            = 'Login';
+  static const String loginButton           = 'MASUK';
   static const String forgotPassword        = 'Lupa Password?';
-  static const String emailHint             = 'Email';
-  static const String passwordHint          = 'Password';
+  static const String emailHint             = 'Masukkan Email';
+  static const String passwordHint          = 'Masukkan Password';
   static const String noAccount             = 'Belum punya akun? ';
   static const String registerLink          = 'Daftar';
-  static const String agreeText             = 'Dengan melanjutkan, Anda setuju dengan';
-  static const String termsText             = 'Ketentuan Layanan';
+  static const String agreeText             = 'Dengan memakai aplikasi ini, anda menyetujui ';
+  static const String termsText             = '\n syarat';
   static const String andText               = ' dan ';
-  static const String conditionsText        = 'Kebijakan Privasi';
+  static const String conditionsText        = 'ketentuan';
   static const String loginInstruction      = 'Silakan masuk untuk melanjutkan.';
   
+  
   // Register Page
-  static const String registerTitle         = 'Buat Akun';
-  static const String registerSubtitle      = 'Daftar untuk memulai';
-  static const String registerButton        = 'Daftar';
+  static const String registerTitle         = 'Daftar';
+  static const String registerSubtitle      = 'Silahkan masuk terlebih dahulu';
+  static const String registerButton        = 'DAFTAR';
   static const String haveAccount           = 'Sudah punya akun? ';
-  static const String confirmPasswordHint   = 'Konfirmasi Password';
-  static const String registerInstruction   = 'Silakan daftar untuk melanjutkan.';
-  static const String usernameHint          = 'Nama Pengguna';
+  static const String usernameHint          = 'Nama';
+  static const String registeremail         = 'Masukkan Email';
+  static const String registerPassword      = 'Masukkan Password';
   static const String validateEmail         = 'Masukkan email valid';
   static const String validateUsername      = 'Masukkan nama pengguna';
   static const String validatePassword      = 'Password minimal 6 karakter';
-  static const String nameHint              = 'Nama Lengkap';
-  static const String agreeTermsText        = 'Saya setuju dengan';
-  static const String agreeTermsText1       = 'Ketentuan';
-  static const String agreeTermsText2       = 'Syarat';
+  static const String agreeTermsText        = 'anda menyetujui ';
+  static const String agreeTermsText1       = 'ketentuan';
+  static const String agreeTermsText2       = 'syarat';
   static const String loginLink             = 'Masuk';
   
   // Forgot Password Page

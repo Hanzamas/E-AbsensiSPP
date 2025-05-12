@@ -152,17 +152,17 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
-                          hintText: Strings.emailHint,
+                          hintText: Strings.registeremail,
                           prefixIcon: Icon(Icons.email_outlined),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return Strings.emailHint;
+                            return Strings.registeremail;
                           }
                           if (!value.contains('@')) {
-                            return Strings.validateEmail;
+                            return Strings.registeremail;
                           }
                           return null;
                         },
@@ -185,7 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: TextFormField(
                         controller: _passwordController,
                         decoration: const InputDecoration(
-                          hintText: Strings.passwordHint,
+                          hintText: Strings.registerPassword,
                           prefixIcon: Icon(Icons.lock_outline),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
@@ -193,7 +193,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return Strings.passwordHint;
+                            return Strings.registerPassword;
                           }
                           if (value.length < 6) {
                             return Strings.validatePassword;
