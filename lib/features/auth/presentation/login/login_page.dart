@@ -80,7 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Login',
+                      Strings.loginTitle,
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -106,14 +106,14 @@ class _LoginPageState extends State<LoginPage> {
                       child: TextFormField(
                         controller: _usernameController,
                         decoration: const InputDecoration(
-                          hintText: 'Masukkan Username',
+                          hintText: Strings.emailHint,
                           prefixIcon: Icon(Icons.person_outline),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Masukkan Username';
+                            return Strings.emailHint;
                           }
                           return null;
                         },
@@ -136,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: TextFormField(
                         controller: _passwordController,
                         decoration: const InputDecoration(
-                          hintText: 'Masukkan Password',
+                          hintText: Strings.passwordHint,
                           prefixIcon: Icon(Icons.lock_outline),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
@@ -144,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Masukkan Password';
+                            return Strings.passwordHint;
                           }
                           return null;
                         },
@@ -157,7 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () => context.go('/forgot-password'),
                         style: TextButton.styleFrom(padding: EdgeInsets.zero),
                         child: const Text(
-                          'lupa password?',
+                          Strings.forgotPassword,
                           style: TextStyle(
                             color: Color(0xFF2196F3),
                             fontWeight: FontWeight.w500,
@@ -182,7 +182,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: state is AuthLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
                                 : const Text(
-                                    'MASUK',
+                                    Strings.loginButton,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -197,14 +197,14 @@ class _LoginPageState extends State<LoginPage> {
                     Center(
                       child: RichText(
                         text: TextSpan(
-                          text: 'Belum Punya Akun ? ',
+                          text: Strings.noAccount,
                           style: const TextStyle(
                             color: Colors.black87,
                             fontSize: 14,
                           ),
                           children: [
                             TextSpan(
-                              text: 'Daftar',
+                              text: Strings.registerLink ,
                               style: const TextStyle(
                                 color: Color(0xFF2196F3),
                                 fontWeight: FontWeight.bold,
@@ -220,14 +220,14 @@ class _LoginPageState extends State<LoginPage> {
                     Center(
                       child: Text.rich(
                         TextSpan(
-                          text: 'Dengan memakai aplikasi ini, anda menyetujui ',
+                          text: Strings.agreeText,
                           style: const TextStyle(
                             color: Colors.black54,
                             fontSize: 12,
                           ),
                           children: [
                             TextSpan(
-                              text: 'syarat',
+                              text: Strings.termsText,
                               style: const TextStyle(
                                 color: Color(0xFF2196F3),
                                 decoration: TextDecoration.underline,
@@ -236,10 +236,10 @@ class _LoginPageState extends State<LoginPage> {
                                 ..onTap = () => context.go('/terms-login'),
                             ),
                             const TextSpan(
-                              text: ' dan ',
+                              text: Strings.andText,
                             ),
                             TextSpan(
-                              text: 'ketentuan',
+                              text: Strings.conditionsText,
                               style: const TextStyle(
                                 color: Color(0xFF2196F3),
                                 decoration: TextDecoration.underline,
