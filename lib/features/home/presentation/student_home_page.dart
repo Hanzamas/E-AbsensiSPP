@@ -29,20 +29,21 @@ class _StudentHomePageState extends State<StudentHomePage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text('Login Berhasil'),
-          content: const Text('Selamat datang kembali!'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                // Save that we've shown the popup
-                await prefs.setBool('has_shown_welcome_popup', true);
-              },
-              child: const Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Login Berhasil'),
+              content: const Text('Selamat datang kembali!'),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    // Save that we've shown the popup
+                    await prefs.setBool('has_shown_welcome_popup', true);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     }
   }
@@ -55,10 +56,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3),
-              Color(0xFFE3F2FD),
-            ],
+            colors: [Color(0xFF2196F3), Color(0xFFE3F2FD)],
           ),
         ),
         child: SafeArea(
@@ -92,10 +90,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
                     const SizedBox(height: 8),
                     const Text(
                       'Lihat aktivitasmu dan semoga hari harimu menyenangkan',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ],
                 ),
@@ -110,7 +105,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
                       child: _HomeMenuCard(
                         icon: Assets.absensi,
                         label: 'Absensi',
-                        onTap: () {},
+                        onTap: () {
+                          context.go('/attendance');
+                        },
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -197,6 +194,8 @@ class _StudentHomePageState extends State<StudentHomePage> {
           if (index == 3) {
             // Icon Profile
             context.go('/profile');
+          } else if (index == 1) {
+            context.go('/attendance');
           } else {
             setState(() {
               _selectedIndex = index;
@@ -206,22 +205,13 @@ class _StudentHomePageState extends State<StudentHomePage> {
         selectedItemColor: const Color(0xFF2196F3),
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.checklist),
             label: 'Absensi',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.credit_card),
-            label: 'SPP',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.credit_card), label: 'SPP'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         type: BottomNavigationBarType.fixed,
       ),
@@ -233,7 +223,11 @@ class _HomeMenuCard extends StatelessWidget {
   final String icon;
   final String label;
   final VoidCallback onTap;
-  const _HomeMenuCard({required this.icon, required this.label, required this.onTap});
+  const _HomeMenuCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -270,4 +264,4 @@ class _HomeMenuCard extends StatelessWidget {
       ),
     );
   }
-} 
+}
