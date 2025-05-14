@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../shared/animations/fade_in.dart';
+import '../../data/auth_service.dart';
+import '../../data/auth_repository.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
@@ -15,6 +17,18 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+  String? _otp;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ambil OTP dari route extra
+    final extra = GoRouterState.of(context).extra;
+    if (extra is String) {
+      _otp = extra;
+    }
+  }
 
   @override
   void dispose() {
@@ -30,15 +44,51 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       );
       return false;
     }
-
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(Strings.passwordMismatchError)),
       );
       return false;
     }
-
     return true;
+  }
+
+  Future<void> _handleResetPassword() async {
+    if (!_validateInputs()) return;
+    if (_otp == null || _otp!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP tidak ditemukan. Silakan ulangi proses.')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    final repo = AuthRepository(AuthService());
+    try {
+      await repo.resetPassword(_otp!, _passwordController.text, _confirmPasswordController.text);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Berhasil'),
+          content: const Text('Password berhasil diubah. Silakan login.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.go('/login');
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -152,32 +202,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onPressed: () {
-                          if (_validateInputs()) {
-                            // TODO: Implementasi API untuk ubah password
-                            
-                            // Tampilkan pesan sukses
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(Strings.passwordChangedSuccess),
+                        onPressed: _isLoading ? null : _handleResetPassword,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                Strings.saveButton,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                            );
-                            
-                            // Navigasi ke halaman login dan hapus history navigasi
-                            Future.delayed(Duration(seconds: 2), () {
-                              // Gunakan pushReplacement agar history navigasi terhapus
-                              GoRouter.of(context).go('/login');
-                            });
-                          }
-                        },
-                        child: Text(
-                          Strings.saveButton,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
                       ),
                     ),
                   ],

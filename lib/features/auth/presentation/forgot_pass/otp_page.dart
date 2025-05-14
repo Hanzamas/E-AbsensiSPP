@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../shared/animations/fade_in.dart';
+import '../../data/auth_service.dart';
+import '../../data/auth_repository.dart';
 
 class OtpPage extends StatefulWidget {
   const OtpPage({Key? key}) : super(key: key);
@@ -15,11 +17,11 @@ class _OtpPageState extends State<OtpPage> {
     4,
     (index) => TextEditingController(),
   );
-
   final List<FocusNode> _focusNodes = List.generate(
     4,
     (index) => FocusNode(),
   );
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -45,13 +47,50 @@ class _OtpPageState extends State<OtpPage> {
   }
 
   bool _validateOtp() {
-    // Cek apakah semua field OTP sudah diisi
     for (var controller in _otpControllers) {
       if (controller.text.isEmpty) {
         return false;
       }
     }
     return true;
+  }
+
+  Future<void> _handleVerifyOtp() async {
+    if (!_validateOtp()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(Strings.otpEmptyError)),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    final repo = AuthRepository(AuthService());
+    final otp = _otpControllers.map((c) => c.text).join();
+    try {
+      await repo.verifyOtp(otp);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Verifikasi Berhasil'),
+          content: const Text('OTP valid, silakan ubah password.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.go('/change-password', extra: otp);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -96,7 +135,8 @@ class _OtpPageState extends State<OtpPage> {
                         color: Colors.grey.shade700,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
+                    // OTP input
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: List.generate(
@@ -141,7 +181,6 @@ class _OtpPageState extends State<OtpPage> {
                         ),
                         TextButton(
                           onPressed: () {
-                            // TODO: Implement resend OTP functionality
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(Strings.otpResendMessage),
@@ -174,41 +213,17 @@ class _OtpPageState extends State<OtpPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onPressed: () {
-                          // Validasi OTP
-                          if (!_validateOtp()) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(Strings.otpEmptyError),
+                        onPressed: _isLoading ? null : _handleVerifyOtp,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                Strings.confirmButton,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                            );
-                            return;
-                          }
-                          
-                          String otp = _otpControllers
-                              .map((controller) => controller.text)
-                              .join();
-                              
-                          // TODO: Verifikasi OTP dengan API
-                          
-                          // Anggap verifikasi berhasil, tampilkan pesan
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(Strings.otpSuccessMessage),
-                            ),
-                          );
-                          
-                          // Navigasi ke halaman ubah password
-                          context.go('/change-password');
-                        },
-                        child: Text(
-                          Strings.confirmButton,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
                       ),
                     ),
                     
