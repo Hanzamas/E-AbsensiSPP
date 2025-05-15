@@ -45,7 +45,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               color: Colors.white, // Ikon article berwarna putih
             ),
             const SizedBox(width: 8),
-            Text(Strings.AttendanceTitle, style: TextStyle(color: Colors.white)),
+            Text(
+              Strings.AttendanceTitle,
+              style: TextStyle(color: Colors.white),
+            ),
           ],
         ),
         backgroundColor: Color(0xFF2196F3),
@@ -210,14 +213,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 2),
               // Empty State / List
               Expanded(
-                child: Center(
-                  child: Text(
-                    Strings.EmptyState,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      Strings.EmptyState,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF475A6B)),
+                    ),
                   ),
                 ),
               ),
@@ -227,7 +236,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color(0xFF2196F3),
-         onPressed: () {
+        onPressed: () {
           context.go('/scan-qr');
         },
         child: Icon(Icons.qr_code_scanner),
