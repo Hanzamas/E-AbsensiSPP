@@ -104,4 +104,9 @@ class Strings {
   static const String CaptionTitle             = 'Keterangan';
   static const String EmptyState               = 'Tidak ada data absensi\npada tanggal ini.';
 
-}
+  // Profile screen
+  static const String ProfileTitle             = 'Profil';
+  static const String EditProfileTitle         = 'Edit Profil';
+  static const String EditProfileButton        = 'Edit Profil';
+
+} 
