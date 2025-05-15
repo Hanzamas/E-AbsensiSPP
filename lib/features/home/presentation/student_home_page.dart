@@ -11,6 +11,8 @@ import '../../../shared/widgets/bottom_navbar.dart';
 import '../../../shared/widgets/loading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../features/auth/cubit/auth_cubit.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../../core/api/api_endpoints.dart';
 
 
 class StudentHomePage extends StatefulWidget {
@@ -25,6 +27,10 @@ class _StudentHomePageState extends State<StudentHomePage> {
   int _selectedIndex = 0;
   List<Schedule> _weeklySchedule = [];
   bool _isLoadingSchedule = true;
+  String? fullname;
+  bool _isLoadingProfile = true;
+  String? _profileError;
+  final _storage = const FlutterSecureStorage();
 
   static const List<String> hariList = [
     'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu', 'minggu'
@@ -33,8 +39,50 @@ class _StudentHomePageState extends State<StudentHomePage> {
   @override
   void initState() {
     super.initState();
+    _fetchProfile();
     _checkAndShowWelcomePopup();
     _loadWeeklySchedule();
+  }
+
+  Future<void> _fetchProfile() async {
+    setState(() {
+      _isLoadingProfile = true;
+      _profileError = null;
+    });
+    try {
+      final token = await _storage.read(key: 'token');
+      if (token == null || token.isEmpty) {
+        setState(() {
+          _profileError = 'Token tidak ditemukan';
+          _isLoadingProfile = false;
+        });
+        return;
+      }
+      final response = await http.get(
+        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.getProfile),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        setState(() {
+          fullname = data['data']['siswa_nama_lengkap'] ?? data['data']['nama'] ?? '-';
+          _isLoadingProfile = false;
+        });
+      } else {
+        setState(() {
+          _profileError = data['message'] ?? 'Gagal mengambil data profil';
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _profileError = 'Terjadi kesalahan. Coba lagi.';
+        _isLoadingProfile = false;
+      });
+    }
   }
 
   Future<void> _checkAndShowWelcomePopup() async {
@@ -119,7 +167,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
                             ),
                             children: [
                               TextSpan(
-                                text: widget.fullname,
+                                text: _isLoadingProfile
+                                  ? '...'
+                                  : (fullname ?? '-'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
