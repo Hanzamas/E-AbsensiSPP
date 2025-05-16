@@ -104,6 +104,19 @@ class Strings {
   static const String CaptionTitle             = 'Keterangan';
   static const String EmptyState               = 'Tidak ada data absensi\npada tanggal ini.';
 
+  // Attendance scan QR
+  static const String AttendanceScanTitle      = 'Scan QR';
+  static const String InstructionScan          = 'Pindai Kode QR untuk absensi';
+
+  // Attendance scan Success
+  static const String TittleSuccess           = 'Keterangan';
+  static const String AttendanceSuccess       = 'Absensi Berhasil';
+  static const String CourseSuccess           = 'Mata Pelajaran ';
+  static const String DateSuccess             = 'Tanggal ';
+  static const String TimeScan                = 'Waktu Scan ';
+  static const String StatusScan              = 'Status ';
+  
+
   // Profile screen
   static const String ProfileTitle             = 'Profil';
   static const String EditProfileTitle         = 'Edit Profil';
