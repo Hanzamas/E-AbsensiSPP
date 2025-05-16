@@ -60,7 +60,7 @@ class SppPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 2, // SPP tab index
+        currentIndex: getNavIndex(userRole, '/spp'),
         userRole: userRole,
         context: context,
       ),
