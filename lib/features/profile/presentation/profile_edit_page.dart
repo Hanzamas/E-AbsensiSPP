@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../core/constants/assets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/strings.dart';
 
 class ProfileEditPage extends StatefulWidget {
   final bool isFromLogin;
@@ -432,7 +433,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Profil'),
+          title: const Text(Strings.EditProfileTitle),
           leading: _isProfileCompleted ? IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -451,7 +452,20 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
-                    Image.asset(Assets.profile, width: 100, height: 100),
+                    SizedBox(
+                      height: 100,
+                      width: 100,
+                      child: ClipOval(
+                        child: Builder(
+                          builder: (context) {
+                              return Container(
+                                color: Colors.blue[100],
+                                child: const Icon(Icons.person, size: 60, color: Colors.white),
+                              );
+                            }
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 24),
                     if (_errorMessage != null) ...[
                       Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
@@ -498,10 +512,19 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       ),
                     ),
                     _inputContainer(
-                      child: TextFormField(
-                        controller: _jenisKelaminController,
+                      child: DropdownButtonFormField<String>(
+                        value: _jenisKelaminController.text.isNotEmpty ? _jenisKelaminController.text : null,
+                        items: const [
+                          DropdownMenuItem(value: 'L', child: Text('Laki-laki')),
+                          DropdownMenuItem(value: 'P', child: Text('Perempuan')),
+                        ],
+                        onChanged: (val) {
+                          setState(() {
+                            _jenisKelaminController.text = val ?? '';
+                          });
+                        },
                         decoration: const InputDecoration(
-                          hintText: 'Jenis Kelamin (L/P)',
+                          labelText: 'Jenis Kelamin',
                           prefixIcon: Icon(Icons.wc),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
@@ -511,8 +534,36 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     _inputContainer(
                       child: TextFormField(
                         controller: _tanggalLahirController,
+                        readOnly: true,
+                        onTap: () async {
+                          FocusScope.of(context).requestFocus(FocusNode());
+                          DateTime firstDate = DateTime(1999);
+                          DateTime lastDate = DateTime(DateTime.now().year, 12, 31);
+                          DateTime initialDate;
+                          if (_tanggalLahirController.text.isNotEmpty) {
+                            final parsed = DateTime.tryParse(_tanggalLahirController.text);
+                            if (parsed != null && !parsed.isBefore(firstDate) && !parsed.isAfter(lastDate)) {
+                              initialDate = parsed;
+                            } else {
+                              initialDate = lastDate;
+                            }
+                          } else {
+                            initialDate = lastDate;
+                          }
+                          DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: initialDate,
+                            firstDate: firstDate,
+                            lastDate: lastDate,
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _tanggalLahirController.text = picked.toIso8601String().split('T')[0];
+                            });
+                          }
+                        },
                         decoration: const InputDecoration(
-                          hintText: 'Tanggal Lahir (YYYY-MM-DD)',
+                          hintText: 'Tanggal Lahir',
                           prefixIcon: Icon(Icons.cake),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
@@ -555,12 +606,22 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     _inputContainer(
                       child: TextFormField(
                         controller: _waWaliController,
+                        keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           hintText: 'No. WA Wali',
                           prefixIcon: Icon(Icons.phone),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Nomor WA wali tidak boleh kosong!';
+                          }
+                          if (!RegExp(r'^\d+$').hasMatch(value)) {
+                            return 'Nomor WA hanya boleh angka';
+                          }
+                          return null;
+                        },
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -578,7 +639,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : const Text(
-                                'Selanjutnya',
+                                Strings.EditProfileButton,
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                       ),
