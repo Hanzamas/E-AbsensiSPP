@@ -18,6 +18,7 @@ import '../../features/profile/presentation/profile_main_page.dart';
 import '../../features/profile/presentation/profile_edit_page.dart';
 import '../../features/attendance/presentation/attendance_screen.dart';
 import '../../features/attendance/presentation/attendance_scan.dart';
+import '../../features/spp/presentation/spp_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -149,6 +150,11 @@ class AppRouter {
         path: '/scan-qr',
         name: 'scan-qr',
         builder: (context, state) => AttendanceQr(),
+      ),
+      GoRoute(
+        path: '/spp',
+        name: 'spp',
+        builder: (context, state) => const SppPage(),
       ),
     ],
   );

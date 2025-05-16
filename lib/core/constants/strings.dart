@@ -109,4 +109,7 @@ class Strings {
   static const String EditProfileTitle         = 'Edit Profil';
   static const String EditProfileButton        = 'Edit Profil';
 
+  // SPP screen
+  static const String SPPTitle                 = 'SPP';
+
 } 
