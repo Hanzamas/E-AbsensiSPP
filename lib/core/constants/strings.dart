@@ -93,4 +93,20 @@ class Strings {
   static const String exitDialogYes       = 'Ya';
   static const String exitDialogNo        = 'Tidak';
   static const String exitConfirmMessage  = 'Tekan kembali lagi untuk keluar';
-}
+
+  // Attendance screen
+  static const String AttendanceTitle          = 'List Absensi';
+  static const String CourseTitle              = 'Mata Pelajaran';
+  static const String FilterTitle              = 'Filter';
+  static const String DownloadTitle            = 'Unduh';
+  static const String DateTitle                = 'Tanggal';
+  static const String StatusTitle              = 'Status';
+  static const String CaptionTitle             = 'Keterangan';
+  static const String EmptyState               = 'Tidak ada data absensi\npada tanggal ini.';
+
+  // Profile screen
+  static const String ProfileTitle             = 'Profil';
+  static const String EditProfileTitle         = 'Edit Profil';
+  static const String EditProfileButton        = 'Edit Profil';
+
+} 

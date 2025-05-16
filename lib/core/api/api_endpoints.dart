@@ -23,6 +23,7 @@ class ApiEndpoints {
   static const String updateStudent = '/students/update';
   static const String getStudentDetail = '/students/detail';
   static const String getKelas = '/classes';
+  static const String getStudentSchedule = '/students/schedule';
   
   // Admin endpoints
   static const String getStudents = '/admin/students';
