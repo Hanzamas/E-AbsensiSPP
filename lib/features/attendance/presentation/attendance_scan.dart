@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../shared/widgets/bottom_navbar.dart';
+import '../../../../core/constants/strings.dart';
 class AttendanceQr extends StatefulWidget {
   const AttendanceQr({Key? key}) : super(key: key);
 
@@ -10,6 +11,8 @@ class AttendanceQr extends StatefulWidget {
 }
 
 class _AttendanceQrState extends State<AttendanceQr> {
+  final int _selectedIndex = 1;
+  final String userRole = 'siswa';
   final MobileScannerController cameraController = MobileScannerController(
     facing: CameraFacing.back,
     torchEnabled: false,
@@ -46,7 +49,7 @@ class _AttendanceQrState extends State<AttendanceQr> {
             context.go('/attendance');
           },
         ),
-        title: const Text('Scan QR', style: TextStyle(color: Colors.white)),
+        title: const Text(Strings.AttendanceScanTitle, style: TextStyle(color: Colors.white)),
         centerTitle: false,
       ),
       body: Stack(
@@ -137,7 +140,7 @@ class _AttendanceQrState extends State<AttendanceQr> {
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16.0),
                 child: Text(
-                  'Pindai Kode QR untuk absensi',
+                  Strings.InstructionScan,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
@@ -188,21 +191,11 @@ class _AttendanceQrState extends State<AttendanceQr> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // "Absensi"
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        onTap: (idx) {},
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
-            label: 'Absensi',
+      bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: _selectedIndex,
+            userRole: userRole,
+            context: context,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'SPP'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Akun'),
-        ],
-      ),
     );
   }
 }

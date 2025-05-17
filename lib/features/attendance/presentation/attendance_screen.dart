@@ -81,7 +81,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
                         children: [
-                          // Dropdown Mata Pelajaran
                           DropdownButtonFormField<String>(
                             decoration: InputDecoration(
                               filled: true,
@@ -97,13 +96,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             ),
                             hint: Text(Strings.CourseTitle),
                             value: _selectedSubject,
-                            items:
-                                _subjects.map((subject) {
-                                  return DropdownMenuItem(
-                                    value: subject,
-                                    child: Text(subject),
-                                  );
-                                }).toList(),
+                            items: _subjects.map((subject) {
+                              return DropdownMenuItem(
+                                value: subject,
+                                child: Text(subject),
+                              );
+                            }).toList(),
                             onChanged: (val) {
                               setState(() {
                                 _selectedSubject = val;
@@ -111,7 +109,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             },
                           ),
                           const SizedBox(height: 12),
-                          // Date Picker
                           InkWell(
                             onTap: _pickDate,
                             child: Container(
@@ -136,7 +133,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          // Buttons Filter & Unduh
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -190,75 +186,65 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 350,
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(top: 0),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade400, width: 1),
+                    child: Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade400, width: 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFBBDEFB),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                topRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: Row(
+                              children: const [
+                                _TableHeaderCell(Strings.DateTitle),
+                                _TableHeaderCell(Strings.CourseTitle),
+                                _TableHeaderCell(Strings.StatusTitle),
+                                _TableHeaderCell(Strings.CaptionTitle),
+                              ],
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFBBDEFB),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(8),
-                                    topRight: Radius.circular(8),
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                SingleChildScrollView(
+                                  child: SizedBox(height: 200),
+                                ),
+                                Center(
+                                  child: Text(
+                                    Strings.EmptyState,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.grey[700], fontSize: 16),
                                   ),
                                 ),
-                                child: Row(
-                                  children: const [
-                                    _TableHeaderCell('Tanggal'),
-                                    _TableHeaderCell('Mata pelajaran'),
-                                    _TableHeaderCell('Status'),
-                                    _TableHeaderCell('Keterangan'),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: Stack(
-                                  children: [
-                                    SingleChildScrollView(
-                                      child: SizedBox(
-                                        height: 200,
-                                      ),
-                                    ),
-                                    Center(
-                                      child: Text(
-                                        'Tidak ada data absensi\npada tanggal ini.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.grey[700], fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        Positioned(
-                          bottom: 16,
-                          right: 16,
-                          child: FloatingActionButton(
-                            heroTag: 'qr-btn',
-                            backgroundColor: Color(0xFF2196F3),
-                            onPressed: () {
-                              context.go('/scan-qr');
-                            },
-                            child: Icon(Icons.qr_code_scanner),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'qr-btn',
+            backgroundColor: Color(0xFF2196F3),
+            onPressed: () {
+              context.go('/scan-qr');
+            },
+            child: Icon(Icons.qr_code_scanner),
           ),
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _selectedIndex,
