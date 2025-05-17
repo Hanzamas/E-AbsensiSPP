@@ -111,5 +111,17 @@ class Strings {
 
   // SPP screen
   static const String SPPTitle                 = 'SPP';
+  static const String SPPMonthTitle            = 'Bulan Pembayaran';
+  static const List<String> SPPMonths         = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  static const String SPPAmount                = 'Rp 500.000';
+  static const String SPPStatusLunas           = 'Status: Lunas';
+  static const String SPPStatusTerhutang       = 'Status: Terhutang';
+  static const String SPPBayar                 = 'Bayar';
+  static const String SPPBarcodeTitle          = 'Barcode';
+  static const String SPPBarcodeDeadline       = 'Batas Waktu Pembayaran';
+  static const String SPPVerifyTitle           = 'Pembayaran Berhasil';
 
 } 
