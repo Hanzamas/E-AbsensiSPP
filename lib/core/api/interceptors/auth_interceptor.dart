@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:e_absensi/core/storage/secure_storage.dart'; 
 
 class AuthInterceptor extends Interceptor {
-  final _storage = const FlutterSecureStorage();
+  final _storage = SecureStorage();
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storage.read(key: 'token');
+    final token = await _storage.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -17,10 +17,11 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
-      // Handle unauthorized error
-      print('Unauthorized error occurred');
+      // Token expired atau invalid
+      await _storage.deleteToken();
+      // Bisa tambahkan logic untuk refresh token atau logout
     }
     return handler.next(err);
   }
