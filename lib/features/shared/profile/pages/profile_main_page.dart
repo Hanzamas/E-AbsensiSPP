@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../shared/widgets/bottom_navbar.dart';
+import '../../widgets/bottom_navbar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../features/auth/cubit/auth_cubit.dart';
 import '../../../core/constants/assets.dart';
