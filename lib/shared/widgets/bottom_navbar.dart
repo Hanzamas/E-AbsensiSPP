@@ -14,7 +14,7 @@ final List<NavItem> allNavItems = [
   NavItem('Home', Icons.home, '/teacher/home', ['guru']),
   NavItem('Home', Icons.home, '/admin/home', ['admin']),
   NavItem('Absensi', Icons.checklist, '/attendance', ['siswa', 'guru', 'admin']),
-  NavItem('SPP', Icons.credit_card, '/spp', ['siswa']),
+  NavItem('SPP', Icons.credit_card, '/spp', ['siswa']), 
   NavItem('Profile', Icons.person, '/profile', ['siswa', 'guru', 'admin']),
 ];
 

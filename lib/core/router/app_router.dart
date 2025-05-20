@@ -1,161 +1,172 @@
+// core/router/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../features/auth/presentation/splash_screen.dart';
-import '../../features/auth/presentation/terms_and_condition.dart';
-import '../../features/auth/presentation/login/login_page.dart';
-import '../../features/auth/presentation/register/register_page.dart';
-import '../../features/auth/presentation/forgot_pass/forgotpass_page.dart';
-import '../../features/auth/presentation/forgot_pass/otp_page.dart';
-import '../../features/auth/presentation/forgot_pass/changepass_page.dart';
-import '../../shared/transitions/fade_transition.dart';
-import '../../features/auth/data/auth_service.dart';
-import '../../features/auth/data/auth_repository.dart';
-import '../../features/auth/cubit/auth_cubit.dart';
-import '../../features/home/presentation/student_home_page.dart';
-import '../../features/profile/presentation/profile_success_page.dart';
-import '../../features/profile/presentation/profile_main_page.dart';
-import '../../features/profile/presentation/profile_edit_page.dart';
-import '../../features/attendance/presentation/attendance_screen.dart';
-import '../../features/attendance/presentation/attendance_scan.dart';
-import '../../features/spp/presentation/spp_page.dart';
+import 'route_guards.dart';
+
+// Auth Pages
+import '../../features/shared/auth/pages/splash_screen.dart';
+import '../../features/shared/auth/pages/login/login_page.dart';
+import '../../features/shared/auth/pages/register/register_page.dart';
+import '../../features/shared/auth/pages/terms_and_condition.dart';
+import '../../features/shared/auth/pages/forgot_pass/forgotpass_page.dart';
+import '../../features/shared/auth/pages/forgot_pass/otp_page.dart';
+import '../../features/shared/auth/pages/forgot_pass/changepass_page.dart';
+
+// // Student Pages
+// import '../../features/student/home/presentation/student_home_page.dart';
+// import '../../features/student/attendance/presentation/attendance_page.dart';
+// import '../../features/student/attendance/presentation/scan_qr_page.dart';
+// import '../../features/student/spp/presentation/spp_page.dart';
+// import '../../features/student/spp/presentation/spp_detail_page.dart';
+
+// // Shared Pages
+// import '../../features/shared/profile/presentation/profile_page.dart';
+// import '../../features/shared/profile/presentation/edit_profile_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
+    redirect: RouteGuards.authGuard, // Uncomment setelah implement route guard
     routes: [
-      GoRoute(
-        path: '/splash',
-        name: 'splash',
-        pageBuilder: (ctx, state) => MaterialPage(child: const SplashScreen()),
-      ),
-      GoRoute(
-        path: '/login',
-        name: 'login',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: BlocProvider(
-                create: (context) {
-                  final authService = AuthService();
-                  final authRepository = AuthRepository(authService);
-                  return AuthCubit(authRepository);
-                },
-                child: const LoginPage(),
-              ),
-            ),
-      ),
-      GoRoute(
-        path: '/register',
-        name: 'register',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: BlocProvider(
-                create: (context) {
-                  final authService = AuthService();
-                  final authRepository = AuthRepository(authService);
-                  return AuthCubit(authRepository);
-                },
-                child: const RegisterPage(),
-              ),
-            ),
-      ),
-      GoRoute(
-        path: '/forgot-password',
-        name: 'forgot-password',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const ForgotPasswordPage(),
-            ),
-      ),
-      GoRoute(
-        path: '/otp-verification',
-        name: 'otp-verification',
-        pageBuilder:
-            (ctx, state) =>
-                FadeTransitionPage(key: state.pageKey, child: const OtpPage()),
-      ),
-      GoRoute(
-        path: '/change-password',
-        name: 'change-password',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const ChangePasswordPage(),
-            ),
-      ),
-      GoRoute(
-        path: '/terms-login',
-        name: 'terms-login',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const TermsAndConditionsPage(source: 'login'),
-            ),
-      ),
-      GoRoute(
-        path: '/terms-register',
-        name: 'terms-register',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const TermsAndConditionsPage(source: 'register'),
-            ),
-      ),
-      GoRoute(
-        path: '/student/home',
-        name: 'student-home',
-        pageBuilder: (ctx, state) {
-          final fullname = state.extra as String? ?? '';
-          return MaterialPage(child: StudentHomePage(fullname: fullname));
-        },
-      ),
-      GoRoute(
-        path: '/profile',
-        name: 'profile',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const ProfileMainPage(),
-            ),
-      ),
-      GoRoute(
-        path: '/profile-edit',
-        name: 'profile-edit',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: ProfileEditPage(
-                isFromLogin: state.extra as bool? ?? false,
-              ),
-            ),
-      ),
-      GoRoute(
-        path: '/profile-success',
-        name: 'profile-success',
-        pageBuilder:
-            (ctx, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const ProfileSuccessPage(),
-            ),
-      ),
-      GoRoute(
-        path: '/attendance',
-        name: 'attendance',
-        builder: (context, state) => AttendanceScreen(),
-      ),
-       GoRoute(
-        path: '/scan-qr',
-        name: 'scan-qr',
-        builder: (context, state) => AttendanceQr(),
-      ),
-      GoRoute(
-        path: '/spp',
-        name: 'spp',
-        builder: (context, state) => const SppPage(),
-      ),
+      // Public Routes (Auth)
+      ..._publicRoutes,
+      
+      // Student Routes
+      ..._studentRoutes,
+      
+      /* // Teacher Routes (belum diimplementasikan)
+      ..._teacherRoutes,
+      
+      // Admin Routes (belum diimplementasikan)
+      ..._adminRoutes,
+      */
+      
+      // Shared Routes
+      ..._sharedRoutes,
     ],
   );
+
+  // Public Routes
+  static final List<RouteBase> _publicRoutes = [
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/register',
+      name: 'register',
+      builder: (context, state) => const RegisterPage(),
+    ),
+    GoRoute(
+      path: '/terms',
+      name: 'terms',
+      builder: (context, state) => TermsAndConditionsPage(
+        source: state.extra as String? ?? 'login',
+      ),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      name: 'forgot-password',
+      builder: (context, state) => const ForgotPasswordPage(),
+    ),
+    GoRoute(
+      path: '/otp-verification',
+      name: 'otp-verification',
+      builder: (context, state) => OtpPage(
+        email: state.extra as String,
+      ),
+    ),
+    GoRoute(
+      path: '/change-password',
+      name: 'change-password',
+      builder: (context, state) => ChangePasswordPage(
+        email: state.extra as String,
+      ),
+    ),
+  ];
+
+  // Student Routes
+  static final List<RouteBase> _studentRoutes = [
+    GoRoute(
+      path: '/student/home',
+      name: 'student-home',
+      builder: (context, state) => const Scaffold(body: Center(child: Text('Student Home'))), // Temporary
+    ),
+    /* // Uncomment setelah implement halaman terkait
+    GoRoute(
+      path: '/student/attendance',
+      name: 'student-attendance',
+      builder: (context, state) => const AttendancePage(),
+    ),
+    GoRoute(
+      path: '/student/attendance/scan',
+      name: 'student-attendance-scan',
+      builder: (context, state) => const ScanQrPage(),
+    ),
+    GoRoute(
+      path: '/student/spp',
+      name: 'student-spp',
+      builder: (context, state) => const SppPage(),
+    ),
+    GoRoute(
+      path: '/student/spp/detail/:bulan',
+      name: 'student-spp-detail',
+      builder: (context, state) {
+        final bulan = state.pathParameters['bulan'] ?? '-';
+        return SppDetailPage(bulan: bulan);
+      },
+    ),
+    */
+  ];
+
+  /* // Teacher Routes (belum diimplementasikan)
+  static final List<RouteBase> _teacherRoutes = [
+    GoRoute(
+      path: '/teacher/home',
+      name: 'teacher-home',
+      builder: (context, state) => const TeacherHomePage(),
+    ),
+  ];
+
+  // Admin Routes (belum diimplementasikan)
+  static final List<RouteBase> _adminRoutes = [
+    GoRoute(
+      path: '/admin/home',
+      name: 'admin-home',
+      builder: (context, state) => const AdminHomePage(),
+    ),
+  ];
+  */
+
+  // Shared Routes (bisa diakses semua role setelah login)
+  static final List<RouteBase> _sharedRoutes = [
+     // Uncomment setelah implement halaman terkait
+    // GoRoute(
+    //   path: '/profile',
+    //   name: 'profile',
+    //   builder: (context, state) => const ProfilePage(),
+    // ),
+    // GoRoute(
+    //   path: '/profile/edit',
+    //   name: 'profile-edit',
+    //   builder: (context, state) => ProfileEditPage(
+    //     isFromLogin: state.extra as bool? ?? false,
+    //   ),
+    // ),
+    // GoRoute(
+    //   path: '/profile/first-input',
+    //   name: 'profile-first-input',
+    //   builder: (context, state) => ProfileEditPage(
+    //     isFromLogin: state.extra as bool? ?? false,
+    //   ),
+      
+    // ),
+    
+  ];
 }
