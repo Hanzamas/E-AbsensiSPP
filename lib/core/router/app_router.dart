@@ -19,6 +19,9 @@ import '../../features/profile/presentation/profile_edit_page.dart';
 import '../../features/attendance/presentation/attendance_screen.dart';
 import '../../features/attendance/presentation/attendance_scan.dart';
 import '../../features/spp/presentation/spp_page.dart';
+import '../../features/spp/presentation/spp_detail_page.dart';
+import '../../features/spp/presentation/spp_barcode_page.dart';
+import '../../features/spp/presentation/spp_verify_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -155,6 +158,28 @@ class AppRouter {
         path: '/spp',
         name: 'spp',
         builder: (context, state) => const SppPage(),
+      ),
+      GoRoute(
+        path: '/spp/detail/:bulan',
+        name: 'spp-detail',
+        builder: (context, state) {
+          final bulan = state.pathParameters['bulan'] ?? '-';
+          // TODO: ambil status lunas dari query/logic nanti
+          return SppDetailPage(bulan: bulan, lunas: false);
+        },
+      ),
+      GoRoute(
+        path: '/spp/barcode/:bulan',
+        name: 'spp-barcode',
+        builder: (context, state) {
+          final bulan = state.pathParameters['bulan'] ?? '-';
+          return SppBarcodePage(bulan: bulan);
+        },
+      ),
+      GoRoute(
+        path: '/spp/verify',
+        name: 'spp-verify',
+        builder: (context, state) => const SppVerifyPage(),
       ),
     ],
   );

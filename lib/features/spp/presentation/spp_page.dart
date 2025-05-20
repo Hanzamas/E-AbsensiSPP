@@ -3,8 +3,39 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/bottom_navbar.dart';
 import '../../../../core/constants/strings.dart';
 
-class SppPage extends StatelessWidget {
+class SppPage extends StatefulWidget {
   const SppPage({Key? key}) : super(key: key);
+
+  @override
+  State<SppPage> createState() => _SppPageState();
+}
+
+class _SppPageState extends State<SppPage> {
+  String? selectedMonth;
+
+  void _showMonthPicker() async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return ListView(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          children: Strings.SPPMonths.map((bulan) => ListTile(
+            title: Text(bulan, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+            onTap: () => Navigator.pop(context, bulan),
+          )).toList(),
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        selectedMonth = picked;
+      });
+      // TODO: Navigate ke detail atau update tampilan
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +46,7 @@ class SppPage extends StatelessWidget {
           children: [
             Icon(Icons.credit_card, color: Colors.white),
             const SizedBox(width: 8),
-            Text(Strings.SPPTitle, style: TextStyle(color: Colors.white)),
+            Text(Strings.SPPTitle, style: const TextStyle(color: Colors.white)),
           ],
         ),
         backgroundColor: const Color(0xFF2196F3),
@@ -31,36 +62,37 @@ class SppPage extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                    border: InputBorder.none,
+              GestureDetector(
+                onTap: _showMonthPicker,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  hint: const Text(
-                    'Bulan Pembayaran',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedMonth ?? Strings.SPPMonthTitle,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const Icon(Icons.keyboard_arrow_down),
+                    ],
                   ),
-                  items: const [],
-                  onChanged: (val) {},
                 ),
               ),
+              // Bisa tambahkan tampilan detail bulan di bawah jika sudah dipilih
             ],
           ),
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: getNavIndex(userRole, '/spp'),
+        currentIndex: 2,
         userRole: userRole,
         context: context,
       ),

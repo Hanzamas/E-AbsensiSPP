@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../shared/widgets/bottom_navbar.dart';
+import '../../../../core/constants/strings.dart';
 class AttendanceQr extends StatefulWidget {
   const AttendanceQr({Key? key}) : super(key: key);
 
   @override
-  _AttendanceqrState createState() => _AttendanceqrState();
+  _AttendanceQrState createState() => _AttendanceQrState();
 }
 
-class _AttendanceqrState extends State<AttendanceQr> {
+class _AttendanceQrState extends State<AttendanceQr> {
+  final int _selectedIndex = 1;
+  final String userRole = 'siswa';
   final MobileScannerController cameraController = MobileScannerController(
     facing: CameraFacing.back,
     torchEnabled: false,
   );
+
   double zoom = 1.0;
+  bool _isScanned = false;
 
   @override
   void dispose() {
@@ -23,12 +28,11 @@ class _AttendanceqrState extends State<AttendanceQr> {
   }
 
   void _processBarcode(String code) {
-    debugPrint('QR Code detected: $code');
-    // TODO: implementasikan logic absensi di sini
+    if (_isScanned) return;
+    _isScanned = true;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('Absensi berhasil: $code')));
-    // Setelah pemrosesan, bisa stop kamera atau kembali
     cameraController.stop();
   }
 
@@ -37,7 +41,7 @@ class _AttendanceqrState extends State<AttendanceQr> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.blue,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -45,8 +49,8 @@ class _AttendanceqrState extends State<AttendanceQr> {
             context.go('/attendance');
           },
         ),
-        title: const Text('Scan QR', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
+        title: const Text(Strings.AttendanceScanTitle, style: TextStyle(color: Colors.white)),
+        centerTitle: false,
       ),
       body: Stack(
         children: [
@@ -58,7 +62,7 @@ class _AttendanceqrState extends State<AttendanceQr> {
                 final code = barcode.rawValue;
                 if (code != null) {
                   _processBarcode(code);
-                  break; // hanya process kode pertama
+                  break;
                 }
               }
             },
@@ -68,41 +72,58 @@ class _AttendanceqrState extends State<AttendanceQr> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+                colors: [Colors.transparent, Colors.black54],
               ),
             ),
           ),
           Column(
             children: [
-              const SizedBox(height: kToolbarHeight + 16),
+              const SizedBox(height: kToolbarHeight + 62),
               // Top controls
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.photo_library, color: Colors.white),
-                    onPressed: () {},
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  IconButton(
-                    icon: ValueListenableBuilder<TorchState>(
-                      valueListenable: cameraController.torchState,
-                      builder: (context, state, _) {
-                        return Icon(
-                          state == TorchState.on
-                              ? Icons.flash_on
-                              : Icons.flash_off,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.photo_library,
                           color: Colors.white,
-                        );
-                      },
-                    ),
-                    onPressed: () => cameraController.toggleTorch(),
+                        ),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: ValueListenableBuilder<TorchState>(
+                          valueListenable: cameraController.torchState,
+                          builder: (context, state, _) {
+                            return Icon(
+                              state == TorchState.on
+                                  ? Icons.flash_on
+                                  : Icons.flash_off,
+                              color: Colors.white,
+                            );
+                          },
+                        ),
+                        onPressed: () => cameraController.toggleTorch(),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.cameraswitch,
+                          color: Colors.white,
+                        ),
+                        onPressed: () => cameraController.switchCamera(),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.cameraswitch, color: Colors.white),
-                    onPressed: () => cameraController.switchCamera(),
-                  ),
-                ],
+                ),
               ),
+              const SizedBox(height: 16),
               Expanded(
                 child: Center(
                   child: AspectRatio(
@@ -110,17 +131,22 @@ class _AttendanceqrState extends State<AttendanceQr> {
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.white, width: 2),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
                 ),
               ),
-              // Instruction
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16.0),
                 child: Text(
-                  'Pindai Kode QR untuk absensi',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  Strings.InstructionScan,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               // Zoom slider
@@ -135,6 +161,8 @@ class _AttendanceqrState extends State<AttendanceQr> {
                         min: 1.0,
                         max: 3.0,
                         divisions: 20,
+                        activeColor: Colors.blue,
+                        inactiveColor: Colors.white54,
                         onChanged: (value) {
                           setState(() {
                             zoom = value;
@@ -147,48 +175,27 @@ class _AttendanceqrState extends State<AttendanceQr> {
                   ],
                 ),
               ),
-              // Capture button
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24.0),
-                child: GestureDetector(
-                  onTap: () {
-                    // Manual capture or focus
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
+              const SizedBox(height: 24),
+              // Camera icon purely decorative
+              CircleAvatar(
+                backgroundColor: Colors.blue,
+                radius: 36,
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 32,
                 ),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // "Absensi"
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
-            label: 'Absensi',
+      bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: _selectedIndex,
+            userRole: userRole,
+            context: context,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'SPP'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Akun'),
-        ],
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        onTap: (idx) {
-          // TODO: Handle bottom nav tap
-        },
-      ),
     );
   }
 }

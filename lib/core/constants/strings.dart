@@ -104,6 +104,19 @@ class Strings {
   static const String CaptionTitle             = 'Keterangan';
   static const String EmptyState               = 'Tidak ada data absensi\npada tanggal ini.';
 
+  // Attendance scan QR
+  static const String AttendanceScanTitle      = 'Scan QR';
+  static const String InstructionScan          = 'Pindai Kode QR untuk absensi';
+
+  // Attendance scan Success
+  static const String TittleSuccess           = 'Keterangan';
+  static const String AttendanceSuccess       = 'Absensi Berhasil';
+  static const String CourseSuccess           = 'Mata Pelajaran ';
+  static const String DateSuccess             = 'Tanggal ';
+  static const String TimeScan                = 'Waktu Scan ';
+  static const String StatusScan              = 'Status ';
+  
+
   // Profile screen
   static const String ProfileTitle             = 'Profil';
   static const String EditProfileTitle         = 'Edit Profil';
@@ -111,5 +124,17 @@ class Strings {
 
   // SPP screen
   static const String SPPTitle                 = 'SPP';
+  static const String SPPMonthTitle            = 'Bulan Pembayaran';
+  static const List<String> SPPMonths         = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  static const String SPPAmount                = 'Rp 500.000';
+  static const String SPPStatusLunas           = 'Status: Lunas';
+  static const String SPPStatusTerhutang       = 'Status: Terhutang';
+  static const String SPPBayar                 = 'Bayar';
+  static const String SPPBarcodeTitle          = 'Barcode';
+  static const String SPPBarcodeDeadline       = 'Batas Waktu Pembayaran';
+  static const String SPPVerifyTitle           = 'Pembayaran Berhasil';
 
 } 
