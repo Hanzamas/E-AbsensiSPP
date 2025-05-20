@@ -23,7 +23,7 @@ class Strings {
   static const String registerSubtitle      = 'Silahkan masuk terlebih dahulu';
   static const String registerButton        = 'DAFTAR';
   static const String haveAccount           = 'Sudah punya akun? ';
-  static const String usernameHint          = 'Nama';
+  static const String usernameHint          = 'Masukan Username';
   static const String registeremail         = 'Masukkan Email';
   static const String registerPassword      = 'Masukkan Password';
   static const String validateEmail         = 'Masukkan email valid';
