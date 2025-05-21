@@ -2,10 +2,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../../../core/constants/strings.dart';
-import '../../../../../core/constants/assets.dart';
-import '../../../../../shared/animations/fade_in_animation.dart';
-import '../../providers/auth_provider.dart';
+import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/core/constants/assets.dart';
+import 'package:e_absensi/shared/animations/fade_in_animation.dart';
+import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -287,18 +287,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         Checkbox(
                           value: _agree,
-                          onChanged: (val) {
-                            setState(() {
-                              _agree = val ?? false;
-                            });
+                          onChanged: (value) {
+                            setState(() => _agree = value ?? false);
                           },
-                          activeColor: const Color(0xFF2196F3),
                         ),
                         Expanded(
                           child: Text.rich(
                             TextSpan(
                               text: Strings.agreeTermsText,
-                              style: const TextStyle(fontSize: 14, color: Colors.black87),
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 12,
+                              ),
                               children: [
                                 TextSpan(
                                   text: Strings.agreeTermsText2,

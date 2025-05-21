@@ -44,6 +44,10 @@ dependencies:
   shared_preferences: ^2.5.3
   intl: ^0.17.0
   mobile_scanner: ^3.0.0
+  shimmer: ^3.0.0
+  package_info_plus: ^8.3.0
+  provider: ^6.1.5
+  image_picker: ^1.0.7
 
 dev_dependencies:
   build_runner: ^2.4.0

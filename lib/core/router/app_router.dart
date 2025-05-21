@@ -4,20 +4,28 @@ import 'package:go_router/go_router.dart';
 import 'route_guards.dart';
 
 // Auth Pages
-import '../../features/shared/auth/pages/splash_screen.dart';
-import '../../features/shared/auth/pages/login/login_page.dart';
-import '../../features/shared/auth/pages/register/register_page.dart';
-import '../../features/shared/auth/pages/terms_and_condition.dart';
-import '../../features/shared/auth/pages/forgot_pass/forgotpass_page.dart';
-import '../../features/shared/auth/pages/forgot_pass/otp_page.dart';
-import '../../features/shared/auth/pages/forgot_pass/changepass_page.dart';
+import 'package:e_absensi/features/shared/auth/pages/splash/splash_screen.dart';
+import 'package:e_absensi/features/shared/auth/pages/login/login_page.dart';
+import 'package:e_absensi/features/shared/auth/pages/register/register_page.dart';
+import 'package:e_absensi/features/shared/auth/pages/terms/terms_and_condition.dart';
+import 'package:e_absensi/features/shared/auth/pages/forgot_pass/forgotpass_page.dart';
+import 'package:e_absensi/features/shared/auth/pages/forgot_pass/otp_page.dart';
+import 'package:e_absensi/features/shared/auth/pages/forgot_pass/changepass_page.dart';
 
-// // Student Pages
-// import '../../features/student/home/presentation/student_home_page.dart';
-// import '../../features/student/attendance/presentation/attendance_page.dart';
-// import '../../features/student/attendance/presentation/scan_qr_page.dart';
-// import '../../features/student/spp/presentation/spp_page.dart';
-// import '../../features/student/spp/presentation/spp_detail_page.dart';
+// Student Pages
+import 'package:e_absensi/features/student/dashboard/pages/student_home_page.dart';
+import 'package:e_absensi/features/student/attendance/pages/attendance_screen.dart';
+import 'package:e_absensi/features/student/attendance/pages/attendance_scan.dart';
+import 'package:e_absensi/features/student/attendance/pages/attendance_success.dart';
+import 'package:e_absensi/features/student/spp/presentation/spp_page.dart';
+import 'package:e_absensi/features/student/spp/presentation/spp_detail_page.dart';
+
+// Shared Pages
+import 'package:e_absensi/features/shared/profile/pages/profile_main_page.dart';
+import 'package:e_absensi/features/shared/profile/pages/profile_edit_page.dart';
+import 'package:e_absensi/features/shared/profile/pages/profile_success_page.dart';
+import 'package:e_absensi/features/shared/profile/pages/account_edit_page.dart';
+import 'package:e_absensi/features/shared/settings/pages/settings_page.dart';
 
 // // Shared Pages
 // import '../../features/shared/profile/presentation/profile_page.dart';
@@ -96,18 +104,44 @@ class AppRouter {
     GoRoute(
       path: '/student/home',
       name: 'student-home',
-      builder: (context, state) => const Scaffold(body: Center(child: Text('Student Home'))), // Temporary
+      builder: (context, state) => const StudentHomePage(),
     ),
-    /* // Uncomment setelah implement halaman terkait
     GoRoute(
       path: '/student/attendance',
       name: 'student-attendance',
-      builder: (context, state) => const AttendancePage(),
+      builder: (context, state) => const AttendanceScreen(),
     ),
     GoRoute(
       path: '/student/attendance/scan',
       name: 'student-attendance-scan',
-      builder: (context, state) => const ScanQrPage(),
+      builder: (context, state) => const AttendanceQr(),
+    ),
+    GoRoute(
+      path: '/student/attendance/success',
+      name: 'student-attendance-success',
+      builder: (context, state) {
+        // Defaultnya jika tidak ada data yang diberikan
+        String subject = 'Matematika';
+        String date = '15/10/2023';
+        String time = '08:30';
+        String status = 'Hadir';
+        
+        // Cek apakah ada data dari extra
+        if (state.extra != null && state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          subject = data['subject'] as String? ?? subject;
+          date = data['date'] as String? ?? date;
+          time = data['time'] as String? ?? time;
+          status = data['status'] as String? ?? status;
+        }
+        
+        return AttendanceSuccess(
+          subject: subject,
+          date: date,
+          time: time,
+          status: status,
+        );
+      },
     ),
     GoRoute(
       path: '/student/spp',
@@ -115,14 +149,16 @@ class AppRouter {
       builder: (context, state) => const SppPage(),
     ),
     GoRoute(
-      path: '/student/spp/detail/:bulan',
+      path: '/student/spp/detail/:id',
       name: 'student-spp-detail',
       builder: (context, state) {
-        final bulan = state.pathParameters['bulan'] ?? '-';
-        return SppDetailPage(bulan: bulan);
+        final id = state.pathParameters['id'] ?? '0';
+        return SppDetailPage(
+          bulan: 'Pembayaran SPP ${id}',
+          lunas: id == '1' || id == '2', // Anggap id 1 dan 2 sudah lunas
+        );
       },
     ),
-    */
   ];
 
   /* // Teacher Routes (belum diimplementasikan)
@@ -146,27 +182,44 @@ class AppRouter {
 
   // Shared Routes (bisa diakses semua role setelah login)
   static final List<RouteBase> _sharedRoutes = [
-     // Uncomment setelah implement halaman terkait
-    // GoRoute(
-    //   path: '/profile',
-    //   name: 'profile',
-    //   builder: (context, state) => const ProfilePage(),
-    // ),
-    // GoRoute(
-    //   path: '/profile/edit',
-    //   name: 'profile-edit',
-    //   builder: (context, state) => ProfileEditPage(
-    //     isFromLogin: state.extra as bool? ?? false,
-    //   ),
-    // ),
-    // GoRoute(
-    //   path: '/profile/first-input',
-    //   name: 'profile-first-input',
-    //   builder: (context, state) => ProfileEditPage(
-    //     isFromLogin: state.extra as bool? ?? false,
-    //   ),
-      
-    // ),
-    
+    // Rute profil untuk semua role
+    GoRoute(
+      path: '/:role/profile',
+      name: 'profile',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return ProfileMainPage(userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/profile/edit',
+      name: 'profile-edit',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        final isFromLogin = state.extra as bool? ?? false;
+        return ProfileEditPage(isFromLogin: isFromLogin, userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/profile/edit-account',
+      name: 'profile-edit-account',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return AccountEditPage(userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/settings',
+      name: 'settings',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return SettingsPage(userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/profile/success',
+      name: 'profile-success',
+      builder: (context, state) => const ProfileSuccessPage(),
+    ),
   ];
 }

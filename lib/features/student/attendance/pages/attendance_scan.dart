@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
-import '../../../shared/widgets/bottom_navbar.dart';
+import '../../../../shared/widgets/bottom_navbar.dart';
 import '../../../../core/constants/strings.dart';
+
 class AttendanceQr extends StatefulWidget {
   const AttendanceQr({Key? key}) : super(key: key);
 
@@ -30,10 +31,22 @@ class _AttendanceQrState extends State<AttendanceQr> {
   void _processBarcode(String code) {
     if (_isScanned) return;
     _isScanned = true;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Absensi berhasil: $code')));
+    
+    // Tampilkan snackbar bahwa scan berhasil
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Absensi berhasil: $code'))
+    );
+    
+    // Hentikan kamera
     cameraController.stop();
+    
+    // Navigasi ke halaman success dengan data
+    context.go('/student/attendance/success', extra: {
+      'subject': 'Matematika',
+      'date': '15/10/2023',
+      'time': '08:30',
+      'status': 'Hadir',
+    });
   }
 
   @override
@@ -46,7 +59,7 @@ class _AttendanceQrState extends State<AttendanceQr> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            context.go('/attendance');
+            context.go('/student/attendance');
           },
         ),
         title: const Text(Strings.AttendanceScanTitle, style: TextStyle(color: Colors.white)),

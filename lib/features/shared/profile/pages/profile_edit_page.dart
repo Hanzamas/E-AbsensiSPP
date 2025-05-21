@@ -10,7 +10,8 @@ import '../../../../core/constants/strings.dart';
 
 class ProfileEditPage extends StatefulWidget {
   final bool isFromLogin;
-  const ProfileEditPage({Key? key, this.isFromLogin = false}) : super(key: key);
+  final String userRole;
+  const ProfileEditPage({Key? key, this.isFromLogin = false, required this.userRole}) : super(key: key);
 
   @override
   State<ProfileEditPage> createState() => _ProfileEditPageState();
@@ -358,7 +359,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         if (!_isProfileCompleted) {
           context.go('/profile-success');
         } else {
-          context.go('/profile');
+          context.go('/${widget.userRole}/profile');
         }
       } else if (data['message']?.toString().toLowerCase().contains('token') ?? false) {
         if (mounted) context.go('/login');
@@ -426,23 +427,21 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     return WillPopScope(
       onWillPop: () async {
         if (_isProfileCompleted) {
-          context.go('/profile');
+          context.go('/${widget.userRole}/profile');
           return false;
         }
         return false;
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(Strings.EditProfileTitle),
-          leading: _isProfileCompleted ? IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              context.go('/profile');
-            },
-          ) : null,
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          elevation: 0,
+          title: const Text('Edit Profil', style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color(0xFF2196F3),
+          leading: widget.isFromLogin 
+            ? null // Jangan tampilkan tombol kembali jika dari login
+            : IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => context.go('/${widget.userRole}/profile'),
+              ),
         ),
         body: SafeArea(
           child: Center(
