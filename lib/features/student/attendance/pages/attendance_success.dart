@@ -31,7 +31,7 @@ class AttendanceSuccess extends StatelessWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            context.go('/student/attendance');
+            context.pop();
           },
         ),
         title: const Text(Strings.TittleSuccess, style: TextStyle(color: Colors.white)),

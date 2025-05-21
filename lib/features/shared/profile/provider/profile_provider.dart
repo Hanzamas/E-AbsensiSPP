@@ -30,6 +30,7 @@ class ProfileProvider extends ChangeNotifier {
   String? get nama => _studentData?['nama_lengkap'] ?? _profileData?['siswa_nama_lengkap'] ?? _profileData?['nama'];
   String? get email => _profileData?['email'];
   bool get isProfileCompleted => _profileData?['siswa_nama_lengkap'] != null;
+  String? get profilePictureUrl => _profileData?['foto_url'];
   
   // Load profile data
   Future<void> loadProfile() async {
@@ -199,5 +200,155 @@ class ProfileProvider extends ChangeNotifier {
     _studentData = null;
     _kelasList = [];
     Future.microtask(() => notifyListeners());
+  }
+  
+  // Upload profile picture
+  Future<bool> uploadProfilePicture(String imagePath) async {
+    _isLoading = true;
+    _error = null;
+    Future.microtask(() => notifyListeners());
+    
+    try {
+      final token = await _storage.read(key: 'token');
+      if (token == null || token.isEmpty) {
+        _error = 'Token tidak ditemukan';
+        return false;
+      }
+      
+      // Create multipart request
+      final request = http.MultipartRequest(
+        'POST', 
+        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.uploadProfilePicture)
+      );
+      
+      // Add authorization header
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      // Add file
+      request.files.add(
+        await http.MultipartFile.fromPath('foto', imagePath),
+      );
+      
+      // Send request
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final data = jsonDecode(responseBody);
+      
+      if (response.statusCode == 200 && data['status'] == true) {
+        // Refresh profile data
+        await loadProfile();
+        return true;
+      } else {
+        _error = data['message'] ?? 'Gagal mengupload foto profil';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      return false;
+    } finally {
+      _isLoading = false;
+      Future.microtask(() => notifyListeners());
+    }
+  }
+  
+  // Update account
+  Future<bool> updateAccount({
+    required String username,
+    required String email,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    Future.microtask(() => notifyListeners());
+    
+    try {
+      final token = await _storage.read(key: 'token');
+      if (token == null || token.isEmpty) {
+        _error = 'Token tidak ditemukan';
+        return false;
+      }
+      
+      final updatePayload = {
+        'username': username,
+        'email': email,
+      };
+      
+      final response = await http.put(
+        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.updateUser),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(updatePayload),
+      );
+      
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        // Refresh profile data
+        await loadProfile();
+        return true;
+      } else {
+        _error = data['message'] ?? 'Gagal mengupdate akun';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      return false;
+    } finally {
+      _isLoading = false;
+      Future.microtask(() => notifyListeners());
+    }
+  }
+  
+  // Update password
+  Future<bool> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    Future.microtask(() => notifyListeners());
+    
+    try {
+      if (newPassword != confirmPassword) {
+        _error = 'Konfirmasi password tidak sesuai';
+        return false;
+      }
+      
+      final token = await _storage.read(key: 'token');
+      if (token == null || token.isEmpty) {
+        _error = 'Token tidak ditemukan';
+        return false;
+      }
+      
+      final updatePayload = {
+        'old_password': oldPassword,
+        'new_password': newPassword,
+        'confirm_password': confirmPassword,
+      };
+      
+      final response = await http.put(
+        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.updatePassword),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(updatePayload),
+      );
+      
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        return true;
+      } else {
+        _error = data['message'] ?? 'Gagal mengupdate password';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Terjadi kesalahan: ${e.toString()}';
+      return false;
+    } finally {
+      _isLoading = false;
+      Future.microtask(() => notifyListeners());
+    }
   }
 } 

@@ -24,6 +24,8 @@ import 'package:e_absensi/features/student/spp/presentation/spp_detail_page.dart
 import 'package:e_absensi/features/shared/profile/pages/profile_main_page.dart';
 import 'package:e_absensi/features/shared/profile/pages/profile_edit_page.dart';
 import 'package:e_absensi/features/shared/profile/pages/profile_success_page.dart';
+import 'package:e_absensi/features/shared/profile/pages/account_edit_page.dart';
+import 'package:e_absensi/features/shared/settings/pages/settings_page.dart';
 
 // // Shared Pages
 // import '../../features/shared/profile/presentation/profile_page.dart';
@@ -157,21 +159,6 @@ class AppRouter {
         );
       },
     ),
-    GoRoute(
-      path: '/student/profile',
-      name: 'student-profile',
-      builder: (context, state) => const ProfileMainPage(),
-    ),
-    GoRoute(
-      path: '/student/profile/edit',
-      name: 'student-profile-edit',
-      builder: (context, state) => ProfileEditPage(isFromLogin: state.extra as bool? ?? false),
-    ),
-    GoRoute(
-      path: '/student/profile/success',
-      name: 'student-profile-success',
-      builder: (context, state) => const ProfileSuccessPage(),
-    ),
   ];
 
   /* // Teacher Routes (belum diimplementasikan)
@@ -195,24 +182,44 @@ class AppRouter {
 
   // Shared Routes (bisa diakses semua role setelah login)
   static final List<RouteBase> _sharedRoutes = [
-    //  // Uncomment setelah implement halaman terkait
-    //  GoRoute(
-    //   path: '/profile-first-input',
-    //   name: 'profile-first-input',
-    //   builder: (context, state) => const ProfileFirstInputPage(),
-    // ),
-    // GoRoute(
-    //   path: '/profile',
-    //   name: 'profile',
-    //   builder: (context, state) => const ProfilePage(),
-    // ),
-    // GoRoute(
-    //   path: '/profile/edit',
-    //   name: 'profile-edit',
-    //   builder: (context, state) => ProfileEditPage(
-    //     isFromLogin: state.extra as bool? ?? false,
-    //   ),
-    // ),
-    
+    // Rute profil untuk semua role
+    GoRoute(
+      path: '/:role/profile',
+      name: 'profile',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return ProfileMainPage(userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/profile/edit',
+      name: 'profile-edit',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        final isFromLogin = state.extra as bool? ?? false;
+        return ProfileEditPage(isFromLogin: isFromLogin, userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/profile/edit-account',
+      name: 'profile-edit-account',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return AccountEditPage(userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/settings',
+      name: 'settings',
+      builder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return SettingsPage(userRole: role);
+      },
+    ),
+    GoRoute(
+      path: '/:role/profile/success',
+      name: 'profile-success',
+      builder: (context, state) => const ProfileSuccessPage(),
+    ),
   ];
 }
