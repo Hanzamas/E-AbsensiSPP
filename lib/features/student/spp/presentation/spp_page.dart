@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../shared/widgets/bottom_navbar.dart';
+import 'package:provider/provider.dart';
+import '../../../../shared/widgets/bottom_navbar.dart';
 import '../../../../core/constants/strings.dart';
+import '../../../../shared/widgets/loading.dart';
+import '../../../../shared/widgets/error_retry.dart';
+import 'spp_provider.dart';
 
 class SppPage extends StatefulWidget {
   const SppPage({Key? key}) : super(key: key);
@@ -11,7 +15,18 @@ class SppPage extends StatefulWidget {
 }
 
 class _SppPageState extends State<SppPage> {
-  String? selectedMonth;
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => _loadData());
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    
+    final provider = Provider.of<SppProvider>(context, listen: false);
+    await provider.loadSppHistory();
+  }
 
   void _showMonthPicker() async {
     final picked = await showModalBottomSheet<String>(
@@ -30,10 +45,8 @@ class _SppPageState extends State<SppPage> {
       },
     );
     if (picked != null) {
-      setState(() {
-        selectedMonth = picked;
-      });
-      // TODO: Navigate ke detail atau update tampilan
+      final provider = Provider.of<SppProvider>(context, listen: false);
+      provider.setSelectedMonth(picked);
     }
   }
 
@@ -74,19 +87,24 @@ class _SppPageState extends State<SppPage> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        selectedMonth ?? Strings.SPPMonthTitle,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                      const Icon(Icons.keyboard_arrow_down),
-                    ],
+                  child: Consumer<SppProvider>(
+                    builder: (context, provider, _) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            provider.selectedMonth ?? Strings.SPPMonthTitle,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          const Icon(Icons.keyboard_arrow_down),
+                        ],
+                      );
+                    }
                   ),
                 ),
               ),
-              // Bisa tambahkan tampilan detail bulan di bawah jika sudah dipilih
+              const SizedBox(height: 20),
+              _buildSppHistory(),
             ],
           ),
         ),
@@ -96,6 +114,142 @@ class _SppPageState extends State<SppPage> {
         userRole: userRole,
         context: context,
       ),
+    );
+  }
+
+  Widget _buildSppHistory() {
+    return Consumer<SppProvider>(
+      builder: (context, provider, _) {
+        final isLoading = provider.isLoading;
+        final error = provider.error;
+        final history = provider.sppHistory;
+
+        if (isLoading) {
+          return const Expanded(
+            child: Center(
+              child: DefaultLoading(),
+            ),
+          );
+        }
+
+        if (error != null) {
+          return Expanded(
+            child: ErrorRetry(
+              message: 'Gagal memuat data SPP: $error',
+              onRetry: _loadData,
+            ),
+          );
+        }
+
+        if (history.isEmpty) {
+          return const Expanded(
+            child: Center(
+              child: Text(
+                'Tidak ada data pembayaran SPP.',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Expanded(
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2196F3),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Riwayat Pembayaran SPP',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(0),
+                    itemCount: history.length,
+                    itemBuilder: (context, index) {
+                      final item = history[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.grey.shade200,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            item['month'] ?? '',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Rp ${item['amount']?.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: item['status'] == 'Lunas' ? Colors.green : Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              item['status'] ?? '',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          onTap: () {
+                            // Navigasi ke halaman detail SPP
+                            context.go('/student/spp/detail/${item['id']}');
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 } 

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/router/app_router.dart';
-// import 'core/theme/app_theme.dart';
-import 'core/storage/secure_storage.dart';
-import 'features/shared/auth/providers/auth_provider.dart';
+import 'package:e_absensi/core/router/app_router.dart';
+import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
+
+// Import baru untuk student dashboard
+import 'package:e_absensi/features/student/dashboard/provider/student_provider.dart';
+import 'package:e_absensi/features/student/attendance/pages/attendance_provider.dart';
+import 'package:e_absensi/features/student/spp/presentation/spp_provider.dart';
+import 'package:e_absensi/features/shared/profile/provider/profile_provider.dart';
+
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -12,14 +17,30 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(SecureStorage()),
+        // Auth Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: AuthProvider(),
+        ),
+        // Student Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: StudentProvider(),
+        ),
+        // Attendance Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: AttendanceProvider(),
+        ),
+        // SPP Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: SppProvider(),
+        ),
+        // Profile Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: ProfileProvider(),
         ),
       ],
       child: MaterialApp.router(
         title: 'E‑Absensi',
         debugShowCheckedModeBanner: false,
-        // theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
       ),
     );

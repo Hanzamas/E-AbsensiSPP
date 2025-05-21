@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'app.dart';
-import 'core/injection.dart';
+import 'package:e_absensi/app.dart';
 
 void main() {
-  setupInjection();
   runApp(const MyApp());
 }

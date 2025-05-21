@@ -2,9 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../../../core/constants/strings.dart';
-import '../../../../../core/constants/assets.dart';
-import '../../providers/auth_provider.dart';
+import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/core/constants/assets.dart';
+import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,6 +43,8 @@ class _LoginPageState extends State<LoginPage> {
           final role = authProvider.userRole;
           final isProfileCompleted = authProvider.userData?.isProfileCompleted ?? false;
 
+          // Komentari bagian pengecekan profil
+          /* 
           if (!isProfileCompleted) {
             _showDialog(
               'Login Berhasil',
@@ -53,6 +55,7 @@ class _LoginPageState extends State<LoginPage> {
             );
             return;
           }
+          */
 
           // Tambahkan delay untuk memastikan snackbar terlihat
           ScaffoldMessenger.of(context).showSnackBar(
@@ -304,10 +307,13 @@ class _LoginPageState extends State<LoginPage> {
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
-                              ..onTap = () => context.goNamed('terms'),
+                              ..onTap = () => context.goNamed('terms', extra: 'login'),
                           ),
-                          const TextSpan(
+                          TextSpan(
                             text: Strings.andText,
+                            style: const TextStyle(
+                              color: Colors.black54,
+                            ),
                           ),
                           TextSpan(
                             text: Strings.conditionsText,
@@ -316,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
-                              ..onTap = () => context.goNamed('terms'),
+                              ..onTap = () => context.goNamed('terms', extra: 'login'),
                           ),
                         ],
                       ),

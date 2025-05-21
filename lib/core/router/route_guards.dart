@@ -1,14 +1,14 @@
 // core/router/route_guards.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../storage/secure_storage.dart';
+import 'package:e_absensi/core/storage/secure_storage.dart';
 
 class RouteGuards {
   static final _storage = SecureStorage();
 
   // Redirect berdasarkan auth state
   static Future<String?> authGuard(BuildContext context, GoRouterState state) async {
-    final token = await _storage.getToken();
+    final token = await _storage.read('token');
     
     // List route yang tidak perlu auth
     final publicRoutes = [
@@ -18,13 +18,12 @@ class RouteGuards {
       '/forgot-password',
       '/otp-verification',
       '/change-password',
-      '/terms-login',
-      '/terms-register',
+      '/terms',
     ];
 
     // Jika di public route dan sudah login, redirect ke home
     if (publicRoutes.contains(state.uri.path) && token != null) {
-      final role = await _storage.getUserRole();
+      final role = await _storage.read('user_role');
       return _getHomeRoute(role);
     }
 
@@ -38,12 +37,12 @@ class RouteGuards {
 
   // Redirect berdasarkan role
   static Future<String?> roleGuard(BuildContext context, GoRouterState state) async {
-    final role = await _storage.getUserRole();
+    final role = await _storage.read('user_role');
     final currentPath = state.uri.path;
 
     // Cek akses berdasarkan prefix path
-    if (currentPath.startsWith('/student') && role != 'student' ||
-        currentPath.startsWith('/teacher') && role != 'teacher' ||
+    if (currentPath.startsWith('/student') && role != 'siswa' ||
+        currentPath.startsWith('/teacher') && role != 'guru' ||
         currentPath.startsWith('/admin') && role != 'admin') {
       return _getHomeRoute(role);
     }

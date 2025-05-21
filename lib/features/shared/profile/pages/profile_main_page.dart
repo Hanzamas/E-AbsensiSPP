@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../shared/widgets/bottom_navbar.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../features/auth/cubit/auth_cubit.dart';
-import '../../../core/constants/assets.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/constants/strings.dart';
+import '../../../../shared/widgets/bottom_navbar.dart';
+import 'package:provider/provider.dart';
+import '../provider/profile_provider.dart';
+import '../../../../core/constants/assets.dart';
+import '../../../../core/constants/strings.dart';
 
 class ProfileMainPage extends StatefulWidget {
   const ProfileMainPage({Key? key}) : super(key: key);
@@ -18,84 +14,45 @@ class ProfileMainPage extends StatefulWidget {
 }
 
 class _ProfileMainPageState extends State<ProfileMainPage> {
-  String? nama;
-  String? email;
-  bool _isLoading = true;
-  String? _errorMessage;
-  final _storage = const FlutterSecureStorage();
-
   @override
   void initState() {
     super.initState();
-    _fetchProfile();
+    Future.microtask(() => _loadData());
   }
 
-  Future<void> _fetchProfile() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      final token = await _storage.read(key: 'token');
-      if (token == null || token.isEmpty) {
-        setState(() {
-          _errorMessage = 'Token tidak ditemukan';
-          _isLoading = false;
-        });
-        return;
-      }
-      final response = await http.get(
-        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.getProfile),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['status'] == true) {
-        setState(() {
-          nama = data['data']['siswa_nama_lengkap'] ?? data['data']['nama'] ?? '-';
-          email = data['data']['email'] ?? '-';
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = data['message'] ?? 'Gagal mengambil data profil';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Terjadi kesalahan. Coba lagi.';
-        _isLoading = false;
-      });
-    }
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    
+    final provider = Provider.of<ProfileProvider>(context, listen: false);
+    await provider.loadProfile();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        String userRole = 'siswa';
-        if (state is AuthSuccess) {
-          userRole = state.auth.role;
-        }
-        return Scaffold(
-          appBar: AppBar(
-            title: Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 8),
-                Text(Strings.ProfileTitle, style: TextStyle(color: Colors.white)),
-              ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Icon(
+              Icons.person,
+              color: Colors.white,
             ),
-            backgroundColor: Color(0xFF2196F3),
-          ),
-          body: SafeArea(
-            child: Center(
+            const SizedBox(width: 8),
+            Text(Strings.ProfileTitle, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF2196F3),
+      ),
+      body: SafeArea(
+        child: Consumer<ProfileProvider>(
+          builder: (context, provider, _) {
+            final isLoading = provider.isLoading;
+            final errorMessage = provider.error;
+            final nama = provider.nama;
+            final email = provider.email;
+            final userRole = 'siswa'; // Hardcoded for simplicity
+            
+            return Center(
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -107,21 +64,17 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                         height: 120,
                         width: 120,
                         child: ClipOval(
-                          child: Builder(
-                            builder: (context) {     
-                                return Container(
-                                  color: Colors.blue[100],
-                                  child: const Icon(Icons.person, size: 80, color: Colors.white),
-                                );
-                              }
+                          child: Container(
+                            color: Colors.blue[100],
+                            child: const Icon(Icons.person, size: 80, color: Colors.white),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      if (_isLoading)
+                      if (isLoading)
                         const CircularProgressIndicator()
-                      else if (_errorMessage != null)
-                        Text(_errorMessage!, style: const TextStyle(color: Colors.red))
+                      else if (errorMessage != null)
+                        Text(errorMessage, style: const TextStyle(color: Colors.red))
                       else ...[
                         Text(
                           nama ?? '-',
@@ -145,7 +98,7 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                       Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         child: ElevatedButton(
-                          onPressed: () => context.go('/profile-edit'),
+                          onPressed: () => context.go('/student/profile/edit'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.black87,
@@ -194,11 +147,15 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: Implementasi logout
+                          onPressed: () async {
+                            // Logout menggunakan profile provider
+                            await provider.logout();
+                            if (mounted) {
+                              context.go('/login');
+                            }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: const Color(0xFF2196F3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -213,15 +170,15 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                   ),
                 ),
               ),
-            ),
-          ),
-          bottomNavigationBar: CustomBottomNavBar(
-            currentIndex: getNavIndex(userRole, '/profile'),
-            userRole: userRole,
-            context: context,
-          ),
-        );
-      },
+            );
+          }
+        ),
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 3, // Profile index
+        userRole: 'siswa',
+        context: context,
+      ),
     );
   }
 } 

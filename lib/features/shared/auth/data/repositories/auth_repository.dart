@@ -1,11 +1,18 @@
-import 'models/login_request.dart';
-import 'models/login_response.dart';
-import 'auth_service.dart';
+import 'package:e_absensi/features/shared/auth/data/models/login_request.dart';
+import 'package:e_absensi/features/shared/auth/data/models/login_response.dart';
+import 'package:e_absensi/features/shared/auth/data/services/auth_service.dart';
 
 class AuthRepository {
-  final AuthService _authService;
+  static final AuthRepository _instance = AuthRepository._internal();
+  late final AuthService _authService;
 
-  AuthRepository(this._authService);
+  // Private constructor
+  AuthRepository._internal() {
+    _authService = AuthService();
+  }
+
+  // Singleton factory
+  factory AuthRepository() => _instance;
 
   Future<LoginResponse> login(String username, String password) async {
     try {

@@ -17,6 +17,30 @@ class Strings {
   static const String conditionsText        = 'ketentuan';
   static const String loginInstruction      = 'Silakan masuk untuk melanjutkan.';
   
+  // Terms and Conditions
+  static const String termsAndConditionsTitle = 'Syarat dan Ketentuan';
+  static const String understandButton        = 'SAYA MENGERTI';
+  static const String termsAndConditionsContent = '''
+1. Aplikasi E-AbsensiSPP hanya dapat digunakan oleh siswa, guru, dan staf administrasi yang terdaftar.
+
+2. Pengguna wajib menjaga kerahasiaan akun dan tidak membagikan informasi login kepada pihak lain.
+
+3. Data yang dimasukkan ke dalam aplikasi harus benar dan dapat dipertanggungjawabkan.
+
+4. Absensi hanya dapat dilakukan pada jam dan lokasi yang telah ditentukan.
+
+5. Pembayaran SPP melalui aplikasi harus mengikuti prosedur yang telah ditetapkan.
+
+6. Pengguna bertanggung jawab atas keamanan perangkat dan koneksi internet yang digunakan.
+
+7. Pihak sekolah berhak menonaktifkan akun yang melanggar ketentuan penggunaan.
+
+8. Data yang tersimpan dalam aplikasi menjadi hak milik sekolah.
+
+9. Aplikasi dapat diperbarui sewaktu-waktu untuk perbaikan dan peningkatan layanan.
+
+10. Dengan menggunakan aplikasi ini, pengguna menyetujui seluruh syarat dan ketentuan yang berlaku.
+''';
   
   // Register Page
   static const String registerTitle         = 'Daftar';
@@ -65,28 +89,7 @@ class Strings {
   
   // Terms & Conditions
   static const String termsLinkText         = 'Syarat & Ketentuan';
-  static const String termsAndConditionsTitle = 'Syarat & Ketentuan';
-  static const String understandButton      = 'Saya Mengerti';
-  static const String termsAndConditionsContent = '''
-    1. Anda harus menjaga kerahasiaan akun Anda, termasuk email dan password.
-    2. Semua aktivitas yang dilakukan menggunakan akun Anda adalah tanggung jawab Anda sepenuhnya.
-    3. Data absensi harus akurat dan tidak dimanipulasi.
-    4. Data absensi disimpan secara aman, tetapi pengembang tidak bertanggung jawab atas kehilangan data karena kesalahan pengguna.
-    5. Jangan menyalahgunakan aplikasi ini untuk tujuan komersial atau ilegal tanpa izin tertulis dari pengembang.
-    6. Aplikasi dan semua komponennya dilindungi oleh undang-undang hak cipta; Anda tidak boleh mendistribusikan ulang atau memodifikasi tanpa izin.
-    7. Pengguna tidak diperbolehkan untuk melakukan reverse engineering, decompile, atau memodifikasi kode sumber aplikasi.
-    8. Pengembang berhak untuk menghentikan, membatasi, atau memodifikasi layanan kapan saja tanpa pemberitahuan sebelumnya.
-    9. Pengguna setuju untuk menerima pembaruan aplikasi otomatis yang mungkin berisi perbaikan, fitur baru, atau perubahan kebijakan.
-    10. Pengguna harus memasukkan data yang valid dan bertanggung jawab atas keakuratan informasi yang diberikan.
-    11. Fitur backup dan restore disediakan, tetapi pengembang tidak menjamin 100% keberhasilan dalam pemulihan data.
-    12. Setiap bentuk pelanggaran (penipuan, peretasan, spam) akan mengakibatkan penangguhan akun permanen.
-    13. Pengguna bertanggung jawab atas perangkat mereka—jika hilang atau dicuri, segera laporkan ke admin sekolah.
-    14. Pengembang tidak akan pernah meminta informasi sensitif di luar mekanisme aplikasi resmi.
-    15. Untuk keluhan atau pertanyaan, hubungi tim dukungan: support@e-absensispp.com.
-
-    Dengan melanjutkan, Anda setuju dengan semua ketentuan di atas dan bertanggung jawab atas penggunaan aplikasi ini.
-    ''';
-    
+  
   // Exit Dialog
   static const String exitDialogTitle     = 'Keluar Aplikasi';
   static const String exitDialogMessage   = 'Apakah Anda yakin ingin keluar?';
