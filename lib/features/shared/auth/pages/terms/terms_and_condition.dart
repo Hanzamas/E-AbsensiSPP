@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/strings.dart';
-import '../../../../shared/animations/fade_in_animation.dart';
+import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/shared/animations/fade_in_animation.dart';
 
 class TermsAndConditionsPage extends StatelessWidget {
   final String source;

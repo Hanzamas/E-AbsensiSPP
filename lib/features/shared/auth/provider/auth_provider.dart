@@ -1,19 +1,28 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../../../core/storage/secure_storage.dart';
-import '../data/auth_repository.dart';
-import '../data/auth_service.dart';
-import '../data/models/login_request.dart';
-import '../data/models/login_response.dart';
+import 'package:e_absensi/core/storage/secure_storage.dart';
+import 'package:e_absensi/features/shared/auth/data/repositories/auth_repository.dart';
+// import '../data/services/auth_service.dart';
+// import '../data/models/login_request.dart';
+import 'package:e_absensi/features/shared/auth/data/models/login_response.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final SecureStorage _storage;
-  final AuthRepository _authRepository;
+  static final AuthProvider _instance = AuthProvider._internal();
+  
+  late final SecureStorage _storage;
+  late final AuthRepository _authRepository;
   String? _token;
   String? _userRole;
   LoginData? _userData;
 
-  AuthProvider(this._storage) : _authRepository = AuthRepository(AuthService());
+  // Private constructor
+  AuthProvider._internal() {
+    _storage = SecureStorage();
+    _authRepository = AuthRepository();
+  }
+
+  // Singleton factory
+  factory AuthProvider() => _instance;
 
   String? get userRole => _userRole;
   bool get isAuthenticated => _token != null;

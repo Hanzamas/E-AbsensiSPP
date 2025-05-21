@@ -1,16 +1,23 @@
 import 'package:dio/dio.dart';
-import '../../../../core/api/dio_client.dart';
-import '../../../../core/api/api_endpoints.dart';
-import 'models/login_request.dart';
-import 'models/login_response.dart';
-import 'models/forgot_password_response.dart';
+import 'package:e_absensi/core/api/dio_client.dart';
+import 'package:e_absensi/core/api/api_endpoints.dart';
+import 'package:e_absensi/features/shared/auth/data/models/login_request.dart';
+import 'package:e_absensi/features/shared/auth/data/models/login_response.dart';
+// import 'models/forgot_password_response.dart';
 
 class AuthService {
-  final Dio _dio;
-  String? _otpToken;  // Untuk menyimpan token OTP
+  static final AuthService _instance = AuthService._internal();
+  late final Dio _dio;
+  // String? _otpToken;  // Untuk menyimpan token OTP
   String? _lastVerifiedOtp;
 
-  AuthService() : _dio = DioClient().dio;
+  // Private constructor
+  AuthService._internal() {
+    _dio = DioClient().dio;
+  }
+
+  // Singleton factory
+  factory AuthService() => _instance;
 
   Future<LoginResponse> login(LoginRequest request) async {
     try {

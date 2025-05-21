@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/bottom_navbar.dart'; 
+import '../../../../shared/widgets/bottom_navbar.dart'; 
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/strings.dart';
 
@@ -31,7 +31,7 @@ class AttendanceSuccess extends StatelessWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            context.go('/attendance');
+            context.go('/student/attendance');
           },
         ),
         title: const Text(Strings.TittleSuccess, style: TextStyle(color: Colors.white)),

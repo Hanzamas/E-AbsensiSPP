@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../../../core/constants/strings.dart';
-import '../../../../../core/constants/assets.dart';
-import '../../../../../shared/animations/fade_in_animation.dart';
-import '../../providers/auth_provider.dart';
+import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/core/constants/assets.dart';
+import 'package:e_absensi/shared/animations/fade_in_animation.dart';
+import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
