@@ -14,6 +14,7 @@ class ApiEndpoints {
   // Profile endpoints
   static const String getProfile = '/users/profile';
   static const String updateProfile = '/users/profile/update';
+  static const String uploadProfilePicture = '/users/profile/upload-photo';
   static const String updateUser = '/users/update';
   static const String updatePassword = '/users/update-password';
   static const String deleteUser = '/users/delete';

@@ -8,6 +8,7 @@ import 'package:e_absensi/features/student/dashboard/provider/student_provider.d
 import 'package:e_absensi/features/student/attendance/pages/attendance_provider.dart';
 import 'package:e_absensi/features/student/spp/presentation/spp_provider.dart';
 import 'package:e_absensi/features/shared/profile/provider/profile_provider.dart';
+import 'package:e_absensi/features/shared/settings/provider/settings_provider.dart';
 
 
 class MyApp extends StatelessWidget {
@@ -36,6 +37,10 @@ class MyApp extends StatelessWidget {
         // Profile Provider - menggunakan singleton pattern
         ChangeNotifierProvider.value(
           value: ProfileProvider(),
+        ),
+        // Settings Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: SettingsProvider(),
         ),
       ],
       child: MaterialApp.router(

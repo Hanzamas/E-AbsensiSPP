@@ -209,6 +209,11 @@ class CustomBottomNavBar extends StatelessWidget {
         break;
     }
 
-    context.go(path);
+    // Khusus untuk profil, gunakan rute baru dengan format /:role/profile
+    if (path.endsWith('/profile')) {
+      context.go('/$role/profile');
+    } else {
+      context.go(path);
+    }
   }
 } 
