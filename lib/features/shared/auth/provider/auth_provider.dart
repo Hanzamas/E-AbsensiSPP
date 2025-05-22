@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:e_absensi/core/storage/secure_storage.dart';
 import 'package:e_absensi/features/shared/auth/data/repositories/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import '../data/services/auth_service.dart';
 // import '../data/models/login_request.dart';
-import 'package:e_absensi/features/shared/auth/data/models/login_response.dart';
+import 'package:e_absensi/features/shared/auth/data/models/auth_models.dart';
 
 class AuthProvider extends ChangeNotifier {
   static final AuthProvider _instance = AuthProvider._internal();
@@ -13,7 +14,6 @@ class AuthProvider extends ChangeNotifier {
   late final AuthRepository _authRepository;
   String? _token;
   String? _userRole;
-  LoginData? _userData;
 
   // Private constructor
   AuthProvider._internal() {
@@ -26,37 +26,20 @@ class AuthProvider extends ChangeNotifier {
 
   String? get userRole => _userRole;
   bool get isAuthenticated => _token != null;
-  LoginData? get userData => _userData;
 
   Future<String?> checkAuth() async {
     _token = await _storage.read('token');
     _userRole = await _storage.read('user_role');
-    final userDataJson = await _storage.read('user_data');
-    if (userDataJson != null) {
-      _userData = LoginData.fromJson(
-        Map<String, dynamic>.from(
-          const JsonDecoder().convert(userDataJson),
-        ),
-      );
-    }
     return _userRole;
   }
 
   Future<bool> login(String username, String password) async {
     try {
       final response = await _authRepository.login(username, password);
-
       await _storage.write('token', response.data.token);
       await _storage.write('user_role', response.data.role.toLowerCase());
-      await _storage.write(
-        'user_data',
-        const JsonEncoder().convert(response.data.toJson()),
-      );
-
       _token = response.data.token;
       _userRole = response.data.role.toLowerCase();
-      _userData = response.data;
-
       notifyListeners();
       return response.status;
     } catch (e) {
@@ -82,15 +65,23 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      await _authRepository.logout();
-      await _storage.delete('token');
-      await _storage.delete('user_role');
-      await _storage.delete('user_data');
+      // Bersihkan SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      // Hapus data dari secure storage
+      await _storage.clearAll();
+      
+      // Reset state
       _token = null;
       _userRole = null;
-      _userData = null;
+      
       notifyListeners();
     } catch (e) {
+      // Pastikan state direset meskipun ada error
+      _token = null;
+      _userRole = null;
+      notifyListeners();
       rethrow;
     }
   }

@@ -1,8 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
 import 'package:e_absensi/core/api/api_endpoints.dart';
-import 'package:e_absensi/features/shared/auth/data/models/login_request.dart';
-import 'package:e_absensi/features/shared/auth/data/models/login_response.dart';
+import 'package:e_absensi/features/shared/auth/data/models/auth_models.dart';
 // import 'models/forgot_password_response.dart';
 
 class AuthService {
@@ -28,36 +27,16 @@ class AuthService {
 
       if (response.statusCode == 200) {
         return LoginResponse.fromJson(response.data);
-      } else {
-        throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
       }
+      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw 'Username atau password salah';
       } else if (e.response?.statusCode == 422) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>;
         throw errors.values.first[0] as String;
-      } else {
-        throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
       }
-    } catch (e) {
       throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      final response = await _dio.post(ApiEndpoints.logout);
-      
-      if (response.statusCode != 200) {
-        throw 'Gagal logout. Silakan coba lagi nanti.';
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        // Token sudah expired, anggap berhasil logout
-        return;
-      }
-      throw 'Gagal logout. Silakan coba lagi nanti.';
     }
   }
 
@@ -124,16 +103,10 @@ class AuthService {
 
   Future<bool> verifyOtp(String email, String otp) async {
     try {
-      print('Verify OTP Request: otp=$otp');
-
       final response = await _dio.post(
         '${ApiEndpoints.verifyOtp}/$otp',
-        data: {
-          'otp': otp,
-        },
+        data: {'otp': otp},
       );
-
-      print('Verify OTP Response: ${response.data}');
 
       if (response.statusCode == 200) {
         _lastVerifiedOtp = otp;
@@ -141,7 +114,6 @@ class AuthService {
       }
       throw 'Kode OTP tidak valid';
     } on DioException catch (e) {
-      print('Verify OTP Error: ${e.response?.data}');
       if (e.response?.statusCode == 422) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>;
         final firstError = errors.values.first;
@@ -160,8 +132,6 @@ class AuthService {
 
   Future<bool> resetPassword(String email, String newPassword) async {
     try {
-      print('Reset Password Request for new password');
-
       final response = await _dio.post(
         '${ApiEndpoints.resetPassword}/$_lastVerifiedOtp',
         data: {
@@ -170,14 +140,11 @@ class AuthService {
         },
       );
 
-      print('Reset Password Response: ${response.data}');
-
       if (response.statusCode == 200) {
         return true;
       }
       throw 'Gagal mengubah password';
     } on DioException catch (e) {
-      print('Reset Password Error: ${e.response?.data}');
       if (e.response?.statusCode == 422) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>;
         final firstError = errors.values.first;

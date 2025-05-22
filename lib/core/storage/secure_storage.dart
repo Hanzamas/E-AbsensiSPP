@@ -5,53 +5,33 @@ class SecureStorage {
   static final SecureStorage _instance = SecureStorage._internal();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  factory SecureStorage() {
-    return _instance;
-  }
-
+  factory SecureStorage() => _instance;
   SecureStorage._internal();
 
-  // Token methods
-  Future<void> saveToken(String token) async {
-    await _storage.write(key: 'token', value: token);
-  }
+  /// Simpan token autentikasi
+  Future<void> saveToken(String token) async => await _storage.write(key: 'token', value: token);
 
-  Future<String?> getToken() async {
-    return await _storage.read(key: 'token');
-  }
+  /// Ambil token autentikasi
+  Future<String?> getToken() async => await _storage.read(key: 'token');
 
-  Future<void> deleteToken() async {
-    await _storage.delete(key: 'token');
-  }
+  /// Hapus token autentikasi
+  Future<void> deleteToken() async => await _storage.delete(key: 'token');
 
-  // Bisa ditambahkan method lain untuk data sensitif
-  // Contoh: user role, user id, dll
-  Future<void> saveUserRole(String role) async {
-    await _storage.write(key: 'user_role', value: role);
-  }
+  /// Simpan role user
+  Future<void> saveUserRole(String role) async => await _storage.write(key: 'user_role', value: role);
 
-  Future<String?> getUserRole() async {
-    return await _storage.read(key: 'user_role');
-  }
+  /// Ambil role user
+  Future<String?> getUserRole() async => await _storage.read(key: 'user_role');
 
-  // Method untuk clear semua data
-  Future<void> clearAll() async {
-    await _storage.deleteAll();
-  }
+  /// Baca data dengan key custom
+  Future<String?> read(String key) async => await _storage.read(key: key);
 
-  Future<String?> read(String key) async {
-    return await _storage.read(key: key);
-  }
+  /// Simpan data dengan key custom
+  Future<void> write(String key, String value) async => await _storage.write(key: key, value: value);
 
-  Future<void> write(String key, String value) async {
-    await _storage.write(key: key, value: value);
-  }
+  /// Hapus data dengan key custom
+  Future<void> delete(String key) async => await _storage.delete(key: key);
 
-  Future<void> delete(String key) async {
-    await _storage.delete(key: key);
-  }
-
-  Future<void> deleteAll() async {
-    await _storage.deleteAll();
-  }
+  /// Hapus semua data di storage
+  Future<void> clearAll() async => await _storage.deleteAll();
 }
