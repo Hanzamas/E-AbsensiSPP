@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 class AppTheme {
   // Colors
@@ -27,21 +28,26 @@ class AppTheme {
     color: Colors.black87,
   );
 
-  // Theme Data
+  /// ThemeData untuk mode terang
   static ThemeData get lightTheme {
     return ThemeData(
-      primaryColor: primary,
-      scaffoldBackgroundColor: background,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.background,
       appBarTheme: const AppBarTheme(
-        backgroundColor: primary,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
       ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+        titleMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black),
+        bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -57,13 +63,59 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: primary),
+          borderSide: BorderSide(color: AppColors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: error),
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
+  }
+
+  /// ThemeData untuk mode gelap
+  static ThemeData get darkTheme {
+    return ThemeData.dark().copyWith(
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: Colors.black,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+        titleMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+        bodyLarge: TextStyle(fontSize: 16, color: Colors.white70),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[700]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.primary),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.error),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

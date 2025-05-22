@@ -2,9 +2,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/core/constants/auth_strings.dart';
 import 'package:e_absensi/core/constants/assets.dart';
 import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
+import 'package:e_absensi/core/utils/validators.dart';
+import 'package:e_absensi/core/constants/app_strings.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,28 +43,13 @@ class _LoginPageState extends State<LoginPage> {
 
         if (success) {
           final role = authProvider.userRole;
-          final isProfileCompleted = authProvider.userData?.isProfileCompleted ?? false;
-
-          // Komentari bagian pengecekan profil
-          /* 
-          if (!isProfileCompleted) {
-            _showDialog(
-              'Login Berhasil',
-              'Selamat datang! Silakan lengkapi profil Anda terlebih dahulu.',
-              onOk: () {
-                context.goNamed('profile-first-input');
-              },
-            );
-            return;
-          }
-          */
 
           // Tambahkan delay untuk memastikan snackbar terlihat
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Selamat datang, ${authProvider.userData?.username ?? ""}!'),
+            const SnackBar(
+              content: Text('Login berhasil!'),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
             ),
           );
 
@@ -150,135 +137,208 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Image.asset(
-                    Assets.logo,
-                    width: 140,
-                    height: 140,
-                    fit: BoxFit.contain,
+                  // Logo dengan efek bayangan
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.2),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(
+                      Assets.logo,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  // Login Title dengan gaya baru
                   Text(
-                    Strings.loginTitle,
+                    AuthStrings.loginTitle,
                     style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2196F3),
+                      letterSpacing: 1.2,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  // Input Email
+                  // Login Instruction
+                  Text(
+                    AuthStrings.loginInstruction,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Username Field dengan desain yang lebih baik
                   Container(
-                    margin: const EdgeInsets.only(top: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
                     child: TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(
-                        hintText: Strings.usernameHint,
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 18),
+                      decoration: InputDecoration(
+                        hintText: AuthStrings.usernameHint,
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.person_outline,
+                          color: Color(0xFF2196F3),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return Strings.emailHint;
-                        }
-                        return null;
-                      },
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                      validator: Validators.validateUsername,
                     ),
                   ),
+                  
                   const SizedBox(height: 16),
-                  // Input Password
+                  
+                  // Password Field dengan desain yang lebih baik
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
                     child: TextFormField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(
-                        hintText: Strings.passwordHint,
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 18),
+                      decoration: InputDecoration(
+                        hintText: AuthStrings.passwordHint,
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color(0xFF2196F3),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
                       ),
                       obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return Strings.passwordHint;
-                        }
-                        return null;
-                      },
+                      validator: Validators.validatePassword,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Forgot Password dengan styling baru
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => context.goNamed('forgot-password'),
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                      child: const Text(
-                        Strings.forgotPassword,
-                        style: TextStyle(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(
+                        AuthStrings.forgotPassword,
+                        style: const TextStyle(
                           color: Color(0xFF2196F3),
                           fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Login Button dengan styling baru
                   SizedBox(
-                    height: 48,
+                    height: 55,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2196F3),
-                        elevation: 2,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: const Color(0xFF2196F3).withOpacity(0.4),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
                           : const Text(
-                              Strings.loginButton,
+                              AuthStrings.loginButton,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
+                                letterSpacing: 1.0,
                               ),
                             ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Register Link dengan styling baru
                   Center(
                     child: RichText(
                       text: TextSpan(
-                        text: Strings.noAccount,
-                        style: const TextStyle(
-                          color: Colors.black87,
+                        text: AuthStrings.noAccount,
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
                           fontSize: 14,
                         ),
                         children: [
                           TextSpan(
-                            text: Strings.registerLink,
+                            text: AuthStrings.registerLink,
                             style: const TextStyle(
                               color: Color(0xFF2196F3),
                               fontWeight: FontWeight.bold,
@@ -290,36 +350,41 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Terms and Conditions dengan styling baru
                   Center(
                     child: Text.rich(
                       TextSpan(
-                        text: Strings.agreeText,
-                        style: const TextStyle(
-                          color: Colors.black54,
+                        text: AppStrings.agreeText,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
                           fontSize: 12,
                         ),
                         children: [
                           TextSpan(
-                            text: Strings.termsText,
+                            text: AppStrings.termsText,
                             style: const TextStyle(
                               color: Color(0xFF2196F3),
                               decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w500,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => context.goNamed('terms', extra: 'login'),
                           ),
                           TextSpan(
-                            text: Strings.andText,
-                            style: const TextStyle(
-                              color: Colors.black54,
+                            text: AppStrings.andText,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
                             ),
                           ),
                           TextSpan(
-                            text: Strings.conditionsText,
+                            text: AppStrings.conditionsText,
                             style: const TextStyle(
                               color: Color(0xFF2196F3),
                               decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w500,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => context.goNamed('terms', extra: 'login'),

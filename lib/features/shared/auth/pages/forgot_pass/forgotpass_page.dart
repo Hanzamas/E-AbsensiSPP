@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/core/constants/auth_strings.dart';
 import 'package:e_absensi/core/constants/assets.dart';
-import 'package:e_absensi/shared/animations/fade_in_animation.dart';
+import 'package:e_absensi/features/shared/animations/fade_in_animation.dart';
 import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
+import 'package:e_absensi/core/utils/validators.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -88,19 +89,26 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.1),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.blue),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Color(0xFF2196F3),
+            size: 20,
+          ),
           onPressed: () => context.goNamed('login'),
         ),
-        title: const Text(
-          Strings.forgotPasswordTitle,
-          style: TextStyle(
-            fontSize: 20,
+        title: Text(
+          AuthStrings.forgotPasswordTitle,
+          style: const TextStyle(
+            fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.blue,
+            color: Color(0xFF2196F3),
+            letterSpacing: 0.5,
           ),
         ),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: Center(
@@ -113,76 +121,155 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset(
-                      Assets.logo,
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      Strings.forgotPasswordSubtitle,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
+                    // Logo dengan efek bayangan
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: Colors.blue.withOpacity(0.2),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        Assets.logo,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Info banner
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.blue.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: Color(0xFF2196F3),
+                            size: 28,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            AuthStrings.forgotPasswordSubtitle,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // Email Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
                       child: TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(
-                          hintText: Strings.emailHint,
-                          prefixIcon: Icon(Icons.email_outlined),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
+                        decoration: InputDecoration(
+                          hintText: AuthStrings.emailHint,
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF2196F3),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return Strings.emailEmptyError;
-                          }
-                          if (!value.contains('@')) {
-                            return Strings.validateEmail;
-                          }
-                          return null;
-                        },
+                        validator: Validators.validateEmail,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // Reset Button
                     SizedBox(
-                      height: 48,
+                      height: 55,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleResetPassword,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2196F3),
-                          elevation: 2,
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shadowColor: const Color(0xFF2196F3).withOpacity(0.4),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                Strings.resetPasswordButton,
-                                style: TextStyle(
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text(
+                                AuthStrings.resetPasswordButton,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
+                                  letterSpacing: 1.0,
                                 ),
                               ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Back to Login
+                    Center(
+                      child: TextButton(
+                        onPressed: () => context.goNamed('login'),
+                        child: Text(
+                          AuthStrings.backToLogin,
+                          style: const TextStyle(
+                            color: Color(0xFF2196F3),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                     ),
                   ],

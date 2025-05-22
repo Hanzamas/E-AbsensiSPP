@@ -1,5 +1,4 @@
-import 'package:e_absensi/features/shared/auth/data/models/login_request.dart';
-import 'package:e_absensi/features/shared/auth/data/models/login_response.dart';
+import 'package:e_absensi/features/shared/auth/data/models/auth_models.dart';
 import 'package:e_absensi/features/shared/auth/data/services/auth_service.dart';
 
 class AuthRepository {
@@ -18,14 +17,6 @@ class AuthRepository {
     try {
       final request = LoginRequest(username: username, password: password);
       return await _authService.login(request);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      await _authService.logout();
     } catch (e) {
       rethrow;
     }
