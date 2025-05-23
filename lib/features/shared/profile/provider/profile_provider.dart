@@ -7,6 +7,9 @@ import 'package:dio/dio.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/models/basic_user_info.dart';
+import '../data/models/student_profile_model.dart';
+import '../data/models/teacher_profile_model.dart';
+import '../data/models/class_model.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
@@ -15,6 +18,11 @@ class ProfileProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   String? _localProfileImagePath;
+  StudentProfile? studentProfile;
+  TeacherProfile? teacherProfile;
+  List<ClassModel> _classes = [];
+  bool _isLoadingClasses = false;
+  String? _errorClasses;
 
   static const String emptyProfilePictPath = '/uploads/';
 
@@ -23,6 +31,9 @@ class ProfileProvider extends ChangeNotifier {
   String? get error => _error;
   String? get photoUrl => _userInfo?.profilePict;
   String? get localProfileImagePath => _localProfileImagePath;
+  List<ClassModel> get classes => _classes;
+  bool get isLoadingClasses => _isLoadingClasses;
+  String? get errorClasses => _errorClasses;
 
   // 3. Ambil Data Profil
   Future<void> loadUserProfile() async {
@@ -266,6 +277,132 @@ class ProfileProvider extends ChangeNotifier {
     _error = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_info');
+    notifyListeners();
+  }
+
+  // Fetch profil dan kelas (untuk siswa) dalam 1 request
+  Future<void> fetchProfileAndClasses(String role) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      if (role == 'siswa') {
+        // Cek cache untuk profil dan kelas
+        final profileCache = prefs.getString('student_profile');
+        final classesCache = prefs.getString('classes');
+        
+        if (profileCache != null && classesCache != null) {
+          // Gunakan cache jika ada
+          studentProfile = StudentProfile.fromJson(jsonDecode(profileCache));
+          _classes = (jsonDecode(classesCache) as List)
+              .map((json) => ClassModel.fromJson(json))
+              .toList();
+        } else {
+          // Fetch dari API jika cache tidak ada
+          final results = await Future.wait([
+            _repository.getStudentProfile(),
+            _repository.getClasses(),
+          ]);
+          // Cast results ke tipe yang benar
+          final profileData = results[0] as Map<String, dynamic>;
+          final classesData = results[1] as List<dynamic>;
+          
+          studentProfile = StudentProfile.fromJson(profileData);
+          _classes = classesData.map((json) => ClassModel.fromJson(json as Map<String, dynamic>)).toList();
+          
+          // Simpan ke cache
+          await prefs.setString('student_profile', jsonEncode(studentProfile!.toJson()));
+          await prefs.setString('classes', jsonEncode(_classes.map((k) => k.toJson()).toList()));
+        }
+      } else {
+        // Cek cache untuk profil guru
+        final profileCache = prefs.getString('teacher_profile');
+        if (profileCache != null) {
+          teacherProfile = TeacherProfile.fromJson(jsonDecode(profileCache));
+        } else {
+          final data = await _repository.getTeacherProfile();
+          teacherProfile = TeacherProfile.fromJson(data);
+          await prefs.setString('teacher_profile', jsonEncode(teacherProfile!.toJson()));
+        }
+      }
+    } catch (e) {
+      _error = e.toString();
+    }
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  // Update profil ke API dan update cache
+  Future<bool> updateProfile(String role, Map<String, dynamic> data) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      if (role == 'siswa') {
+        final updated = await _repository.updateStudentProfile(data);
+        studentProfile = StudentProfile.fromJson(updated);
+        prefs.setString('student_profile', jsonEncode(studentProfile!.toJson()));
+      } else {
+        final updated = await _repository.updateTeacherProfile(data);
+        teacherProfile = TeacherProfile.fromJson(updated);
+        prefs.setString('teacher_profile', jsonEncode(teacherProfile!.toJson()));
+      }
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Get nama kelas dari id
+  String? getClassNameById(int? id) {
+    if (id == null) return null;
+    try {
+      final kelas = _classes.firstWhere((k) => k.id == id);
+      return kelas.displayName;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get tahun ajaran dari id kelas
+  String? getTahunAjaranByClassId(int? id) {
+    if (id == null) return null;
+    try {
+      final kelas = _classes.firstWhere((k) => k.id == id);
+      return kelas.tahunAjaran;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get nama kelas dari id (tanpa tahun ajaran)
+  String? getNamaKelasById(int? id) {
+    if (id == null) return null;
+    try {
+      final kelas = _classes.firstWhere((k) => k.id == id);
+      return kelas.namaKelas;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Clear cache saat logout
+  Future<void> clearCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('student_profile');
+    await prefs.remove('teacher_profile');
+    await prefs.remove('classes');
+    await prefs.remove('profile_image_path');
+    _classes = [];
+    studentProfile = null;
+    teacherProfile = null;
     notifyListeners();
   }
 }

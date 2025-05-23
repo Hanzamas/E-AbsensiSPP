@@ -122,7 +122,7 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                             Center(
                               child: Stack(
                                 alignment: Alignment.bottomRight,
-                                children: [
+                              children: [
                                   provider.getProfileImageWidget(size: 100),
                                   GestureDetector(
                                     onTap: () => _showImagePickerOptions(context),
@@ -142,28 +142,28 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                isLoading ? 'Memuat...' : (nama ?? 'Pengguna'),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2196F3),
-                                ),
+                                                ),
+                                                const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(30),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      isLoading ? 'Memuat...' : (nama ?? 'Pengguna'),
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2196F3),
+                                    ),
                               ),
                             ),
                             const SizedBox(height: 32),
@@ -411,16 +411,16 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
                   'Pilih Foto Profil',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                     fontSize: 18,
-                  ),
                 ),
-                const SizedBox(height: 16),
+              ),
+              const SizedBox(height: 16),
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
@@ -467,8 +467,8 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                       await _deleteProfilePicture();
                     },
                   ),
-              ],
-            ),
+                ],
+              ),
           ),
         );
       },
@@ -602,20 +602,20 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
       final hasExistingPhoto = provider.photoUrl != null && provider.photoUrl!.isNotEmpty;
       bool success;
       if (hasExistingPhoto) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
             content: Text('Ganti foto profil hanya didukung di mobile.'),
             backgroundColor: Colors.red,
-          ),
-        );
+            ),
+          );
         return;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Upload foto profil hanya didukung di mobile.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+              backgroundColor: Colors.red,
+            ),
+          );
         return;
       }
     } catch (e) {
@@ -635,17 +635,50 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
     final confirm = await showDialog<bool>(
             context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus Foto Profil'),
-        content: const Text('Apakah Anda yakin ingin menghapus foto profil?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red,
+              size: 28,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Hapus Foto Profil',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Apakah Anda yakin ingin menghapus foto profil?',
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: const Text(
+              'Batal',
+              style: TextStyle(
+                color: Color(0xFF2196F3),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
+            child: const Text(
+              'Hapus',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -691,13 +724,22 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Keluar'),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.logout, color: Colors.red, size: 28),
+            SizedBox(width: 8),
+            Text('Keluar Akun', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+            style: TextButton.styleFrom(foregroundColor: Colors.blue),
+            child: const Text('Batal', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () async {
@@ -705,9 +747,7 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
               showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                builder: (context) => const Center(child: CircularProgressIndicator()),
               );
               try {
                 await Provider.of<AuthProvider>(context, listen: false).logout();
@@ -726,7 +766,7 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Keluar'),
+            child: const Text('Keluar', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

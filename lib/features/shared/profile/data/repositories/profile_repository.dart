@@ -34,4 +34,15 @@ class ProfileRepository {
   Future<bool> deleteProfilePicture(String fileName) async {
     return await _service.deleteProfilePicture(fileName);
   }
+  // Siswa
+  Future<Map<String, dynamic>> getStudentProfile() => _service.getStudentProfile();
+  Future<Map<String, dynamic>> updateStudentProfile(Map<String, dynamic> data) => _service.updateStudentProfile(data);
+
+  // Guru
+  Future<Map<String, dynamic>> getTeacherProfile() => _service.getTeacherProfile();
+  Future<Map<String, dynamic>> updateTeacherProfile(Map<String, dynamic> data) => _service.updateTeacherProfile(data);
+
+  // Kelas
+  Future<List<Map<String, dynamic>>> getClasses() => _service.getClasses();
+  Future<Map<String, dynamic>> getClassDetail(int id) => _service.getClassDetail(id);
 }

@@ -22,20 +22,20 @@ class SharedRoutes {
         );
       },
     ),
-    // GoRoute(
-    //   path: '/:role/profile/edit',
-    //   name: 'profile-edit',
-    //   pageBuilder: (context, state) {
-    //     final role = state.pathParameters['role'] ?? 'student';
-    //     final isFromLogin = state.extra as bool? ?? false;
-    //     return PageTransitionHelper.buildPageWithTransition(
-    //       child: ProfileEditPage(isFromLogin: isFromLogin, userRole: role),
-    //       type: TransitionType.slideLeft,
-    //       duration: const Duration(milliseconds: 300),
-    //       key: state.pageKey,
-    //     );
-    //   },
-    // ),
+    GoRoute(
+      path: '/:role/profile/edit',
+      name: 'profile-edit',
+      pageBuilder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        final isFromLogin = state.extra as bool? ?? false;
+        return PageTransitionHelper.buildPageWithTransition(
+          child: ProfileEditPage(isFromLogin: isFromLogin, userRole: role),
+          type: TransitionType.slideLeft,
+          duration: const Duration(milliseconds: 300),
+          key: state.pageKey,
+        );
+      },
+    ),
     // GoRoute(
     //   path: '/:role/profile/edit-account',
     //   name: 'profile-edit-account',

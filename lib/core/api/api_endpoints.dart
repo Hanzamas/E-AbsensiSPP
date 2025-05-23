@@ -26,9 +26,11 @@ class ApiEndpoints {
   static const String getStudentDownloadAttendance = '/students/download-attendance';
   static const String scanStudentAttendance = '/studens/attendance/scan';
   static const String getStudentSchedule = '/students/schedule';
+  static const String getKelas = '/classes';
   
   // Guru
-  
+  static const String getTeacherProfile = '/profile/teacher';
+  static const String updateTeacher = '/teachers/update';
   // Admin
 
   
