@@ -393,7 +393,9 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
 
   void _showImagePickerOptions(BuildContext context) {
     final provider = Provider.of<ProfileProvider>(context, listen: false);
-    final hasPhoto = provider.photoUrl != null && provider.photoUrl!.isNotEmpty;
+    final hasPhoto = provider.photoUrl != null &&
+        provider.photoUrl!.isNotEmpty &&
+        provider.photoUrl != '/uploads/';
     if (kIsWeb) {
       _pickAndUploadImageWeb();
       return;
@@ -409,16 +411,16 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
             child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
                   'Pilih Foto Profil',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
                     fontSize: 18,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
@@ -465,8 +467,8 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                       await _deleteProfilePicture();
                     },
                   ),
-                ],
-              ),
+              ],
+            ),
           ),
         );
       },
@@ -513,10 +515,10 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
     final provider = Provider.of<ProfileProvider>(context, listen: false);
     try {
       final fileSize = await imageFile.length();
-      if (fileSize > 5 * 1024 * 1024) {
+      if (fileSize > 1024 * 1024) { // 1MB
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Ukuran file terlalu besar (maksimal 5MB)'),
+            content: Text('Ukuran file terlalu besar (maksimal 1MB)'),
             backgroundColor: Colors.red,
           ),
         );

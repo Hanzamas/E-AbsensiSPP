@@ -5,6 +5,7 @@ import 'package:e_absensi/core/api/dio_client.dart';
 
 class ProfileServices {
   final Dio _dio = DioClient().dio;
+  final String emptyProfilePictPath = '/uploads/';
 
   // 1. Get user info
   Future<Map<String, dynamic>> getUserInfo() async {
@@ -30,9 +31,12 @@ class ProfileServices {
       final data = {
         'username': username,
         'email': email,
-        'profile_pict': profilePict,
+        'profile_pict': profilePict ?? emptyProfilePictPath,
       };
-      final response = await _dio.put(ApiEndpoints.usersUpdate, data: data);
+      final response = await _dio.put(
+        ApiEndpoints.usersUpdate,
+        data: data,
+      );
       if (response.statusCode == 200 && response.data['status'] == true) {
         return response.data['data'];
       } else {
@@ -46,6 +50,12 @@ class ProfileServices {
   // 3. Upload foto profil baru
   Future<String> uploadProfilePicture(File file) async {
     try {
+      // Cek ukuran file (max 1MB)
+      final fileSize = await file.length();
+      if (fileSize > 1024 * 1024) {
+        throw Exception('Ukuran file terlalu besar (maksimal 1MB)');
+      }
+
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(file.path),
       });
@@ -63,6 +73,12 @@ class ProfileServices {
   // 4. Replace foto profil (update file lama)
   Future<String> replaceProfilePicture(String oldFileName, File newFile) async {
     try {
+      // Cek ukuran file (max 1MB)
+      final fileSize = await newFile.length();
+      if (fileSize > 1024 * 1024) {
+        throw Exception('Ukuran file terlalu besar (maksimal 1MB)');
+      }
+
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(newFile.path),
       });
