@@ -7,6 +7,9 @@ import 'package:dio/dio.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/models/basic_user_info.dart';
+import '../data/models/student_profile_model.dart';
+import '../data/models/teacher_profile_model.dart';
+import '../data/models/class_model.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
@@ -15,12 +18,22 @@ class ProfileProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   String? _localProfileImagePath;
+  StudentProfile? studentProfile;
+  TeacherProfile? teacherProfile;
+  List<ClassModel> _classes = [];
+  bool _isLoadingClasses = false;
+  String? _errorClasses;
+
+  static const String emptyProfilePictPath = '/uploads/';
 
   BasicUserInfo? get userInfo => _userInfo;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get photoUrl => _userInfo?.profilePict;
   String? get localProfileImagePath => _localProfileImagePath;
+  List<ClassModel> get classes => _classes;
+  bool get isLoadingClasses => _isLoadingClasses;
+  String? get errorClasses => _errorClasses;
 
   // 3. Ambil Data Profil
   Future<void> loadUserProfile() async {
@@ -31,6 +44,13 @@ class ProfileProvider extends ChangeNotifier {
     _localProfileImagePath = prefs.getString('profile_image_path');
     if (userJson != null) {
       _userInfo = BasicUserInfo.fromJson(json.decode(userJson));
+      // Jika file lokal tidak ada, download dari server
+      if ((_localProfileImagePath == null || !File(_localProfileImagePath!).existsSync()) &&
+          _userInfo?.profilePict != null &&
+          _userInfo!.profilePict!.isNotEmpty &&
+          _userInfo!.profilePict != emptyProfilePictPath) {
+        await downloadProfileImageFromServer(_userInfo!.profilePict!);
+      }
       _isLoading = false;
       notifyListeners();
       return;
@@ -79,12 +99,13 @@ class ProfileProvider extends ChangeNotifier {
         _userInfo = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
-        // Hapus file lokal lama jika ada
-        if (_localProfileImagePath != null && File(_localProfileImagePath!).existsSync()) {
-          await File(_localProfileImagePath!).delete();
-        }
-        // Download ulang file dari server (timestamp)
-        await downloadProfileImageFromServer(user.profilePict ?? fileUrl);
+        // Copy file lokal hasil upload ke app dir
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = file.path.split('/').last;
+        final localPath = '${appDir.path}/$fileName';
+        final localFile = await file.copy(localPath);
+        _localProfileImagePath = localFile.path;
+        await prefs.setString('profile_image_path', localFile.path);
       }
       await refresh();
       _isLoading = false;
@@ -127,12 +148,13 @@ class ProfileProvider extends ChangeNotifier {
         _userInfo = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
-        // Hapus file lokal lama jika ada
-        if (_localProfileImagePath != null && File(_localProfileImagePath!).existsSync()) {
-          await File(_localProfileImagePath!).delete();
-        }
-        // Download ulang file dari server (timestamp)
-        await downloadProfileImageFromServer(user.profilePict ?? fileUrl);
+        // Copy file lokal hasil upload ke app dir
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = newFile.path.split('/').last;
+        final localPath = '${appDir.path}/$fileName';
+        final localFile = await newFile.copy(localPath);
+        _localProfileImagePath = localFile.path;
+        await prefs.setString('profile_image_path', localFile.path);
       }
       await refresh();
       _isLoading = false;
@@ -152,30 +174,36 @@ class ProfileProvider extends ChangeNotifier {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      // Hapus file di server
-      final success = await _repository.deleteProfilePicture(fileName);
-      if (!success) throw Exception('Gagal menghapus file');
-      // Update user info di server dengan profile_pict: ''
+      // 1. Update user info dulu dengan profile_pict: emptyProfilePictPath
       final user = await _repository.updateUserInfo(
         username: _userInfo?.username ?? '',
         email: _userInfo?.email ?? '',
-        profilePict: '', // string kosong!
+        profilePict: emptyProfilePictPath,
       );
       if (user != null) {
         _userInfo = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
-        // Hapus file lokal jika ada
+        // 2. Hapus file lokal jika ada
         if (_localProfileImagePath != null && File(_localProfileImagePath!).existsSync()) {
           await File(_localProfileImagePath!).delete();
           _localProfileImagePath = null;
           await prefs.remove('profile_image_path');
         }
+        // 3. Coba hapus file di server (jika ada)
+        if (fileName.isNotEmpty) {
+          try {
+            await _repository.deleteProfilePicture(fileName);
+          } catch (e) {
+            // Jika file sudah tidak ada (404) atau error lain, abaikan
+          }
+        }
+        await refresh();
+        _isLoading = false;
+        notifyListeners();
+        return true;
       }
-      await refresh();
-      _isLoading = false;
-      notifyListeners();
-      return true;
+      throw Exception('Gagal update user info');
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -184,10 +212,10 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  // Download gambar profil dari server (timestamp)
+  // Download gambar profil dari server (hanya jika file lokal tidak ada)
   Future<void> downloadProfileImageFromServer(String url) async {
     try {
-      if (url.isEmpty) return;
+      if (url.isEmpty || url == emptyProfilePictPath) return;
       final appDir = await getApplicationDocumentsDirectory();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${url.split('/').last}';
       final savePath = '${appDir.path}/$fileName';
@@ -203,8 +231,7 @@ class ProfileProvider extends ChangeNotifier {
       await prefs.setString('profile_image_path', savePath);
       notifyListeners();
     } catch (e) {
-      _error = 'Gagal download gambar profil: $e';
-      notifyListeners();
+      // Tidak perlu error handling khusus, cukup abaikan jika gagal
     }
   }
 
@@ -219,20 +246,8 @@ class ProfileProvider extends ChangeNotifier {
           fit: BoxFit.cover,
         ),
       );
-    } else if (photoUrl != null && photoUrl!.isNotEmpty) {
-      // Jika file lokal tidak ada, download manual dari server
-      downloadProfileImageFromServer(photoUrl!);
-      // Sementara tampilkan placeholder/loading
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.blue[100],
-          shape: BoxShape.circle,
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    } else {
+    }
+    if (photoUrl == null || photoUrl!.isEmpty || photoUrl == emptyProfilePictPath) {
       return Container(
         width: size,
         height: size,
@@ -243,6 +258,17 @@ class ProfileProvider extends ChangeNotifier {
         child: const Icon(Icons.person, size: 60, color: Colors.white),
       );
     }
+    // Jika file lokal tidak ada, download dari server (sekali saja)
+    downloadProfileImageFromServer(photoUrl!);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.blue[100],
+        shape: BoxShape.circle,
+      ),
+      child: const Center(child: CircularProgressIndicator()),
+    );
   }
 
   // Clear cache dan state
@@ -251,6 +277,132 @@ class ProfileProvider extends ChangeNotifier {
     _error = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_info');
+    notifyListeners();
+  }
+
+  // Fetch profil dan kelas (untuk siswa) dalam 1 request
+  Future<void> fetchProfileAndClasses(String role) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      if (role == 'siswa') {
+        // Cek cache untuk profil dan kelas
+        final profileCache = prefs.getString('student_profile');
+        final classesCache = prefs.getString('classes');
+        
+        if (profileCache != null && classesCache != null) {
+          // Gunakan cache jika ada
+          studentProfile = StudentProfile.fromJson(jsonDecode(profileCache));
+          _classes = (jsonDecode(classesCache) as List)
+              .map((json) => ClassModel.fromJson(json))
+              .toList();
+        } else {
+          // Fetch dari API jika cache tidak ada
+          final results = await Future.wait([
+            _repository.getStudentProfile(),
+            _repository.getClasses(),
+          ]);
+          // Cast results ke tipe yang benar
+          final profileData = results[0] as Map<String, dynamic>;
+          final classesData = results[1] as List<dynamic>;
+          
+          studentProfile = StudentProfile.fromJson(profileData);
+          _classes = classesData.map((json) => ClassModel.fromJson(json as Map<String, dynamic>)).toList();
+          
+          // Simpan ke cache
+          await prefs.setString('student_profile', jsonEncode(studentProfile!.toJson()));
+          await prefs.setString('classes', jsonEncode(_classes.map((k) => k.toJson()).toList()));
+        }
+      } else {
+        // Cek cache untuk profil guru
+        final profileCache = prefs.getString('teacher_profile');
+        if (profileCache != null) {
+          teacherProfile = TeacherProfile.fromJson(jsonDecode(profileCache));
+        } else {
+          final data = await _repository.getTeacherProfile();
+          teacherProfile = TeacherProfile.fromJson(data);
+          await prefs.setString('teacher_profile', jsonEncode(teacherProfile!.toJson()));
+        }
+      }
+    } catch (e) {
+      _error = e.toString();
+    }
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  // Update profil ke API dan update cache
+  Future<bool> updateProfile(String role, Map<String, dynamic> data) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      if (role == 'siswa') {
+        final updated = await _repository.updateStudentProfile(data);
+        studentProfile = StudentProfile.fromJson(updated);
+        prefs.setString('student_profile', jsonEncode(studentProfile!.toJson()));
+      } else {
+        final updated = await _repository.updateTeacherProfile(data);
+        teacherProfile = TeacherProfile.fromJson(updated);
+        prefs.setString('teacher_profile', jsonEncode(teacherProfile!.toJson()));
+      }
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Get nama kelas dari id
+  String? getClassNameById(int? id) {
+    if (id == null) return null;
+    try {
+      final kelas = _classes.firstWhere((k) => k.id == id);
+      return kelas.displayName;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get tahun ajaran dari id kelas
+  String? getTahunAjaranByClassId(int? id) {
+    if (id == null) return null;
+    try {
+      final kelas = _classes.firstWhere((k) => k.id == id);
+      return kelas.tahunAjaran;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get nama kelas dari id (tanpa tahun ajaran)
+  String? getNamaKelasById(int? id) {
+    if (id == null) return null;
+    try {
+      final kelas = _classes.firstWhere((k) => k.id == id);
+      return kelas.namaKelas;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Clear cache saat logout
+  Future<void> clearCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('student_profile');
+    await prefs.remove('teacher_profile');
+    await prefs.remove('classes');
+    await prefs.remove('profile_image_path');
+    _classes = [];
+    studentProfile = null;
+    teacherProfile = null;
     notifyListeners();
   }
 }

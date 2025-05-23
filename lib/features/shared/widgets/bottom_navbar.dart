@@ -1,59 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+const String siswaRole = 'siswa';
+const String guruRole = 'guru';
+const String adminRole = 'admin';
+
 class NavItem {
   final String label;
   final IconData icon;
   final String route;
-  final List<String> roles; // ['siswa', 'guru', 'admin']
-  NavItem(this.label, this.icon, this.route, this.roles);
+  NavItem(this.label, this.icon, this.route);
 }
 
-final List<NavItem> allNavItems = [
-  NavItem('Home', Icons.home, '/student/home', ['siswa']),
-  NavItem('Home', Icons.home, '/teacher/home', ['guru']),
-  NavItem('Home', Icons.home, '/admin/home', ['admin']),
-  NavItem('Absensi', Icons.article_outlined, '/student/attendance', ['siswa']),
-  NavItem('Absensi', Icons.article_outlined, '/teacher/attendance', ['guru']),
-  NavItem('SPP', Icons.credit_card, '/student/spp', ['siswa']), 
-  NavItem('Profile', Icons.person, '/student/profile', ['siswa']),
-  NavItem('Profile', Icons.person, '/teacher/profile', ['guru']),
-  NavItem('Profile', Icons.person, '/admin/profile', ['admin']),
-];
+final Map<String, List<NavItem>> navItemsByRole = {
+  siswaRole: [
+    NavItem('Home', Icons.home, '/student/home'),
+    NavItem('Absensi', Icons.article_outlined, '/student/attendance'),
+    NavItem('SPP', Icons.credit_card, '/student/spp'),
+    NavItem('Profile', Icons.person, '/student/profile'),
+  ],
+  guruRole: [
+    NavItem('Home', Icons.home, '/teacher/home'),
+    NavItem('Absensi', Icons.article_outlined, '/teacher/attendance'),
+    NavItem('Akademik', Icons.book, '/teacher/academic'),
+    NavItem('Profile', Icons.person, '/teacher/profile'),
+  ],
+  adminRole: [
+    NavItem('Home', Icons.home, '/admin/home'),
+    NavItem('Users', Icons.people, '/admin/users'),
+    NavItem('Settings', Icons.settings, '/admin/settings'),
+    NavItem('Profile', Icons.person, '/admin/profile'),
+  ],
+};
 
-// Function untuk mendapatkan indeks navigasi
 int getNavIndex(String role, String path) {
-  final studentPaths = {
-    '/student/home': 0,
-    '/student/attendance': 1,
-    '/student/spp': 2,
-    '/student/profile': 3,
-  };
-
-  final teacherPaths = {
-    '/teacher/home': 0,
-    '/teacher/attendance': 1,
-    '/teacher/academic': 2,
-    '/teacher/profile': 3,
-  };
-
-  final adminPaths = {
-    '/admin/home': 0,
-    '/admin/users': 1,
-    '/admin/settings': 2,
-    '/admin/profile': 3,
-  };
-
-  switch (role.toLowerCase()) {
-    case 'siswa':
-      return studentPaths[path] ?? 0;
-    case 'guru':
-      return teacherPaths[path] ?? 0;
-    case 'admin':
-      return adminPaths[path] ?? 0;
-    default:
-      return 0;
-  }
+  final items = navItemsByRole[role.toLowerCase()] ?? navItemsByRole[siswaRole]!;
+  return items.indexWhere((item) => item.route == path);
 }
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -70,6 +52,7 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final items = navItemsByRole[userRole.toLowerCase()] ?? navItemsByRole[siswaRole]!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -87,56 +70,12 @@ class CustomBottomNavBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _buildNavItems(userRole, context),
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildNavItems(String role, BuildContext context) {
-    List<NavItem> items = [];
-
-    switch (role.toLowerCase()) {
-      case 'siswa':
-        items = [
-          NavItem('Home', Icons.home, '/student/home', [role]),
-          NavItem('Absensi', Icons.article_outlined, '/student/attendance', [role]),
-          NavItem('SPP', Icons.credit_card, '/student/spp', [role]),
-          NavItem('Profile', Icons.person, '/student/profile', [role]),
-        ];
-        break;
-      case 'guru':
-        items = [
-          NavItem('Home', Icons.home, '/teacher/home', [role]),
-          NavItem('Absensi', Icons.article_outlined, '/teacher/attendance', [role]),
-          NavItem('Akademik', Icons.book, '/teacher/academic', [role]),
-          NavItem('Profile', Icons.person, '/teacher/profile', [role]),
-        ];
-        break;
-      case 'admin':
-        items = [
-          NavItem('Home', Icons.home, '/admin/home', [role]),
-          NavItem('Users', Icons.people, '/admin/users', [role]),
-          NavItem('Settings', Icons.settings, '/admin/settings', [role]),
-          NavItem('Profile', Icons.person, '/admin/profile', [role]),
-        ];
-        break;
-      default:
-        items = [
-          NavItem('Home', Icons.home, '/home', [role]),
-          NavItem('Profile', Icons.person, '/profile', [role]),
-        ];
-    }
-
-    return items.asMap().entries.map((entry) {
-      final index = entry.key;
-      final item = entry.value;
+            children: List.generate(items.length, (index) {
+              final item = items[index];
       final isSelected = index == currentIndex;
-
       return Expanded(
         child: GestureDetector(
-          onTap: () => _onItemTapped(index, role, context),
+                  onTap: () => _onItemTapped(index, userRole, context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -165,65 +104,17 @@ class CustomBottomNavBar extends StatelessWidget {
           ),
         ),
       );
-    }).toList();
+            }),
+          ),
+        ),
+      ),
+    );
   }
 
   void _onItemTapped(int index, String role, BuildContext context) {
-    if (index == currentIndex) return;
-
-    String path = '/';
-    switch (role.toLowerCase()) {
-      case 'siswa':
-        switch (index) {
-          case 0:
-            path = '/student/home';
-            break;
-          case 1:
-            path = '/student/attendance';
-            break;
-          case 2:
-            path = '/student/spp';
-            break;
-          case 3:
-            path = '/student/profile';
-            break;
-        }
-        break;
-      case 'guru':
-        switch (index) {
-          case 0:
-            path = '/teacher/home';
-            break;
-          case 1:
-            path = '/teacher/attendance';
-            break;
-          case 2:
-            path = '/teacher/academic';
-            break;
-          case 3:
-            path = '/teacher/profile';
-            break;
-        }
-        break;
-      case 'admin':
-        switch (index) {
-          case 0:
-            path = '/admin/home';
-            break;
-          case 1:
-            path = '/admin/users';
-            break;
-          case 2:
-            path = '/admin/settings';
-            break;
-          case 3:
-            path = '/admin/profile';
-            break;
-        }
-        break;
-    }
-
-    // Khusus untuk profil, gunakan rute baru dengan format /:role/profile
+    final items = navItemsByRole[role.toLowerCase()] ?? navItemsByRole[siswaRole]!;
+    final path = items[index].route;
+    // Untuk profile, gunakan rute baru dengan format /:role/profile
     if (path.endsWith('/profile')) {
       context.go('/$role/profile');
     } else {
