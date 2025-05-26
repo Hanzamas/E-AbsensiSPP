@@ -1,11 +1,9 @@
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:e_absensi/core/storage/secure_storage.dart';
 import 'package:e_absensi/features/shared/auth/data/repositories/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import '../data/services/auth_service.dart';
-// import '../data/models/login_request.dart';
-import 'package:e_absensi/features/shared/auth/data/models/auth_models.dart';
+
 
 class AuthProvider extends ChangeNotifier {
   static final AuthProvider _instance = AuthProvider._internal();

@@ -405,4 +405,63 @@ class ProfileProvider extends ChangeNotifier {
     teacherProfile = null;
     notifyListeners();
   }
+
+  // Update akun (username dan email)
+  Future<bool> updateAccount({
+    required String username,
+    required String email,
+  }) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final user = await _repository.updateUserInfo(
+        username: username,
+        email: email,
+        profilePict: _userInfo?.profilePict,
+      );
+
+      if (user != null) {
+        _userInfo = user;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_info', json.encode(user.toJson()));
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      throw Exception('Gagal update user info');
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Update password
+  Future<bool> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final result = await _repository.updatePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return result != null;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

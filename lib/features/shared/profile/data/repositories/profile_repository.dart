@@ -1,5 +1,6 @@
 import '../models/basic_user_info.dart';
 import '../services/profile_services.dart';
+import '../models/update_password_model.dart';
 import 'dart:io';
 
 class ProfileRepository {
@@ -34,6 +35,21 @@ class ProfileRepository {
   Future<bool> deleteProfilePicture(String fileName) async {
     return await _service.deleteProfilePicture(fileName);
   }
+
+  // Method untuk update password
+  Future<BasicUserInfo?> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final passwordData = UpdatePasswordModel(
+      oldPassword: oldPassword, 
+      newPassword: newPassword
+    );
+    
+    final data = await _service.updatePassword(passwordData);
+    return BasicUserInfo.fromJson(data);
+  }
+
   // Siswa
   Future<Map<String, dynamic>> getStudentProfile() => _service.getStudentProfile();
   Future<Map<String, dynamic>> updateStudentProfile(Map<String, dynamic> data) => _service.updateStudentProfile(data);
