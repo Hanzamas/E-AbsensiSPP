@@ -12,6 +12,7 @@ class ApiEndpoints {
   // Users
   static const String usersMy = '/users/my';
   static const String usersUpdate = '/users/update';
+  static const String usersUpdatePassword = '/users/update-password';
 
   // File
   static const String filesUpload = '/files/upload';

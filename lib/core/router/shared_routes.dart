@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
+
 import 'package:e_absensi/features/shared/profile/pages/profile_main_page.dart';
 import 'package:e_absensi/features/shared/profile/pages/profile_edit_page.dart';
 import 'package:e_absensi/features/shared/profile/pages/profile_success_page.dart';
@@ -36,19 +36,19 @@ class SharedRoutes {
         );
       },
     ),
-    // GoRoute(
-    //   path: '/:role/profile/edit-account',
-    //   name: 'profile-edit-account',
-    //   pageBuilder: (context, state) {
-    //     final role = state.pathParameters['role'] ?? 'student';
-    //     return PageTransitionHelper.buildPageWithTransition(
-    //       child: AccountEditPage(userRole: role),
-    //       type: TransitionType.slideLeft,
-    //       duration: const Duration(milliseconds: 300),
-    //       key: state.pageKey,
-    //     );
-    //   },
-    // ),
+    GoRoute(
+      path: '/:role/profile/edit-account',
+      name: 'profile-edit-account',
+      pageBuilder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return PageTransitionHelper.buildPageWithTransition(
+          child: AccountEditPage(userRole: role),
+          type: TransitionType.slideLeft,
+          duration: const Duration(milliseconds: 300),
+          key: state.pageKey,
+        );
+      },
+    ),
     // GoRoute(
     //   path: '/:role/settings',
     //   name: 'settings',
