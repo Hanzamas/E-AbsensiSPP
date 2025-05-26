@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../../core/api/services/schedule_service.dart';
 import '../model/schedule.dart';
-import '../../../shared/animations/fade_in.dart';
+import '../../../shared/animations/fade_in_animation.dart';
 import '../../../shared/widgets/bottom_navbar.dart';
 import '../../../shared/widgets/loading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

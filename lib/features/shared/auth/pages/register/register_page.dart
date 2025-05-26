@@ -2,10 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:e_absensi/core/constants/strings.dart';
+import 'package:e_absensi/core/constants/auth_strings.dart';
 import 'package:e_absensi/core/constants/assets.dart';
-import 'package:e_absensi/shared/animations/fade_in_animation.dart';
+import 'package:e_absensi/features/shared/animations/fade_in_animation.dart';
 import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
+import 'package:e_absensi/core/utils/validators.dart';
+import 'package:e_absensi/core/constants/app_strings.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -75,15 +77,43 @@ class _RegisterPageState extends State<RegisterPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              success ? Icons.check_circle : Icons.info_outline,
+              color: success ? Colors.green : Colors.blue,
+              size: 28,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 14, height: 1.4),
+        ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               if (success) context.goNamed('login');
             },
-            child: const Text('OK'),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Color(0xFF2196F3),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -94,6 +124,14 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2196F3)),
+          onPressed: () => context.goNamed('login'),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -105,116 +143,166 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset(
-                      Assets.logo,
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
+                    // Logo dengan efek bayangan
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.2),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        Assets.logo,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
+                    // Register Title dengan gaya baru
                     Text(
-                      Strings.registerTitle,
+                      AuthStrings.registerTitle,
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2196F3),
+                        letterSpacing: 1.2,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
+                    // Register Subtitle
                     Text(
-                      Strings.registerSubtitle,
+                      AuthStrings.registerSubtitle,
                       style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
+                        fontSize: 14,
+                        color: Colors.black54,
+                        letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 32),
-                    // Nama
+                    const SizedBox(height: 24),
+                    
+                    // Username Field dengan desain yang lebih baik
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
                       child: TextFormField(
                         controller: _usernameController,
-                        decoration: const InputDecoration(
-                          hintText: Strings.usernameHint,
-                          prefixIcon: Icon(Icons.person_outline),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
+                        decoration: InputDecoration(
+                          hintText: AuthStrings.usernameHint,
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.person_outline,
+                            color: Color(0xFF2196F3),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return Strings.validateUsername;
-                          }
-                          return null;
-                        },
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        validator: Validators.validateUsername,
                       ),
                     ),
+                    
                     const SizedBox(height: 16),
-                    // Email
+                    
+                    // Email Field dengan desain yang lebih baik
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
                       child: TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(
-                          hintText: Strings.registeremail,
-                          prefixIcon: Icon(Icons.email_outlined),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
+                        decoration: InputDecoration(
+                          hintText: AuthStrings.registerEmail,
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF2196F3),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return Strings.registeremail;
-                          }
-                          if (!value.contains('@')) {
-                            return Strings.validateEmail;
-                          }
-                          return null;
-                        },
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        validator: Validators.validateEmail,
                       ),
                     ),
+                    
                     const SizedBox(height: 16),
-                    // Password
+                    
+                    // Password Field dengan desain yang lebih baik
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
                       child: TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
-                          hintText: Strings.registerPassword,
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          hintText: AuthStrings.registerPassword,
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: Color(0xFF2196F3),
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey.shade500,
+                              size: 20,
                             ),
                             onPressed: () {
                               setState(() {
@@ -222,32 +310,35 @@ class _RegisterPageState extends State<RegisterPage> {
                               });
                             },
                           ),
-                          border: InputBorder.none,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
                           contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
                         obscureText: _obscurePassword,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password tidak boleh kosong';
-                          }
-                          if (value.length < 8) {
-                            return 'Password minimal 8 karakter';
-                          }
-                          return null;
-                        },
+                        validator: Validators.validatePassword,
                       ),
                     ),
+                    
                     const SizedBox(height: 16),
-                    // Konfirmasi Password
+                    
+                    // Konfirmasi Password Field dengan desain yang lebih baik
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
@@ -255,10 +346,19 @@ class _RegisterPageState extends State<RegisterPage> {
                         controller: _passwordConfirmController,
                         decoration: InputDecoration(
                           hintText: 'Konfirmasi Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: Color(0xFF2196F3),
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey.shade500,
+                              size: 20,
                             ),
                             onPressed: () {
                               setState(() {
@@ -266,101 +366,143 @@ class _RegisterPageState extends State<RegisterPage> {
                               });
                             },
                           ),
-                          border: InputBorder.none,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
                           contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
                         obscureText: _obscureConfirmPassword,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Konfirmasi password tidak boleh kosong';
-                          }
-                          if (value != _passwordController.text) {
-                            return 'Password tidak sama';
-                          }
-                          return null;
-                        },
+                        validator: (value) => Validators.validatePasswordConfirmation(value, _passwordController.text),
                       ),
                     ),
+                    
                     const SizedBox(height: 16),
-                    // Checkbox syarat
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _agree,
-                          onChanged: (value) {
-                            setState(() => _agree = value ?? false);
-                          },
-                        ),
-                        Expanded(
-                          child: Text.rich(
-                            TextSpan(
-                              text: Strings.agreeTermsText,
-                              style: const TextStyle(
-                                color: Colors.black54,
-                                fontSize: 12,
+                    
+                    // Checkbox syarat dengan styling baru
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Transform.scale(
+                            scale: 0.9,
+                            child: Checkbox(
+                              value: _agree,
+                              activeColor: const Color(0xFF2196F3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                              children: [
-                                TextSpan(
-                                  text: Strings.agreeTermsText2,
-                                  style: const TextStyle(
-                                    color: Color(0xFF2196F3),
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () => context.goNamed('terms', extra: 'register'),
-                                ),
-                                const TextSpan(text: ' dan '),
-                                TextSpan(
-                                  text: Strings.agreeTermsText1,
-                                  style: const TextStyle(
-                                    color: Color(0xFF2196F3),
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () => context.goNamed('terms', extra: 'register'),
-                                ),
-                              ],
+                              onChanged: (value) {
+                                setState(() => _agree = value ?? false);
+                              },
                             ),
                           ),
-                        ),
-                      ],
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                text: AppStrings.agreeText,
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: 12,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: AppStrings.termsText,
+                                    style: const TextStyle(
+                                      color: Color(0xFF2196F3),
+                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => context.goNamed('terms', extra: 'register'),
+                                  ),
+                                  TextSpan(
+                                    text: AppStrings.andText,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: AppStrings.conditionsText,
+                                    style: const TextStyle(
+                                      color: Color(0xFF2196F3),
+                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => context.goNamed('terms', extra: 'register'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    
                     const SizedBox(height: 24),
+                    
+                    // Register Button dengan styling baru
                     SizedBox(
-                      height: 48,
+                      height: 55,
                       child: ElevatedButton(
                         onPressed: (!_agree || _isLoading) ? null : _handleRegister,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2196F3),
-                          elevation: 2,
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shadowColor: const Color(0xFF2196F3).withOpacity(0.4),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                          disabledBackgroundColor: Colors.grey.shade300,
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
                             : const Text(
-                                Strings.registerButton,
+                                AuthStrings.registerButton,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
+                                  letterSpacing: 1.0,
                                 ),
                               ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    
+                    const SizedBox(height: 20),
+                    
+                    // Login Link dengan styling baru
                     Center(
                       child: RichText(
                         text: TextSpan(
-                          text: Strings.haveAccount,
-                          style: const TextStyle(
-                            color: Colors.black87,
+                          text: AuthStrings.haveAccount,
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
                             fontSize: 14,
                           ),
                           children: [
                             TextSpan(
-                              text: Strings.loginLink,
+                              text: AuthStrings.loginLink,
                               style: const TextStyle(
                                 color: Color(0xFF2196F3),
                                 fontWeight: FontWeight.bold,
@@ -372,6 +514,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                     ),
+                    
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:e_absensi/core/storage/secure_storage.dart';
+import 'package:e_absensi/core/utils/route_helper.dart';
 
 class RouteGuards {
   static final _storage = SecureStorage();
@@ -24,7 +25,7 @@ class RouteGuards {
     // Jika di public route dan sudah login, redirect ke home
     if (publicRoutes.contains(state.uri.path) && token != null) {
       final role = await _storage.read('user_role');
-      return _getHomeRoute(role);
+      return getHomeRoute(role);
     }
 
     // Jika di protected route dan belum login, redirect ke login
@@ -44,23 +45,9 @@ class RouteGuards {
     if (currentPath.startsWith('/student') && role != 'siswa' ||
         currentPath.startsWith('/teacher') && role != 'guru' ||
         currentPath.startsWith('/admin') && role != 'admin') {
-      return _getHomeRoute(role);
+      return getHomeRoute(role);
     }
 
     return null;
-  }
-
-  // Helper untuk mendapatkan home route berdasarkan role
-  static String _getHomeRoute(String? role) {
-    switch (role) {
-      case 'siswa':
-        return '/student/home';
-      case 'guru':
-        return '/teacher/home';
-      case 'admin':
-        return '/admin/home';
-      default:
-        return '/login';
-    }
   }
 }

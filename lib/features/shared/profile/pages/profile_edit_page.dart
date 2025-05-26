@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import '../../../../core/api/api_endpoints.dart';
-import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../../core/constants/assets.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/strings.dart';
+import '../provider/profile_provider.dart';
+import '../data/models/student_profile_model.dart';
+import '../data/models/teacher_profile_model.dart';
 
 class ProfileEditPage extends StatefulWidget {
   final bool isFromLogin;
@@ -18,426 +16,110 @@ class ProfileEditPage extends StatefulWidget {
 }
 
 class _ProfileEditPageState extends State<ProfileEditPage> {
-  final _storage = const FlutterSecureStorage();
-
-  final TextEditingController _namaLengkapController = TextEditingController();
-  final TextEditingController _nisController = TextEditingController();
-  final TextEditingController _jenisKelaminController = TextEditingController();
-  final TextEditingController _tanggalLahirController = TextEditingController();
-  final TextEditingController _tempatLahirController = TextEditingController();
-  final TextEditingController _alamatController = TextEditingController();
-  final TextEditingController _waliController = TextEditingController();
-  final TextEditingController _waWaliController = TextEditingController();
-
-  bool _isLoading = false;
-  String? _errorMessage;
-  String? _token;
-  int? _studentId;
-
-  // Dropdown kelas
-  List<Map<String, dynamic>> _kelasList = [];
-  String? _selectedKelasId;
-
+  final _formKey = GlobalKey<FormState>();
+  final Map<String, TextEditingController> _controllers = {};
   bool _isProfileCompleted = false;
+  bool _isLoading = false;
+
+  // Field bertipe int untuk masing-masing role (ambil dari model agar scalable)
+  static final List<String> studentIntFields = StudentProfile.intFields;
+  static final List<String> teacherIntFields = [];
+
+  // Modular gender options
+  static const List<Map<String, String>> genderOptions = [
+    {'value': 'L', 'label': 'Laki-laki'},
+    {'value': 'P', 'label': 'Perempuan'},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _initProfile();
-    if (widget.isFromLogin) {
-      _checkAndShowWelcomePopup();
-    }
+    Future.microtask(() async {
+      final provider = Provider.of<ProfileProvider>(context, listen: false);
+      await provider.fetchProfileAndClasses(widget.userRole);
+      final isSiswa = widget.userRole == 'siswa';
+      final data = isSiswa ? provider.studentProfile : provider.teacherProfile;
+      if (_shouldShowWelcomePopup(data)) {
+        _showWelcomePopup();
+      }
+    });
   }
 
-  Future<void> _checkAndShowWelcomePopup() async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasShownPopup = prefs.getBool('has_shown_profile_popup') ?? false;
+  bool _shouldShowWelcomePopup(dynamic data) {
+    if (data == null) return true;
+    if (data is StudentProfile) {
+      return data.namaLengkap.isEmpty || data.idKelas == 0;
+    }
+    if (data is TeacherProfile) {
+      return data.namaLengkap.isEmpty;
+    }
+    return true;
+  }
 
-    if (!hasShownPopup && mounted) {
+  void _showWelcomePopup() {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text('Login Berhasil'),
-          content: const Text('Selamat datang! Silakan lengkapi data diri Anda terlebih dahulu.'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                // Save that we've shown the popup
-                await prefs.setBool('has_shown_profile_popup', true);
-              },
-              child: const Text('OK'),
-            ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.info_outline, color: Colors.blue, size: 28),
+            SizedBox(width: 8),
+            Text('Selamat Datang', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-      );
-    }
-  }
-
-  Future<void> _initProfile() async {
-    final token = await _storage.read(key: 'token');
-    if (token == null || token.isEmpty) {
-      if (mounted) context.go('/login');
-      return;
-    }
-    setState(() {
-      _token = token;
-    });
-    await _fetchKelas(token);
-    await _fetchProfile(token);
-  }
-
-  Future<void> _fetchKelas(String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.getKelas),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['status'] == true) {
-        final List kelas = data['data'];
-        setState(() {
-          _kelasList = kelas.map<Map<String, dynamic>>((k) => {
-            'id': k['id'],
-            'nama': k['nama'],
-          }).toList();
-        });
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _fetchProfile(String token) async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      // First get user profile to get user ID
-      final profileResponse = await http.get(
-        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.getProfile),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      // print('Profile Response: ${profileResponse.body}'); // Debug log
-      final profileData = jsonDecode(profileResponse.body);
-      
-      if (profileResponse.statusCode == 200 && profileData['status'] == true) {
-        final userId = profileData['data']['id'];
-        // print('User ID: $userId'); // Debug log
-        
-        // Check if profile is completed by checking if siswa_nama_lengkap exists
-        final isProfileCompleted = profileData['data']['siswa_nama_lengkap'] != null;
-        // print('Is Profile Completed: $isProfileCompleted'); // Debug log
-        
-        if (isProfileCompleted) {
-          // If profile is completed, get student data
-          final studentResponse = await http.get(
-            Uri.parse('${ApiEndpoints.baseUrl}${ApiEndpoints.getStudentDetail}'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          );
-          
-          // print('Student Response: ${studentResponse.body}'); // Debug log
-          final studentData = jsonDecode(studentResponse.body);
-          
-          if (studentResponse.statusCode == 200 && studentData['status'] == true) {
-            if (studentData['data'] == null) {
-              setState(() {
-                _errorMessage = 'Data siswa tidak ditemukan';
-                _isProfileCompleted = false;
-              });
-              return;
-            }
-            
-            final student = studentData['data'];
-            // print('Student Data: $student'); // Debug log
-            
-            setState(() {
-              _studentId = student['id'];
-              _namaLengkapController.text = student['nama_lengkap'] ?? '';
-              _nisController.text = student['nis'] ?? '';
-              _selectedKelasId = student['id_kelas']?.toString();
-              _jenisKelaminController.text = student['jenis_kelamin'] ?? '';
-              _setTanggalLahir(student['tanggal_lahir'] ?? '');
-              _tempatLahirController.text = student['tempat_lahir'] ?? '';
-              _alamatController.text = student['alamat'] ?? '';
-              _waliController.text = student['wali'] ?? '';
-              _waWaliController.text = student['wa_wali'] ?? '';
-              _isProfileCompleted = true;
-            });
-          } else {
-            // print('Student Error: ${studentData['message']}'); // Debug log
-            setState(() {
-              _errorMessage = studentData['message'] ?? 'Gagal mengambil data siswa';
-              _isProfileCompleted = false;
-            });
-          }
-        } else {
-          // If profile is not completed, just set the profile data
-          setState(() {
-            _isProfileCompleted = false;
-            // Clear all fields since this is a new profile
-            _namaLengkapController.text = '';
-            _nisController.text = '';
-            _selectedKelasId = null;
-            _jenisKelaminController.text = '';
-            _tanggalLahirController.text = '';
-            _tempatLahirController.text = '';
-            _alamatController.text = '';
-            _waliController.text = '';
-            _waWaliController.text = '';
-          });
-        }
-      } else {
-        // print('Profile Error: ${profileData['message']}'); // Debug log
-        if (profileData['message']?.toString().toLowerCase().contains('token') ?? false) {
-          if (mounted) context.go('/login');
-          return;
-        }
-        setState(() {
-          _errorMessage = profileData['message'] ?? 'Gagal mengambil data profil';
-        });
-      }
-    } catch (e) {
-      // print('Exception: $e'); // Debug log
-      setState(() {
-        _errorMessage = 'Terjadi kesalahan. Coba lagi.';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _updateProfile() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    // Validasi semua field wajib
-    if (_selectedKelasId == null) {
-      setState(() {
-        _errorMessage = 'Kelas harus dipilih!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_nisController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'NIS tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_namaLengkapController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Nama lengkap tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_jenisKelaminController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Jenis kelamin tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_tanggalLahirController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Tanggal lahir tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_tempatLahirController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Tempat lahir tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_alamatController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Alamat tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_waliController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Nama wali tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (_waWaliController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Nomor WA wali tidak boleh kosong!';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    try {
-      // Get user ID first
-      final profileResponse = await http.get(
-        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.getProfile),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
-      );
-      final profileData = jsonDecode(profileResponse.body);
-      
-      if (profileResponse.statusCode != 200 || !profileData['status']) {
-        throw Exception(profileData['message'] ?? 'Gagal mendapatkan ID pengguna');
-      }
-
-      final userId = profileData['data']['id'];
-      
-      // Format tanggal_lahir ke YYYY-MM-DD
-      String formattedDate = _tanggalLahirController.text;
-      if (formattedDate.contains('T')) {
-        formattedDate = formattedDate.split('T')[0];
-      }
-      
-      // Siapkan payload update dengan semua field
-      final updatePayload = {
-        'id_kelas': int.parse(_selectedKelasId!),
-        'nis': _nisController.text.trim(),
-        'nama_lengkap': _namaLengkapController.text.trim(),
-        'jenis_kelamin': _jenisKelaminController.text.trim(),
-        'tanggal_lahir': formattedDate,
-        'tempat_lahir': _tempatLahirController.text.trim(),
-        'alamat': _alamatController.text.trim(),
-        'wali': _waliController.text.trim(),
-        'wa_wali': _waWaliController.text.trim(),
-      };
-
-      final response = await http.put(
-        Uri.parse(ApiEndpoints.baseUrl + ApiEndpoints.updateProfile),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
-        body: jsonEncode(updatePayload),
-      );
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['status'] == true) {
-        if (!mounted) return;
-        
-        // Tampilkan popup sukses
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Profil berhasil diperbarui'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        // Jika ini update pertama kali (profile completion)
-        if (!_isProfileCompleted) {
-          context.go('/profile-success');
-        } else {
-          context.go('/${widget.userRole}/profile');
-        }
-      } else if (data['message']?.toString().toLowerCase().contains('token') ?? false) {
-        if (mounted) context.go('/login');
-        return;
-      } else {
-        // Tampilkan popup error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['message'] ?? 'Gagal mengupdate profil'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        setState(() {
-          _errorMessage = data['message'] ?? 'Gagal mengupdate profil';
-        });
-      }
-    } catch (e) {
-      // Tampilkan popup error
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Terjadi kesalahan. Silakan coba lagi.'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      setState(() {
-        _errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  // Add this method to format date when setting the controller
-  void _setTanggalLahir(String date) {
-    if (date.contains('T')) {
-      date = date.split('T')[0];
-    }
-    _tanggalLahirController.text = date;
-  }
-
-  Widget _inputContainer({required Widget child}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        content: const Text('Silakan lengkapi data diri Anda terlebih dahulu.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(foregroundColor: Colors.blue),
+            child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
-      child: child,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_isProfileCompleted) {
-          context.go('/${widget.userRole}/profile');
-          return false;
+    return Consumer<ProfileProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading) return const Center(child: CircularProgressIndicator());
+        if (provider.error != null) return Center(child: Text('Error: ${provider.error}'));
+        final isSiswa = widget.userRole == 'siswa';
+        final data = isSiswa ? provider.studentProfile : provider.teacherProfile;
+        if (data == null) return const Center(child: Text('Data tidak ditemukan'));
+
+        // Inisialisasi controller hanya sekali
+        if (_controllers.isEmpty) {
+          final map = isSiswa
+              ? (provider.studentProfile as StudentProfile).toJson()
+              : (provider.teacherProfile as TeacherProfile).toJson();
+          map.forEach((key, value) {
+            _controllers[key] = TextEditingController(text: value?.toString() ?? '');
+          });
+          // Inisialisasi controller tahun_ajaran jika belum ada
+          if (_controllers['tahun_ajaran'] == null) {
+            String tahunAjaran = '';
+            if (isSiswa && _controllers['id_kelas']?.text.isNotEmpty == true) {
+              tahunAjaran = provider.getTahunAjaranByClassId(int.tryParse(_controllers['id_kelas']!.text)) ?? '';
+            }
+            _controllers['tahun_ajaran'] = TextEditingController(text: tahunAjaran);
+          }
         }
-        return false;
-      },
-      child: Scaffold(
+
+        return Scaffold(
+          backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Edit Profil', style: TextStyle(color: Colors.white)),
           backgroundColor: const Color(0xFF2196F3),
+            elevation: 0,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+            ),
           leading: widget.isFromLogin 
-            ? null // Jangan tampilkan tombol kembali jika dari login
+              ? null 
             : IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => context.go('/${widget.userRole}/profile'),
@@ -446,210 +128,435 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Form(
+                  key: _formKey,
                 child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 16),
+                      if (isSiswa) ...[
+                        _buildStyledClassDropdown(),
+                        _buildStyledField('nis', 'NIS', keyboardType: TextInputType.number),
+                        _buildStyledField('nama_lengkap', 'Nama Lengkap'),
+                        _buildStyledDropdown('jenis_kelamin', 'Jenis Kelamin'),
+                        _buildStyledDateField(),
+                        _buildStyledField('tempat_lahir', 'Tempat Lahir'),
+                        _buildStyledField('alamat', 'Alamat'),
+                        _buildStyledField('wali', 'Nama Wali'),
+                        _buildStyledField('wa_wali', 'No. WA Wali', keyboardType: TextInputType.phone),
+                      ] else ...[
+                        _buildStyledField('nip', 'NIP'),
+                        _buildStyledField('nama_lengkap', 'Nama Lengkap'),
+                        _buildStyledDropdown('jenis_kelamin', 'Jenis Kelamin'),
+                        _buildStyledDateField(),
+                        _buildStyledField('tempat_lahir', 'Tempat Lahir'),
+                        _buildStyledField('alamat', 'Alamat'),
+                        _buildStyledField('pendidikan_terakhir', 'Pendidikan Terakhir'),
+                      ],
+                      const SizedBox(height: 32),
                     SizedBox(
-                      height: 100,
-                      width: 100,
-                      child: ClipOval(
-                        child: Builder(
-                          builder: (context) {
-                              return Container(
-                                color: Colors.blue[100],
-                                child: const Icon(Icons.person, size: 60, color: Colors.white),
-                              );
-                            }
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () async {
+                                  if (_formKey.currentState?.validate() ?? false) {
+                                    setState(() => _isLoading = true);
+                                    final isSiswa = widget.userRole == 'siswa';
+                                    final intFields = isSiswa ? StudentProfile.intFields : TeacherProfile.intFields;
+                                    
+                                    try {
+                                      final payload = <String, dynamic>{};
+                                      _controllers.forEach((key, ctrl) {
+                                        final text = ctrl.text.trim();
+                                        if (intFields.contains(key)) {
+                                          // Konversi ke integer untuk field yang seharusnya integer
+                                          payload[key] = text.isEmpty ? null : int.tryParse(text);
+                                        } else {
+                                          payload[key] = text;
+                                        }
+                                      });
+
+                                      // Format tanggal lahir ke YYYY-MM-DD jika dalam format ISO
+                                      final tanggalLahir = payload['tanggal_lahir']?.toString();
+                                      if (tanggalLahir != null && tanggalLahir.contains('T')) {
+                                        payload['tanggal_lahir'] = tanggalLahir.split('T')[0];
+                                      }
+
+                                      final success = await provider.updateProfile(widget.userRole, payload);
+                                      
+                                      if (success && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Profil berhasil diperbarui'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                        
+                                        if (widget.isFromLogin) {
+                                          context.go('/profile-success');
+                                        } else {
+                                          context.go('/${widget.userRole}/profile');
+                                        }
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Gagal memperbarui profil: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      setState(() => _isLoading = false);
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2196F3),
+                            foregroundColor: Colors.white,
+                            elevation: 4,
+                            shadowColor: const Color(0xFF2196F3).withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  'Simpan',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    if (_errorMessage != null) ...[
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 12),
                     ],
-                    _inputContainer(
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStyledField(String key, String label, {TextInputType? keyboardType}) {
+    final iconMap = <String, IconData>{
+      'id_kelas': Icons.class_,
+      'nis': Icons.badge_outlined,
+      'nama_lengkap': Icons.person_outline,
+      'nip': Icons.badge_outlined,
+      'jenis_kelamin': Icons.wc,
+      'tanggal_lahir': Icons.cake_outlined,
+      'tempat_lahir': Icons.location_on_outlined,
+      'alamat': Icons.home_outlined,
+      'wali': Icons.family_restroom,
+      'wa_wali': Icons.phone_outlined,
+      'pendidikan_terakhir': Icons.school_outlined,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: TextFormField(
+          controller: _controllers[key],
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: key == 'wa_wali' ? '628xxxxxxxxxx' : label,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 14,
+            ),
+            prefixIcon: iconMap[key] != null ? Icon(iconMap[key], color: const Color(0xFF2196F3)) : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+          ),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+          validator: (val) {
+            if (val == null || val.isEmpty) {
+              return '$label wajib diisi';
+            }
+            if (key == 'wa_wali') {
+              if (!val.startsWith('62')) {
+                return 'Nomor WA harus diawali dengan 62';
+              }
+              if (!RegExp(r'^62[0-9]{9,13}$').hasMatch(val)) {
+                return 'Format nomor WA tidak valid';
+              }
+            }
+            if (key == 'nis' && !RegExp(r'^[0-9]+$').hasMatch(val)) {
+              return 'NIS harus berupa angka';
+            }
+            return null;
+          },
+          onChanged: (value) {
+            if (key == 'wa_wali') {
+              // Hanya izinkan angka dan awalan 62
+              if (value.isNotEmpty && !value.startsWith('62')) {
+                _controllers[key]?.text = '62${value.replaceAll(RegExp(r'[^0-9]'), '')}';
+              } else {
+                _controllers[key]?.text = value.replaceAll(RegExp(r'[^0-9]'), '');
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyledDropdown(String key, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
                       child: DropdownButtonFormField<String>(
-                        value: _selectedKelasId,
-                        items: _kelasList.map((kelas) {
-                          return DropdownMenuItem<String>(
-                            value: kelas['id'].toString(),
-                            child: Text(kelas['nama']),
-                          );
-                        }).toList(),
-                        onChanged: (val) => setState(() => _selectedKelasId = val),
-                        decoration: const InputDecoration(
-                          labelText: 'Kelas',
-                          prefixIcon: Icon(Icons.class_),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: TextFormField(
-                        controller: _nisController,
-                        decoration: const InputDecoration(
-                          hintText: 'NIS',
-                          prefixIcon: Icon(Icons.confirmation_number),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: TextFormField(
-                        controller: _namaLengkapController,
-                        decoration: const InputDecoration(
-                          hintText: 'Nama Lengkap',
-                          prefixIcon: Icon(Icons.person),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: DropdownButtonFormField<String>(
-                        value: _jenisKelaminController.text.isNotEmpty ? _jenisKelaminController.text : null,
-                        items: const [
-                          DropdownMenuItem(value: 'L', child: Text('Laki-laki')),
-                          DropdownMenuItem(value: 'P', child: Text('Perempuan')),
-                        ],
+          value: _controllers[key]?.text.isNotEmpty == true ? _controllers[key]?.text : null,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: label,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 14,
+            ),
+            prefixIcon: key == 'jenis_kelamin' ? const Icon(Icons.wc, color: Color(0xFF2196F3)) : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+          ),
+          items: genderOptions.map((option) {
+            return DropdownMenuItem<String>(
+              value: option['value'],
+              child: Text(
+                option['label']!,
+                style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14, color: Colors.black87),
+              ),
+            );
+          }).toList(),
                         onChanged: (val) {
-                          setState(() {
-                            _jenisKelaminController.text = val ?? '';
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Jenis Kelamin',
-                          prefixIcon: Icon(Icons.wc),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
+            if (val != null) {
+              _controllers[key]?.text = val;
+            }
+          },
+          validator: (val) => val == null ? '$label wajib dipilih' : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyledDateField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
                       child: TextFormField(
-                        controller: _tanggalLahirController,
+          controller: _controllers['tanggal_lahir'],
                         readOnly: true,
+          decoration: InputDecoration(
+            labelText: 'Tanggal Lahir',
+            hintText: 'Tanggal Lahir',
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 14,
+            ),
+            prefixIcon: const Icon(Icons.cake_outlined, color: Color(0xFF2196F3)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            suffixIcon: const Icon(Icons.calendar_today),
+          ),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
                         onTap: () async {
-                          FocusScope.of(context).requestFocus(FocusNode());
-                          DateTime firstDate = DateTime(1999);
-                          DateTime lastDate = DateTime(DateTime.now().year, 12, 31);
-                          DateTime initialDate;
-                          if (_tanggalLahirController.text.isNotEmpty) {
-                            final parsed = DateTime.tryParse(_tanggalLahirController.text);
-                            if (parsed != null && !parsed.isBefore(firstDate) && !parsed.isAfter(lastDate)) {
-                              initialDate = parsed;
-                            } else {
-                              initialDate = lastDate;
-                            }
-                          } else {
-                            initialDate = lastDate;
-                          }
-                          DateTime? picked = await showDatePicker(
+            final DateTime? picked = await showDatePicker(
                             context: context,
-                            initialDate: initialDate,
-                            firstDate: firstDate,
-                            lastDate: lastDate,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
                           );
                           if (picked != null) {
-                            setState(() {
-                              _tanggalLahirController.text = picked.toIso8601String().split('T')[0];
-                            });
-                          }
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'Tanggal Lahir',
-                          prefixIcon: Icon(Icons.cake),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: TextFormField(
-                        controller: _tempatLahirController,
-                        decoration: const InputDecoration(
-                          hintText: 'Tempat Lahir',
-                          prefixIcon: Icon(Icons.location_city),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: TextFormField(
-                        controller: _alamatController,
-                        decoration: const InputDecoration(
-                          hintText: 'Alamat',
-                          prefixIcon: Icon(Icons.home),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: TextFormField(
-                        controller: _waliController,
-                        decoration: const InputDecoration(
-                          hintText: 'Nama Wali',
-                          prefixIcon: Icon(Icons.people),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
-                    ),
-                    _inputContainer(
-                      child: TextFormField(
-                        controller: _waWaliController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          hintText: 'No. WA Wali',
-                          prefixIcon: Icon(Icons.phone),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Nomor WA wali tidak boleh kosong!';
-                          }
-                          if (!RegExp(r'^\d+$').hasMatch(value)) {
-                            return 'Nomor WA hanya boleh angka';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _updateProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                Strings.EditProfileButton,
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                      ),
+              _controllers['tanggal_lahir']?.text = picked.toIso8601String().split('T')[0];
+            }
+          },
+          validator: (val) => (val == null || val.isEmpty) ? 'Tanggal lahir wajib diisi' : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyledClassDropdown() {
+    return Consumer<ProfileProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoadingClasses) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (provider.errorClasses != null) {
+          return Center(child: Text('Error: ${provider.errorClasses}'));
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
+                child: DropdownButtonFormField<int>(
+                  value: _controllers['id_kelas']?.text.isNotEmpty == true 
+                      ? int.tryParse(_controllers['id_kelas']!.text) 
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: 'Kelas',
+                    hintText: 'Pilih Kelas',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: const Icon(Icons.class_, color: Color(0xFF2196F3)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                  items: provider.classes.map((kelas) {
+                    return DropdownMenuItem<int>(
+                      value: kelas.id,
+                      child: Text(kelas.namaKelas),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      _controllers['id_kelas']?.text = val.toString();
+                      // Update tahun ajaran jika ada
+                      final tahunAjaran = provider.getTahunAjaranByClassId(val);
+                      if (tahunAjaran != null) {
+                        _controllers['tahun_ajaran']?.text = tahunAjaran;
+                      }
+                    }
+                  },
+                  validator: (val) => val == null ? 'Kelas wajib dipilih' : null,
+                ),
               ),
+            ),
+            // Tahun Ajaran (Read-only)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: TextFormField(
+                  controller: _controllers['tahun_ajaran'],
+                  readOnly: true,
+                  enabled: false,
+                  decoration: InputDecoration(
+                    labelText: 'Tahun Ajaran',
+                    hintText: 'Pilih Kelas terlebih dahulu',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                  ),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
             ),
           ),
         ),
       ),
+          ],
+        );
+      },
     );
   }
 }

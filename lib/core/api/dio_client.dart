@@ -1,10 +1,8 @@
+// lib/core/api/dio_client.dart
 import 'package:dio/dio.dart';
-import 'package:e_absensi/core/api/interceptors/auth_interceptor.dart';
-import 'package:e_absensi/core/api/interceptors/logger_interceptor.dart';
+import 'package:e_absensi/core/api/auth_interceptor.dart';
 import 'package:e_absensi/core/api/api_endpoints.dart';
-import 'package:e_absensi/core/api/config/api_config.dart';
 
-// core/api/dio_client.dart
 class DioClient {
   static final DioClient _instance = DioClient._internal();
   late final Dio dio;
@@ -15,16 +13,16 @@ class DioClient {
     dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: ApiConfig.timeout,
-        receiveTimeout: ApiConfig.timeout,
-        headers: ApiConfig.defaultHeaders,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Accept': 'application/json',
+          // 'Content-Type': 'application/json',
+        },
       ),
     );
 
-    // Tambahkan interceptors langsung
-    dio.interceptors.addAll([
-      AuthInterceptor(),
-      LoggerInterceptor(),
-    ]);
+    // Hanya gunakan auth interceptor
+    dio.interceptors.add(AuthInterceptor());
   }
 }
