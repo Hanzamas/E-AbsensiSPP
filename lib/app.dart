@@ -40,9 +40,9 @@ class _MyAppState extends State<MyApp> {
           value: ScheduleProvider(),
         ),
         // Attendance Provider - menggunakan singleton pattern
-        // ChangeNotifierProvider.value(
-        //   value: AttendanceProvider(),
-        // ),
+        ChangeNotifierProvider.value(
+          value: AttendanceProvider(),
+        ),
         // // SPP Provider - menggunakan singleton pattern
         // ChangeNotifierProvider.value(
         //   value: SppProvider(),

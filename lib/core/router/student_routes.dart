@@ -21,39 +21,39 @@ class StudentRoutes {
         key: state.pageKey,
       ),
     ),
-    // GoRoute(
-    //   path: '/student/attendance',
-    //   name: 'student-attendance',
-    //   pageBuilder: (context, state) {
-    //     return CustomTransitionPage<void>(
-    //       key: state.pageKey,
-    //       child: const AttendanceScreen(),
-    //       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-    //         return FadeTransition(
-    //           opacity: animation,
-    //           child: SlideTransition(
-    //             position: Tween<Offset>(
-    //               begin: const Offset(0.05, 0.0),
-    //               end: Offset.zero,
-    //             ).animate(animation),
-    //             child: child,
-    //           ),
-    //         );
-    //       },
-    //       transitionDuration: const Duration(milliseconds: 300),
-    //     );
-    //   },
-    // ),
-    // GoRoute(
-    //   path: '/student/attendance/scan',
-    //   name: 'student-attendance-scan',
-    //   pageBuilder: (context, state) => PageTransitionHelper.buildPageWithTransition(
-    //     child: const AttendanceQr(),
-    //     type: TransitionType.slideUp,
-    //     duration: const Duration(milliseconds: 400),
-    //     key: state.pageKey,
-    //   ),
-    // ),
+    GoRoute(
+      path: '/student/attendance',
+      name: 'student-attendance',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          child: const AttendanceScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.05, 0.0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/student/attendance/scan',
+      name: 'student-attendance-scan',
+      pageBuilder: (context, state) => PageTransitionHelper.buildPageWithTransition(
+        child: const AttendanceQr(),
+        type: TransitionType.slideUp,
+        duration: const Duration(milliseconds: 400),
+        key: state.pageKey,
+      ),
+    ),
     // GoRoute(
     //   path: '/student/attendance/success',
     //   name: 'student-attendance-success',
