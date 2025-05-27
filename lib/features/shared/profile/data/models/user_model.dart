@@ -1,4 +1,4 @@
-class BasicUserInfo {
+class User {
   final int id;
   final String username;
   final String email;
@@ -6,7 +6,7 @@ class BasicUserInfo {
   final String role;
   final String? profilePict;
 
-  BasicUserInfo({
+  User({
     required this.id,
     required this.username,
     required this.email,
@@ -15,8 +15,8 @@ class BasicUserInfo {
     this.profilePict,
   });
 
-  factory BasicUserInfo.fromJson(Map<String, dynamic> json) {
-    return BasicUserInfo(
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
       username: json['username']?.toString() ?? '',
       email: json['email']?.toString() ?? '',

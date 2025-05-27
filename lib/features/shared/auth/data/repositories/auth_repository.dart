@@ -26,9 +26,16 @@ class AuthRepository {
     required String username,
     required String email,
     required String password,
+    required String passwordConfirmation,
   }) async {
     try {
-      return await _authService.register(username, email, password);
+      final request = RegisterRequest(
+        username: username,
+        email: email,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+      );
+      return await _authService.register(request);
     } catch (e) {
       rethrow;
     }
@@ -36,23 +43,37 @@ class AuthRepository {
 
   Future<bool> requestPasswordReset(String email) async {
     try {
-      return await _authService.requestPasswordReset(email);
+      final request = PasswordResetRequest(email: email);
+      return await _authService.requestPasswordReset(request);
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<bool> verifyOtp(String email, String otp) async {
+  Future<bool> verifyOtp(String otp) async {
     try {
-      return await _authService.verifyOtp(email, otp);
+      final request = OtpVerificationRequest(otp: otp);
+      return await _authService.verifyOtp(request);
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<bool> resetPassword(String email, String newPassword) async {
+  Future<bool> resetPassword(String newPassword) async {
     try {
-      return await _authService.resetPassword(email, newPassword);
+      final request = PasswordChangeRequest(
+        newPassword: newPassword,
+        confirmPassword: newPassword,
+      );
+      return await _authService.resetPassword(request);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<UserInfoResponse> getUserInfo() async {
+    try {
+      return await _authService.getUserInfo();
     } catch (e) {
       rethrow;
     }

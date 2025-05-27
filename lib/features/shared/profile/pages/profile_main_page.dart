@@ -18,18 +18,59 @@ class ProfileMainPage extends StatefulWidget {
 }
 
 class _ProfileMainPageState extends State<ProfileMainPage> {
+  bool _isLoading = true;
+  bool _isFirstLoad = true;
+  bool _didInitLoad = false;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _loadData());
+    
+    // Gunakan singleton pattern dan optimasi cache
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Refresh data otomatis saat kembali ke halaman ini
+    if (_didInitLoad) {
+      // Gunakan singleton langsung
+      ProfileProvider().refresh();
+    }
+  }
+  
+  Future<void> _loadInitialData() async {
+    if (!mounted) return;
+    
+    try {
+      // Pertama coba load dari cache
+      await ProfileProvider().loadUserProfile();
+      
+      // Kemudian refresh dari API
+      await ProfileProvider().refresh();
+      
+      _didInitLoad = true;
+    } catch (e) {
+      debugPrint('Error loading profile data: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isFirstLoad = false;
+        });
+      }
+    }
   }
 
+  // Untuk pull-to-refresh
   Future<void> _loadData() async {
     if (!mounted) return;
-    final provider = Provider.of<ProfileProvider>(context, listen: false);
-    await provider.refresh();
+    await ProfileProvider().refresh();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,10 +92,10 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
           child: SafeArea(
             child: Consumer<ProfileProvider>(
               builder: (context, provider, _) {
-                final isLoading = provider.isLoading;
                 final errorMessage = provider.error;
                 final nama = provider.userInfo?.namaLengkap;
                 final photoUrl = provider.photoUrl;
+                
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
@@ -88,33 +129,33 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                           ],
                         ),
                       ),
-                            if (errorMessage != null && nama == null)
-                              Container(
+                      if (errorMessage != null && nama == null)
+                        Container(
                           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade100,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.red.shade200),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.error_outline, color: Colors.red, size: 24),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
                                   'Gagal memuat data profil (${errorMessage ?? "404"})',
-                                        style: const TextStyle(color: Colors.red, fontSize: 14),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.refresh, color: Colors.red),
-                                      onPressed: () => _loadData(),
-                                tooltip: 'Muat ulang',
-                                    ),
-                                  ],
+                                  style: const TextStyle(color: Colors.red, fontSize: 14),
                                 ),
                               ),
+                              IconButton(
+                                icon: const Icon(Icons.refresh, color: Colors.red),
+                                onPressed: () => _loadData(),
+                                tooltip: 'Muat ulang',
+                              ),
+                            ],
+                          ),
+                        ),
                       Container(
                         margin: const EdgeInsets.all(24),
                         child: Column(
@@ -122,7 +163,7 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                             Center(
                               child: Stack(
                                 alignment: Alignment.bottomRight,
-                              children: [
+                                children: [
                                   provider.getProfileImageWidget(size: 100),
                                   GestureDetector(
                                     onTap: () => _showImagePickerOptions(context),
@@ -142,28 +183,29 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                                   ),
                                 ],
                               ),
-                                                ),
-                                                const SizedBox(height: 16),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(30),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.05),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      isLoading ? 'Memuat...' : (nama ?? 'Pengguna'),
-                                    style: const TextStyle(
-                                        fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2196F3),
-                                    ),
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                // Gunakan state lokal untuk loading indicator
+                                _isFirstLoad ? 'Memuat...' : (nama ?? 'Pengguna'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2196F3),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 32),
@@ -196,25 +238,26 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                                     iconColor: Colors.teal,
                                     title: 'Edit Akun',
                                     onTap: () {
-                                      context.push('/${widget.userRole}/profile/account');
+                                      context.push('/${widget.userRole}/profile/edit-account');
                                     },
                                   ),
-                                  _buildDivider(),
-                                  _buildMenuItem(
-                                    icon: Icons.help_outline,
-                                    iconColor: Colors.orange,
-                                    title: 'Tutorial',
-                                    onTap: () {},
-                                  ),
+                                  // _buildDivider(),
+                                  // _buildMenuItem(
+                                  //   icon: Icons.help_outline,
+                                  //   iconColor: Colors.orange,
+                                  //   title: 'Tutorial',
+                                  //   onTap: () {},
+                                  // ),
                                   _buildDivider(),
                                   _buildMenuItem(
                                     icon: Icons.settings,
                                     iconColor: Colors.purple,
                                     title: 'Pengaturan',
                                     onTap: () {
-                                      _showSettingsSheet(context);
+                                      // Ganti dari bottom sheet ke navigasi halaman Settings
+                                      context.push('/${widget.userRole}/settings');
                                     },
-                                  ),
+                                  ),  
                                 ],
                               ),
                             ),
