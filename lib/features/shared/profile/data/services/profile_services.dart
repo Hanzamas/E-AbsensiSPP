@@ -2,8 +2,19 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:e_absensi/core/api/api_endpoints.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
+import '../models/update_password_model.dart';
 
 class ProfileServices {
+  // Implementasi singleton factory
+  static final ProfileServices _instance = ProfileServices._internal();
+  
+  // Factory constructor yang mengembalikan instance yang sama
+  factory ProfileServices() => _instance;
+  
+  // Private constructor
+  ProfileServices._internal();
+  
+  // Properties
   final Dio _dio = DioClient().dio;
   final String emptyProfilePictPath = '/uploads/';
 
@@ -166,6 +177,29 @@ class ProfileServices {
       return response.data['data'];
     } else {
       throw Exception(response.data['message'] ?? 'Gagal mengambil detail kelas');
+    }
+  }
+
+  // Method untuk update password
+  Future<Map<String, dynamic>> updatePassword(UpdatePasswordModel passwordData) async {
+    try {
+      // Validasi password terlebih dahulu
+      if (!passwordData.validate()) {
+        throw Exception('Validasi password gagal');
+      }
+
+      final response = await _dio.put(
+        ApiEndpoints.usersUpdatePassword,
+        data: passwordData.toJson(),
+      );
+
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        return response.data['data'];
+      } else {
+        throw Exception(response.data['message'] ?? 'Gagal update password');
+      }
+    } catch (e) {
+      throw Exception('Gagal update password: $e');
     }
   }
 }

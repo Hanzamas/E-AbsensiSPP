@@ -1,16 +1,29 @@
-import '../models/basic_user_info.dart';
+import '../models/user_model.dart';
 import '../services/profile_services.dart';
+import '../models/update_password_model.dart';
 import 'dart:io';
 
 class ProfileRepository {
-  final ProfileServices _service = ProfileServices();
-
-  Future<BasicUserInfo?> getUserInfo() async {
-    final data = await _service.getUserInfo();
-    return BasicUserInfo.fromJson(data);
+  // Implementasi singleton factory
+  static final ProfileRepository _instance = ProfileRepository._internal();
+  
+  // Factory constructor yang mengembalikan instance yang sama
+  factory ProfileRepository() => _instance;
+  
+  // Deklarasi service
+  late final ProfileServices _service;
+  
+  // Private constructor
+  ProfileRepository._internal() {
+    _service = ProfileServices();
   }
 
-  Future<BasicUserInfo?> updateUserInfo({
+  Future<User?> getUserInfo() async {
+    final data = await _service.getUserInfo();
+    return User.fromJson(data);
+  }
+
+  Future<User?> updateUserInfo({
     required String username,
     required String email,
     String? profilePict,
@@ -20,7 +33,7 @@ class ProfileRepository {
       email: email,
       profilePict: profilePict,
     );
-    return BasicUserInfo.fromJson(data);
+    return User.fromJson(data);
   }
 
   Future<String> uploadProfilePicture(File file) async {
@@ -34,6 +47,21 @@ class ProfileRepository {
   Future<bool> deleteProfilePicture(String fileName) async {
     return await _service.deleteProfilePicture(fileName);
   }
+
+  // Method untuk update password
+  Future<User?> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final passwordData = UpdatePasswordModel(
+      oldPassword: oldPassword, 
+      newPassword: newPassword
+    );
+    
+    final data = await _service.updatePassword(passwordData);
+    return User.fromJson(data);
+  }
+
   // Siswa
   Future<Map<String, dynamic>> getStudentProfile() => _service.getStudentProfile();
   Future<Map<String, dynamic>> updateStudentProfile(Map<String, dynamic> data) => _service.updateStudentProfile(data);

@@ -6,9 +6,8 @@ import '../../../../core/constants/assets.dart';
 import '../../../shared/animations/fade_in_animation.dart';
 import '../../../shared/widgets/bottom_navbar.dart';
 import '../../../shared/widgets/loading.dart';
-import '../provider/schedule_provider.dart';
+import '../provider/home_provider.dart';
 import '../data/models/schedule_model.dart';
-import '../data/services/user_info_service.dart';
 
 class StudentHomePage extends StatefulWidget {
   const StudentHomePage({Key? key}) : super(key: key);
@@ -19,9 +18,7 @@ class StudentHomePage extends StatefulWidget {
 
 class _StudentHomePageState extends State<StudentHomePage> {
   bool _isLoading = true;
-  Map<String, dynamic>? _userInfo;
-  final UserInfoService _userInfoService = UserInfoService();
-
+  bool _didInitLoad = false;
   static const List<String> hariList = [
     'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu', 'minggu'
   ];
@@ -30,19 +27,48 @@ class _StudentHomePageState extends State<StudentHomePage> {
   void initState() {
     super.initState();
     _checkAndShowWelcomePopup();
-    _loadUserInfo();
-    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
-    scheduleProvider.loadSchedules();
+    
+    // Fix: Schedule data loading after the initial build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
+  }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Refresh user data setiap kali halaman ini menjadi aktif
+    if (_didInitLoad) {
+      // Hanya refresh data user tanpa loading indicator
+      final homeProvider = Provider.of<HomeProvider>(context, listen: false);
+      homeProvider.loadUserInfo(); // Ini async tapi tidak perlu await karena kita tidak ingin UI menunggu
+    }
+  }
+  
+  Future<void> _loadInitialData() async {
+    final homeProvider = Provider.of<HomeProvider>(context, listen: false);
+    
+    try {
+      await homeProvider.loadUserInfo();
+      await homeProvider.loadSchedules();
+      _didInitLoad = true; // Set flag bahwa initial load sudah selesai
+    } catch (e) {
+      debugPrint('Error loading initial data: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _loadData() async {
     if (!mounted) return;
-    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
+    final homeProvider = Provider.of<HomeProvider>(context, listen: false);
     setState(() { _isLoading = true; });
     try {
       await Future.wait([
-        _refreshUserInfo(),
-        scheduleProvider.refreshSchedules(),
+        homeProvider.loadUserInfo(),
+        homeProvider.refreshSchedules(),
       ]);
     } catch (e) {
       // ignore error, tetap pakai cache
@@ -113,21 +139,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
     }
   }
 
-  Future<void> _loadUserInfo() async {
-    // Coba ambil dari cache dulu, jika tidak ada fetch dari API
-    final data = await _userInfoService.getUserInfo();
-    setState(() {
-      _userInfo = data;
-    });
-  }
-
-  Future<void> _refreshUserInfo() async {
-    final data = await _userInfoService.refreshUserInfo();
-    setState(() {
-      _userInfo = data;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -177,70 +188,76 @@ class _StudentHomePageState extends State<StudentHomePage> {
   }
 
   Widget _buildHeader() {
-    final nama = _userInfo != null ? (_userInfo!['nama_lengkap'] ?? _userInfo!['username'] ?? '-') : '-';
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header dengan judul "Dashboard" dan icon
-          Row(
+    return Consumer<HomeProvider>(
+      builder: (context, homeProvider, _) {
+        final userInfo = homeProvider.userInfo;
+        final nama = userInfo != null ? (userInfo.namaLengkap.isNotEmpty ? userInfo.namaLengkap : userInfo.username) : '-';
+        
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.dashboard_rounded,
-                  color: Colors.white,
-                  size: 20,
+              // Header dengan judul "Dashboard" dan icon
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.dashboard_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Dashboard',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text.rich(
+                TextSpan(
+                  text: 'Halo, ',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: nama,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 22,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(height: 8),
               const Text(
-                'Dashboard',
+                'Lihat aktivitasmu dan semoga hari harimu menyenangkan',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
                   color: Colors.white,
-                ),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+              ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Text.rich(
-            TextSpan(
-              text: 'Halo, ',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-              ),
-              children: [
-                TextSpan(
-                  text: nama,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 22,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Lihat aktivitasmu dan semoga hari harimu menyenangkan',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-          ),
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
@@ -274,7 +291,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
   }
 
   Widget _buildScheduleSection() {
-    return Consumer<ScheduleProvider>(
+    return Consumer<HomeProvider>(
       builder: (context, provider, _) {
         final isLoading = provider.isLoading;
         final schedules = provider.schedules;
@@ -335,7 +352,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
                         onPressed: () async {
                           if (!isLoading) {
                             await provider.refreshSchedules();
-                            await _refreshUserInfo();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Jadwal berhasil diperbarui'),
@@ -1241,4 +1257,4 @@ class _HomeMenuCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

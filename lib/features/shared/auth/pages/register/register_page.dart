@@ -51,6 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
           username: _usernameController.text,
           email: _emailController.text,
           password: _passwordController.text,
+          passwordConfirmation: _passwordConfirmController.text, // Tambahkan ini
         );
 
         if (!mounted) return;

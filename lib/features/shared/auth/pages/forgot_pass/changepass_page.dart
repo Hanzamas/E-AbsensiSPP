@@ -30,75 +30,75 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     super.dispose();
   }
 
-  Future<void> _handleChangePassword() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
+Future<void> _handleChangePassword() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    setState(() => _isLoading = true);
 
-      try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        final success = await authProvider.resetPassword(
-          widget.email,
-          _newPasswordController.text,
-        );
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      // Perubahan di sini: tidak perlu mengirim email karena sudah disimpan saat verifikasi OTP
+      final success = await authProvider.resetPassword(
+        _newPasswordController.text,
+      );
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        if (success) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    AuthStrings.passwordChangedSuccess,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              content: const Text(
-                AuthStrings.passwordChangedSuccess,
-                style: TextStyle(fontSize: 14, height: 1.4),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.goNamed('login');
-                  },
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(
-                      color: Color(0xFF2196F3),
-                      fontWeight: FontWeight.bold,
-                    ),
+      if (success) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 28,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  AuthStrings.passwordChangedTitle,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-          );
-        }
-      } catch (e) {
-        _showError(e.toString());
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+            content: const Text(
+              AuthStrings.passwordChangedSuccess,
+              style: TextStyle(fontSize: 14, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.goNamed('login');
+                },
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Color(0xFF2196F3),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
+}
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
