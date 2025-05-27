@@ -5,6 +5,16 @@ import 'package:e_absensi/core/api/dio_client.dart';
 import '../models/update_password_model.dart';
 
 class ProfileServices {
+  // Implementasi singleton factory
+  static final ProfileServices _instance = ProfileServices._internal();
+  
+  // Factory constructor yang mengembalikan instance yang sama
+  factory ProfileServices() => _instance;
+  
+  // Private constructor
+  ProfileServices._internal();
+  
+  // Properties
   final Dio _dio = DioClient().dio;
   final String emptyProfilePictPath = '/uploads/';
 

@@ -56,7 +56,8 @@ class _OtpPageState extends State<OtpPage> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.verifyOtp(widget.email, _otpCode);
+      // Perubahan di sini: tidak lagi mengirim email ke method verifyOtp
+      final success = await authProvider.verifyOtp(_otpCode);
 
       if (!mounted) return;
 
@@ -93,7 +94,6 @@ class _OtpPageState extends State<OtpPage> {
       }
     }
   }
-
   Future<void> _resendOtp() async {
     setState(() => _isLoading = true);
 

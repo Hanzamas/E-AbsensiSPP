@@ -49,19 +49,19 @@ class SharedRoutes {
         );
       },
     ),
-    // GoRoute(
-    //   path: '/:role/settings',
-    //   name: 'settings',
-    //   pageBuilder: (context, state) {
-    //     final role = state.pathParameters['role'] ?? 'student';
-    //     return PageTransitionHelper.buildPageWithTransition(
-    //       child: SettingsPage(userRole: role),
-    //       type: TransitionType.slideLeft,
-    //       duration: const Duration(milliseconds: 300),
-    //       key: state.pageKey,
-    //     );
-    //   },
-    // ),
+    GoRoute(
+      path: '/:role/settings',
+      name: 'settings',
+      pageBuilder: (context, state) {
+        final role = state.pathParameters['role'] ?? 'student';
+        return PageTransitionHelper.buildPageWithTransition(
+          child: SettingsPage(userRole: role),
+          type: TransitionType.slideLeft,
+          duration: const Duration(milliseconds: 300),
+          key: state.pageKey,
+        );
+      },
+    ),
     // GoRoute(
     //   path: '/:role/profile/success',
     //   name: 'profile-success',

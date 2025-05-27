@@ -49,5 +49,6 @@ class AuthStrings {
   static const String saveButton = 'SIMPAN';
   static const String passwordEmptyError = 'Password tidak boleh kosong';
   static const String passwordMismatchError = 'Password tidak sama';
-  static const String passwordChangedSuccess = 'Password berhasil diubah, silakan login';
+  static const String passwordChangedTitle = 'Ubah Password berhasil';
+  static const String passwordChangedSuccess = 'Password Anda telah berhasil diubah. Silakan masuk kembali dengan password baru Anda.';
 } 

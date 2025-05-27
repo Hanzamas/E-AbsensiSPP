@@ -6,15 +6,27 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
 import '../data/repositories/profile_repository.dart';
-import '../data/models/basic_user_info.dart';
+import '../data/models/user_model.dart';
 import '../data/models/student_profile_model.dart';
 import '../data/models/teacher_profile_model.dart';
 import '../data/models/class_model.dart';
 
 class ProfileProvider extends ChangeNotifier {
-  final ProfileRepository _repository = ProfileRepository();
+  // Implementasi singleton factory
+  static final ProfileProvider _instance = ProfileProvider._internal();
+  
+  // Factory constructor yang mengembalikan instance yang sama
+  factory ProfileProvider() => _instance;
+  
+  // Deklarasi repository
+  late final ProfileRepository _repository;
+  
+  // Private constructor
+  ProfileProvider._internal() {
+    _repository = ProfileRepository();
+  }
 
-  BasicUserInfo? _userInfo;
+  User? _user;
   bool _isLoading = false;
   String? _error;
   String? _localProfileImagePath;
@@ -26,10 +38,10 @@ class ProfileProvider extends ChangeNotifier {
 
   static const String emptyProfilePictPath = '/uploads/';
 
-  BasicUserInfo? get userInfo => _userInfo;
+  User? get userInfo => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  String? get photoUrl => _userInfo?.profilePict;
+  String? get photoUrl => _user?.profilePict;
   String? get localProfileImagePath => _localProfileImagePath;
   List<ClassModel> get classes => _classes;
   bool get isLoadingClasses => _isLoadingClasses;
@@ -43,13 +55,13 @@ class ProfileProvider extends ChangeNotifier {
     final userJson = prefs.getString('user_info');
     _localProfileImagePath = prefs.getString('profile_image_path');
     if (userJson != null) {
-      _userInfo = BasicUserInfo.fromJson(json.decode(userJson));
+      _user = User.fromJson(json.decode(userJson));
       // Jika file lokal tidak ada, download dari server
       if ((_localProfileImagePath == null || !File(_localProfileImagePath!).existsSync()) &&
-          _userInfo?.profilePict != null &&
-          _userInfo!.profilePict!.isNotEmpty &&
-          _userInfo!.profilePict != emptyProfilePictPath) {
-        await downloadProfileImageFromServer(_userInfo!.profilePict!);
+          _user?.profilePict != null &&
+          _user!.profilePict!.isNotEmpty &&
+          _user!.profilePict != emptyProfilePictPath) {
+        await downloadProfileImageFromServer(_user!.profilePict!);
       }
       _isLoading = false;
       notifyListeners();
@@ -58,6 +70,7 @@ class ProfileProvider extends ChangeNotifier {
     // Jika cache tidak ada, fetch dari API
     await refresh();
   }
+  
 
   // Fetch dari API dan simpan ke cache
   Future<void> refresh() async {
@@ -67,7 +80,7 @@ class ProfileProvider extends ChangeNotifier {
       notifyListeners();
       final user = await _repository.getUserInfo();
       if (user != null) {
-        _userInfo = user;
+        _user = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
       }
@@ -91,12 +104,12 @@ class ProfileProvider extends ChangeNotifier {
       if (fileUrl.isEmpty) throw Exception('URL file kosong');
       // Update user info di server
       final user = await _repository.updateUserInfo(
-        username: _userInfo?.username ?? '',
-        email: _userInfo?.email ?? '',
+        username: _user?.username ?? '',
+        email: _user?.email ?? '',
         profilePict: fileUrl,
       );
       if (user != null) {
-        _userInfo = user;
+        _user = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
         // Copy file lokal hasil upload ke app dir
@@ -140,12 +153,12 @@ class ProfileProvider extends ChangeNotifier {
       if (fileUrl.isEmpty) throw Exception('URL file kosong');
       // Update user info di server
       final user = await _repository.updateUserInfo(
-        username: _userInfo?.username ?? '',
-        email: _userInfo?.email ?? '',
+        username: _user?.username ?? '',
+        email: _user?.email ?? '',
         profilePict: fileUrl,
       );
       if (user != null) {
-        _userInfo = user;
+        _user = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
         // Copy file lokal hasil upload ke app dir
@@ -176,12 +189,12 @@ class ProfileProvider extends ChangeNotifier {
       notifyListeners();
       // 1. Update user info dulu dengan profile_pict: emptyProfilePictPath
       final user = await _repository.updateUserInfo(
-        username: _userInfo?.username ?? '',
-        email: _userInfo?.email ?? '',
+        username: _user?.username ?? '',
+        email: _user?.email ?? '',
         profilePict: emptyProfilePictPath,
       );
       if (user != null) {
-        _userInfo = user;
+        _user = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
         // 2. Hapus file lokal jika ada
@@ -273,7 +286,7 @@ class ProfileProvider extends ChangeNotifier {
 
   // Clear cache dan state
   Future<void> clear() async {
-    _userInfo = null;
+    _user = null;
     _error = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_info');
@@ -419,11 +432,11 @@ class ProfileProvider extends ChangeNotifier {
       final user = await _repository.updateUserInfo(
         username: username,
         email: email,
-        profilePict: _userInfo?.profilePict,
+        profilePict: _user?.profilePict,
       );
 
       if (user != null) {
-        _userInfo = user;
+        _user = user;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_info', json.encode(user.toJson()));
         _isLoading = false;
