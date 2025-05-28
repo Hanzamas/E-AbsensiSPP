@@ -1,4 +1,6 @@
 {
     "editor.insertSpaces": false,
-    "cmake.sourceDirectory": "C:/laragon/www/E-AbsensiSPP/linux"
+    "cmake.sourceDirectory": "C:/laragon/www/E-AbsensiSPP/linux",
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-21",
+    "java.configuration.runtimes": []
 }
