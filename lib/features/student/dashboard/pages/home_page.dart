@@ -22,6 +22,10 @@ class _StudentHomePageState extends State<StudentHomePage> {
   static const List<String> hariList = [
     'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu', 'minggu'
   ];
+  // Define orderedHariList with correct day order (matching DateTime.weekday index 0=Sunday)
+  static const List<String> orderedHariList = [
+    'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu'
+  ];
 
   @override
   void initState() {
@@ -415,14 +419,11 @@ class _StudentHomePageState extends State<StudentHomePage> {
 
   Widget _buildFilterDropdown() {
     final now = DateTime.now();
-    final currentDay = [
-      'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu'
-    ][now.weekday % 7];
+    // Use orderedHariList for determining current day name
+    final currentDayName = orderedHariList[now.weekday % 7];
 
     // Default to current day if no selection
-    if (_selectedDay == '') {
-      _selectedDay = currentDay;
-    }
+    // Removed the logic that defaulted to current day, keeping 'semua' as default
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -472,27 +473,22 @@ class _StudentHomePageState extends State<StudentHomePage> {
   Widget _buildScheduleTable(List<Schedule> schedules) {
     // Get current day and time
     final now = DateTime.now();
-    final currentDay = [
-      'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu'
-    ][now.weekday % 7]; // 0 = Sunday in this array to match with DateTime.weekday
+    // Use orderedHariList for getting current day name
+    final currentDayName = orderedHariList[now.weekday % 7];
 
     // Get tomorrow (besok) dan lusa (2 hari ke depan)
     final tomorrow = DateTime.now().add(const Duration(days: 1));
-    final tomorrowDay = [
-      'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu'
-    ][tomorrow.weekday % 7];
-    
+    final tomorrowDayName = orderedHariList[tomorrow.weekday % 7];
+
     final dayAfterTomorrow = DateTime.now().add(const Duration(days: 2));
-    final dayAfterTomorrowDay = [
-      'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu'
-    ][dayAfterTomorrow.weekday % 7];
-    
+    final dayAfterTomorrowDayName = orderedHariList[dayAfterTomorrow.weekday % 7];
+
     final currentTimeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     
     // Group schedules by day (we'll show all days together in a single table)
     final Map<String, List<Schedule>> schedulesMap = {};
     for (final schedule in schedules) {
-      final day = schedule.hari.toLowerCase();
+      final day = schedule.hari.toLowerCase(); // schedule.hari should match names in orderedHariList
       if (!schedulesMap.containsKey(day)) {
         schedulesMap[day] = [];
       }
@@ -507,7 +503,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
     List<String> daysToShow = [];
     if (_selectedDay == 'semua') {
       // Show all days in the correct order
-      daysToShow = hariList;
+      daysToShow = orderedHariList; // Use orderedHariList for iteration order
     } else {
       // Show only the selected day
       daysToShow = [_selectedDay];
@@ -533,9 +529,12 @@ class _StudentHomePageState extends State<StudentHomePage> {
           
           // Check if this is a current/today/tomorrow class
           bool isCurrentClass = false;
-          bool isTodayClass = hari == currentDay;
-          bool isTomorrowClass = hari == tomorrowDay;
-          bool isDayAfterTomorrowClass = hari == dayAfterTomorrowDay;
+          // Compare schedule day name with current day name
+          bool isTodayClass = currentDay == currentDayName;
+          // Compare schedule day name with tomorrow day name
+          bool isTomorrowClass = currentDay == tomorrowDayName;
+          // Compare schedule day name with day after tomorrow name
+          bool isDayAfterTomorrowClass = currentDay == dayAfterTomorrowDayName;
           
           if (isTodayClass) {
             // Check if current time is between start and end time
@@ -635,7 +634,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 width: 1,
               ),
                   ),
-            child: _buildResponsiveTable(tableData, tomorrowDay, dayAfterTomorrowDay),
+            child: _buildResponsiveTable(tableData, tomorrowDayName, dayAfterTomorrowDayName),
                       ),
           const SizedBox(height: 16),
         ],
@@ -884,24 +883,32 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF2196F3).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
-                    border: isTodayClass
-                        ? Border.all(color: const Color(0xFF2196F3))
-                        : isTomorrowClass
-                            ? Border.all(color: Colors.blueGrey)
-                            : isDayAfterTomorrowClass
-                                ? Border.all(color: Colors.grey)
-                                : null,
+                    // Adjust border logic to use status flags directly
+                    border: isCurrentClass
+                        ? Border.all(color: Colors.green) // Berlangsung border
+                        : isTodayClass
+                            ? Border.all(color: Colors.orange) // Hari Ini border
+                            : isTomorrowClass
+                                ? Border.all(color: Colors.blueGrey) // Besok border
+                                : isDayAfterTomorrowClass
+                                    ? Border.all(color: Colors.grey) // Lusa border
+                                    : null, // Default no border
                   ),
                   child: Text(
                     (data['hari'] as String).toUpperCase(),
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 12,
-                      color: isTomorrowClass
-                          ? Colors.blueGrey
-                          : isDayAfterTomorrowClass
-                              ? Colors.grey
-                              : const Color(0xFF2196F3),
+                      // Adjust text color based on status flags
+                      color: isCurrentClass
+                          ? Colors.green // Berlangsung text color
+                          : isTodayClass
+                              ? Colors.orange // Hari Ini text color
+                              : isTomorrowClass
+                                  ? Colors.blueGrey // Besok text color
+                                  : isDayAfterTomorrowClass
+                                      ? Colors.grey // Lusa text color
+                                      : const Color(0xFF2196F3), // Default text color
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -915,13 +922,16 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 12,
+                    // Adjust text color based on status flags
                     color: isCurrentClass
                         ? Colors.green
-                        : isTomorrowClass
-                            ? Colors.blueGrey
-                            : isDayAfterTomorrowClass
-                                ? Colors.grey
-                                : const Color(0xFF424242),
+                        : isTodayClass
+                            ? Colors.orange
+                            : isTomorrowClass
+                                ? Colors.blueGrey
+                                : isDayAfterTomorrowClass
+                                    ? Colors.grey
+                                    : const Color(0xFF424242),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -934,11 +944,16 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 12,
-                    color: isTomorrowClass
-                        ? Colors.blueGrey
-                        : isDayAfterTomorrowClass
-                            ? Colors.grey
-                            : const Color(0xFF424242),
+                    // Adjust text color based on status flags
+                    color: isCurrentClass
+                        ? Colors.green
+                        : isTodayClass
+                            ? Colors.orange
+                            : isTomorrowClass
+                                ? Colors.blueGrey
+                                : isDayAfterTomorrowClass
+                                    ? Colors.grey
+                                    : const Color(0xFF424242),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -947,17 +962,22 @@ class _StudentHomePageState extends State<StudentHomePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 child: Text(
-                  mapelText.isNotEmpty 
+                  mapelText.isNotEmpty
                       ? (mapelIsPJOK ? 'PJOK' : mapelText)
                       : '-',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 12,
-                    color: isTomorrowClass
-                        ? Colors.blueGrey
-                        : isDayAfterTomorrowClass
-                            ? Colors.grey
-                            : const Color(0xFF424242),
+                    // Adjust text color based on status flags
+                    color: isCurrentClass
+                        ? Colors.green
+                        : isTodayClass
+                            ? Colors.orange
+                            : isTomorrowClass
+                                ? Colors.blueGrey
+                                : isDayAfterTomorrowClass
+                                    ? Colors.grey
+                                    : const Color(0xFF424242),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -966,17 +986,22 @@ class _StudentHomePageState extends State<StudentHomePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 child: Text(
-                  data['guru'].toString().isNotEmpty 
-                      ? data['guru'] 
+                  data['guru'].toString().isNotEmpty
+                      ? data['guru']
                       : '-',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 12,
-                    color: isTomorrowClass
-                        ? Colors.blueGrey
-                        : isDayAfterTomorrowClass
-                            ? Colors.grey
-                            : const Color(0xFF424242),
+                    // Adjust text color based on status flags
+                    color: isCurrentClass
+                        ? Colors.green
+                        : isTodayClass
+                            ? Colors.orange
+                            : isTomorrowClass
+                                ? Colors.blueGrey
+                                : isDayAfterTomorrowClass
+                                    ? Colors.grey
+                                    : const Color(0xFF424242),
                   ),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
