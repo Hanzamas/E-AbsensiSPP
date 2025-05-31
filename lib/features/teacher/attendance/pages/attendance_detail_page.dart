@@ -171,12 +171,12 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           const SizedBox(height: 16),
           _InfoRow(
             label: 'Nama Siswa',
-            value: record.namaSiswa ?? 'Tidak diketahui',
+            value: record.namaSiswa, // Fixed: Removed ?? 'Tidak diketahui'
           ),
           const SizedBox(height: 12),
           _InfoRow(
             label: 'NIS',
-            value: record.nis ?? 'Tidak diketahui',
+            value: record.nis, // Fixed: Removed ?? 'Tidak diketahui'
           ),
         ],
       ),
@@ -211,22 +211,22 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           const SizedBox(height: 16),
           _InfoRow(
             label: 'Mata Pelajaran',
-            value: record.namaMapel ?? 'Tidak diketahui',
+            value: record.namaMapel,
           ),
           const SizedBox(height: 12),
           _InfoRow(
             label: 'Kelas',
-            value: record.namaKelas ?? 'Tidak diketahui',
+            value: record.namaKelas,
           ),
           const SizedBox(height: 12),
           _InfoRow(
             label: 'Tanggal',
-            value: record.formattedDate ?? 'Tidak diketahui',
+            value: record.formattedDate,
           ),
           const SizedBox(height: 12),
           _InfoRow(
             label: 'Status',
-            value: record.status ?? 'Alpha',
+            value: record.status,
           ),
           if (record.keterangan != null) ...[
             const SizedBox(height: 12),
@@ -249,7 +249,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     final record = provider.getFilteredAttendanceById(attendanceId);
     if (record == null) return;
 
-    String selectedStatus = record.status ?? 'Alpha';
+    String selectedStatus = record.status;
     String? keterangan = record.keterangan;
     final keteranganController = TextEditingController(text: keterangan ?? '');
 
@@ -263,7 +263,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Siswa: ${record.namaSiswa ?? 'Tidak diketahui'}',
+                'Siswa: ${record.namaSiswa}', // Fixed: Removed ?? 'Tidak diketahui'
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                 ),
