@@ -32,6 +32,11 @@ class ApiEndpoints {
   // Guru
   static const String getTeacherProfile = '/profile/teacher';
   static const String updateTeacher = '/teachers/update';
+  static const String getTeacherSchedule = '/teacher/teaching/my';
+  static const String createLearningSession = '/teacher/learning-session/assign';
+  static const String getTeacherAttendance = '/teacher/attendance';
+  static const String getTeacherAttendanceById = '/teacher/attendance'; // Will append /:id
+  static const String updateTeacherAttendance = '/teachers/attendance/update'; // Will append /:id
   // Admin
 
   

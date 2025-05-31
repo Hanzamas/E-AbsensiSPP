@@ -8,9 +8,11 @@ import 'package:e_absensi/features/student/dashboard/provider/home_provider.dart
 import 'package:e_absensi/features/student/attendance/provider/attendance_provider.dart';
 import 'package:e_absensi/features/student/spp/provider/spp_provider.dart';
 import 'package:e_absensi/features/shared/profile/provider/profile_provider.dart';
-
 import 'package:e_absensi/features/shared/settings/provider/settings_provider.dart';
 
+// Import teacher providers
+import 'package:e_absensi/features/teacher/dashboard/provider/teacher_dashboard_provider.dart';
+import 'package:e_absensi/features/teacher/attendance/provider/teacher_attendance_provider.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -24,7 +26,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     // Inisialisasi data profile dari cache saat aplikasi pertama dimuat
-    
   }
 
   @override
@@ -35,25 +36,29 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(
           value: AuthProvider(),
         ),
-        // Home Provider - menggunakan singleton pattern
+        
+        // Student Providers
         ChangeNotifierProvider.value(
           value: HomeProvider(),
         ),
-        // Attendance Provider - menggunakan singleton pattern
         // ChangeNotifierProvider.value(
         //   value: AttendanceProvider(),
         // ),
-        // // SPP Provider - menggunakan singleton pattern
         // ChangeNotifierProvider.value(
         //   value: SppProvider(),
         // ),
-        // Profile Provider - menggunakan singleton pattern
+        
+        // Teacher Providers
+        ChangeNotifierProvider.value(
+          value: TeacherDashboardProvider(),
+        ),
+        ChangeNotifierProvider.value(
+          value: TeacherAttendanceProvider(),
+        ),
+        // Shared Providers
         ChangeNotifierProvider.value(
           value: ProfileProvider(),
         ),
-        // Profile Photo Provider - menggunakan singleton pattern
-        
-        // Settings Provider - menggunakan singleton pattern
         ChangeNotifierProvider.value(
           value: SettingsProvider(),
         ),
