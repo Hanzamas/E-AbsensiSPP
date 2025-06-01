@@ -22,7 +22,7 @@ final Map<String, List<NavItem>> navItemsByRole = {
   guruRole: [
     NavItem('Home', Icons.home, '/teacher/home'),
     NavItem('Absensi', Icons.article_outlined, '/teacher/attendance'),
-    NavItem('Akademik', Icons.book, '/teacher/academic'),
+    NavItem('Kelas', Icons.school, '/teacher/classes'),  // Future feature
     NavItem('Profile', Icons.person, '/teacher/profile'),
   ],
   adminRole: [
