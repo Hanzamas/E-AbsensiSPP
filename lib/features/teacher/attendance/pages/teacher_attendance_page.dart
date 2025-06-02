@@ -3159,14 +3159,40 @@ class _ScheduleCard extends StatelessWidget {
     this.showBorder = true, // Default true untuk backward compatibility
   });
 
+    // Tambahkan metode untuk memeriksa apakah jadwal sudah lewat
+  bool _isSchedulePassed() {
+    try {
+      // Parse jam selesai dari jadwal
+      final timeParts = schedule.jamSelesai.split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
+      
+      // Buat DateTime untuk waktu selesai hari ini
+      final now = DateTime.now();
+      final endTime = DateTime(
+        now.year, 
+        now.month, 
+        now.day,
+        hour,
+        minute,
+      );
+      
+      // Jadwal sudah lewat jika waktu sekarang lebih dari waktu selesai
+      return now.isAfter(endTime);
+    } catch (e) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isPassed = _isSchedulePassed();
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        // Terapkan shadow dan border hanya jika showBorder true
         boxShadow: showBorder ? [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -3200,7 +3226,10 @@ class _ScheduleCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: isStartingSession ? null : onStartSession,
+                // Disable tombol jika jadwal sudah lewat atau sedang memulai sesi
+                onPressed: (isPassed || isStartingSession) 
+                    ? null 
+                    : onStartSession,
                 icon: isStartingSession
                     ? const SizedBox(
                         width: 16,
@@ -3210,10 +3239,22 @@ class _ScheduleCard extends StatelessWidget {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Icon(Icons.play_arrow, size: 18),
-                label: Text(isStartingSession ? 'Memulai...' : 'Mulai Sesi'),
+                    : Icon(
+                        isPassed ? Icons.lock_clock : Icons.play_arrow,
+                        size: 18
+                      ),
+                label: Text(
+                  isStartingSession 
+                      ? 'Memulai...' 
+                      : isPassed 
+                          ? 'Waktu Habis' 
+                          : 'Mulai Sesi'
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
+                  // Ubah warna jadi abu-abu kalau sudah lewat
+                  backgroundColor: isPassed 
+                      ? Colors.grey.shade400
+                      : const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
