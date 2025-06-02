@@ -1860,16 +1860,31 @@ class _HistoryTabState extends State<_HistoryTab> {
   
   TeacherAttendanceProvider get provider => widget.provider;
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Enhanced Filter Section
-        Container(
+// Memodifikasi bagian filter section
+Widget build(BuildContext context) {
+  return Column(
+    children: [
+      // Enhanced Filter Section dengan Card
+      Card(
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 2,
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          color: Colors.white,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Filter Riwayat Absensi',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -1970,7 +1985,7 @@ class _HistoryTabState extends State<_HistoryTab> {
             ],
           ),
         ),
-        
+      ),
         // Filter result count
         if (provider.hasFiltersApplied)
           Container(
@@ -1994,7 +2009,7 @@ class _HistoryTabState extends State<_HistoryTab> {
         if (_selectedIds.isNotEmpty)
           _buildBulkActionBar(),
         
-        // Attendance List with checkboxes
+              // Ubah attendance list dengan card yang lebih jelas
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
@@ -2009,8 +2024,17 @@ class _HistoryTabState extends State<_HistoryTab> {
                       final record = provider.filteredAttendance[index];
                       final isSelected = _selectedIds.contains(record.idAbsensi);
                       
-                      return Container(
+                      // Tambahkan Card dengan elevation dan border yang lebih jelas
+                      return Card(
                         margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected ? const Color(0xFF2196F3) : Colors.transparent,
+                            width: isSelected ? 2 : 0,
+                          ),
+                        ),
                         child: _AttendanceCardWithCheckbox(
                           record: record,
                           isSelected: isSelected,
@@ -2033,8 +2057,8 @@ class _HistoryTabState extends State<_HistoryTab> {
                     title: 'Tidak Ada Data',
                     subtitle: 'Tidak ada data absensi dengan filter yang diterapkan',
                   ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -2478,7 +2502,6 @@ class _HistoryTabState extends State<_HistoryTab> {
   }
 }
 
-// Tambahkan class _AttendanceCardWithCheckbox untuk dukungan bulk action
 class _AttendanceCardWithCheckbox extends StatelessWidget {
   final dynamic record;
   final bool isSelected;
@@ -2494,82 +2517,76 @@ class _AttendanceCardWithCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isSelected ? const Color(0xFF2196F3) : Colors.transparent,
-          width: isSelected ? 2 : 0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Checkbox
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: Checkbox(
-              value: isSelected,
-              onChanged: (value) => onCheckboxChanged(value ?? false),
-              activeColor: const Color(0xFF2196F3),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
+    return Padding(
+      padding: const EdgeInsets.all(2.0), // Beri sedikit padding untuk efek selection
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(14.0),
+          child: Row(
+            children: [
+              // Checkbox
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Checkbox(
+                  value: isSelected,
+                  onChanged: (value) => onCheckboxChanged(value ?? false),
+                  activeColor: const Color(0xFF2196F3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          
-          // Card content
-          Expanded(
-            child: GestureDetector(
-              onTap: onTap,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    record.namaSiswa ?? 'Nama Siswa',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600, 
-                      color: Color(0xFF2D3748),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${record.namaMapel} - ${record.namaKelas}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF718096),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _StatusChip(status: record.status ?? 'Alpha'),
-                      const Spacer(),
-                      Text(
-                        record.formattedDate ?? '',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF718096),
-                        ),
+              const SizedBox(width: 12),
+              
+              // Card content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      record.namaSiswa ?? 'Nama Siswa',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600, 
+                        color: Color(0xFF2D3748),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${record.namaMapel} - ${record.namaKelas}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF718096),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _StatusChip(status: record.status ?? 'Alpha'),
+                        const Spacer(),
+                        Text(
+                          record.formattedDate ?? '',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF718096),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+              // Tambahkan icon untuk menandakan detail
+              const Icon(
+                Icons.chevron_right,
+                color: Colors.grey,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
