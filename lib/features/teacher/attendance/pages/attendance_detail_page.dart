@@ -256,107 +256,197 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Update Status Absensi'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Siswa: ${record.namaSiswa}', // Fixed: Removed ?? 'Tidak diketahui'
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Status Absensi',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: selectedStatus,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                items: ['Hadir', 'Alpha', 'Sakit', 'Izin']
-                    .map((status) => DropdownMenuItem(
-                          value: status,
-                          child: Text(status),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Keterangan (Opsional)',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: keteranganController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Masukkan keterangan...',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                maxLines: 3,
-              ),
-            ],
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Batal'),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Text(
+                  'Update Status Absensi',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 
-                final success = await provider.updateAttendanceStatus(
-                  attendanceId,
-                  selectedStatus,
-                  keteranganController.text.trim().isEmpty 
-                      ? null 
-                      : keteranganController.text.trim(),
-                );
+                // Siswa info
+                Text(
+                  'Siswa: ${record.namaSiswa}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xFF2D3748),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 
-                if (context.mounted) {
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Status absensi berhasil diupdate'),
-                        backgroundColor: Color(0xFF4CAF50),
-                        behavior: SnackBarBehavior.floating,
+                // Status field
+                const Text(
+                  'Status Absensi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                    icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
+                    items: ['Hadir', 'Alpha', 'Sakit', 'Izin']
+                        .map((status) => DropdownMenuItem(
+                              value: status,
+                              child: Text(
+                                status,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedStatus = value!;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Keterangan field
+                const Text(
+                  'Keterangan (Opsional)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: TextFormField(
+                    controller: keteranganController,
+                    decoration: const InputDecoration(
+                      hintText: 'Masukkan keterangan...',
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      hintStyle: TextStyle(color: Color(0xFFA0AEC0), fontSize: 14),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF2D3748)),
+                    maxLines: 3,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Gagal update status: ${provider.error}'),
-                        backgroundColor: const Color(0xFFE53E3E),
-                        behavior: SnackBarBehavior.floating,
+                      child: const Text(
+                        'Batal',
+                        style: TextStyle(fontSize: 14),
                       ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2196F3),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Update'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        
+                        final success = await provider.updateAttendanceStatus(
+                          attendanceId,
+                          selectedStatus,
+                          keteranganController.text.trim().isEmpty 
+                              ? null 
+                              : keteranganController.text.trim(),
+                        );
+                        
+                        if (context.mounted) {
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Status absensi berhasil diupdate'),
+                                backgroundColor: Color(0xFF4CAF50),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Gagal update status: ${provider.error}'),
+                                backgroundColor: const Color(0xFFE53E3E),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2196F3),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Update',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

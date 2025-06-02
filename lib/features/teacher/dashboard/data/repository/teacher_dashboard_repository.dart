@@ -71,6 +71,29 @@ Future<Map<String, int>> getAttendanceStats() async {
   }
 }
 
+Future<List<dynamic>> getAttendanceData() async {
+  try {
+    final attendanceData = await _service.getAttendanceData();
+    
+    // Filter untuk hanya menampilkan data absensi hari ini
+    final today = DateTime.now();
+    final todayString = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    
+    // Filter untuk data hari ini saja
+    final todayData = attendanceData.where((item) {
+      final attendanceDate = item['tanggal'] != null 
+          ? DateTime.parse(item['tanggal']).toString().split(' ')[0]
+          : '';
+      return attendanceDate == todayString;
+    }).toList();
+    
+    return todayData.isEmpty ? [] : todayData;
+  } catch (e) {
+    debugPrint('📊 Repository getAttendanceData error: $e');
+    return []; // Return empty list instead of throwing error
+  }
+}
+
   Future<Map<String, dynamic>> startSession(int idPengajaran) async {
     try {
       return await _service.startLearningSession(idPengajaran);
