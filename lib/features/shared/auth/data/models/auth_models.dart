@@ -1,7 +1,4 @@
-// Semua model untuk fitur auth
-
 // ----- REQUEST MODELS -----
-
 class LoginRequest {
   final String username;
   final String password;
@@ -11,12 +8,10 @@ class LoginRequest {
     required this.password,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'username': username,
-      'password': password,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'password': password,
+  };
 }
 
 class RegisterRequest {
@@ -24,25 +19,21 @@ class RegisterRequest {
   final String email;
   final String password;
   final String passwordConfirmation;
-  final String role;
 
   RegisterRequest({
     required this.username,
     required this.email,
     required this.password,
     required this.passwordConfirmation,
-    this.role = 'siswa',
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'username': username,
-      'email': email,
-      'password': password,
-      'password_confirmation': passwordConfirmation,
-      'role': role,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'email': email,
+    'password': password,
+    'password_confirmation': passwordConfirmation,
+    'role': 'siswa', // Default role
+  };
 }
 
 class PasswordResetRequest {
@@ -50,9 +41,7 @@ class PasswordResetRequest {
   
   PasswordResetRequest({required this.email});
   
-  Map<String, dynamic> toJson() {
-    return {'email': email};
-  }
+  Map<String, dynamic> toJson() => {'email': email};
 }
 
 class OtpVerificationRequest {
@@ -60,9 +49,7 @@ class OtpVerificationRequest {
   
   OtpVerificationRequest({required this.otp});
   
-  Map<String, dynamic> toJson() {
-    return {'otp': otp};
-  }
+  Map<String, dynamic> toJson() => {'otp': otp};
 }
 
 class PasswordChangeRequest {
@@ -74,130 +61,74 @@ class PasswordChangeRequest {
     required this.confirmPassword,
   });
   
-  Map<String, dynamic> toJson() {
-    return {
-      'newPassword': newPassword,
-      'confirmPassword': confirmPassword,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'newPassword': newPassword,
+    'confirmPassword': confirmPassword,
+  };
 }
 
-// ----- RESPONSE MODELS -----
-
+// ----- SIMPLE RESPONSE MODELS -----
 class LoginResponse {
   final bool status;
   final String message;
-  final LoginData data;
+  final String token;
+  final String role;
+  final UserData user;
 
   LoginResponse({
     required this.status,
     required this.message,
-    required this.data,
+    required this.token,
+    required this.role,
+    required this.user,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>;
     return LoginResponse(
       status: json['status'] as bool,
       message: json['message'] as String,
-      data: LoginData.fromJson(json['data'] as Map<String, dynamic>),
+      token: data['token'] as String,
+      role: data['role'] as String,
+      user: UserData.fromJson(data),
     );
   }
 }
 
-class UserInfoResponse {
-  final bool status;
-  final String message;
-  final UserInfo data;
-  
-  UserInfoResponse({
-    required this.status,
-    required this.message,
-    required this.data,
-  });
-  
-  factory UserInfoResponse.fromJson(Map<String, dynamic> json) {
-    return UserInfoResponse(
-      status: json['status'] as bool,
-      message: json['message'] as String,
-      data: UserInfo.fromJson(json['data'] as Map<String, dynamic>),
-    );
-  }
-}
-
-// ----- DATA MODELS -----
-
-class LoginData {
-  final String token;
-  final int idUser;
-  final String username;
-  final String role;
-  final bool isProfileCompleted;
-
-  LoginData({
-    required this.token,
-    required this.idUser,
-    required this.username,
-    required this.role,
-    required this.isProfileCompleted,
-  });
-
-  factory LoginData.fromJson(Map<String, dynamic> json) {
-    return LoginData(
-      token: json['token'] as String,
-      idUser: json['id_user'] as int,
-      username: json['username'] as String,
-      role: json['role'] as String,
-      isProfileCompleted: json['isProfileCompleted'] as bool,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'token': token,
-      'id_user': idUser,
-      'username': username,
-      'role': role,
-      'isProfileCompleted': isProfileCompleted,
-    };
-  }
-}
-
-class UserInfo {
+class UserData {
   final int id;
   final String username;
   final String email;
   final String namaLengkap;
-  final String role;
-  final String? profilePict;
 
-  UserInfo({
+  UserData({
     required this.id,
     required this.username,
     required this.email,
     required this.namaLengkap,
-    required this.role,
-    this.profilePict,
   });
 
-  factory UserInfo.fromJson(Map<String, dynamic> json) {
-    return UserInfo(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
-      username: json['username']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      namaLengkap: json['nama_lengkap']?.toString() ?? '',
-      role: json['role']?.toString() ?? '',
-      profilePict: json['profile_pict']?.toString(),
+  factory UserData.fromJson(Map<String, dynamic> json) {
+    return UserData(
+      id: json['id_user'] as int,
+      username: json['username'] as String,
+      email: json['email'] ?? '',
+      namaLengkap: json['nama_lengkap'] ?? json['username'],
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-      'email': email,
-      'nama_lengkap': namaLengkap,
-      'role': role,
-      'profile_pict': profilePict,
-    };
+// Simple response untuk operations
+class SimpleResponse {
+  final bool status;
+  final String message;
+  
+  SimpleResponse({required this.status, required this.message});
+  
+  factory SimpleResponse.fromJson(Map<String, dynamic> json) {
+    return SimpleResponse(
+      status: json['status'] as bool,
+      message: json['message'] as String,
+    );
   }
 }

@@ -1,143 +1,259 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:e_absensi/core/storage/secure_storage.dart';
-import 'package:e_absensi/features/shared/auth/data/repositories/auth_repository.dart';
-import 'package:e_absensi/features/shared/auth/data/models/auth_models.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../data/repositories/auth_repository.dart';
+import '../data/models/auth_models.dart';
 
 class AuthProvider extends ChangeNotifier {
   static final AuthProvider _instance = AuthProvider._internal();
   
   late final SecureStorage _storage;
-  late final AuthRepository _authRepository;
+  late final AuthRepository _repository;
+  
+  // ✅ Simple state variables
   String? _token;
-  String? _userRole;
-  UserInfo? _userInfo;
+  String? _role; // 'siswa', 'guru', 'admin'
+  UserData? _user;
+  bool _isLoading = false;
+  String? _error; // ✅ ADD: Error state
 
-  // Private constructor
   AuthProvider._internal() {
     _storage = SecureStorage();
-    _authRepository = AuthRepository();
-    // _loadCachedUserInfo();
+    _repository = AuthRepository();
   }
 
-  // Singleton factory
   factory AuthProvider() => _instance;
 
-  // Getters
-  String? get userRole => _userRole;
-  bool get isAuthenticated => _token != null;
-  UserInfo? get userInfo => _userInfo;
+  // ✅ Simple getters
+  String? get token => _token;
+  String? get role => _role;
+  UserData? get user => _user;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get isAuthenticated => _token != null && _role != null;
 
-  // Method untuk load cached user info
-  // Future<void> _loadCachedUserInfo() async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final userInfoString = prefs.getString('user_info');
-  //     if (userInfoString != null) {
-  //       _userInfo = UserInfo.fromJson(json.decode(userInfoString));
-  //       notifyListeners();
-  //     }
-  //   } catch (e) {
-  //     // Ignore error, this is just for caching
-  //   }
-  // }
-
+  // ✅ Check existing auth with better error handling
   Future<String?> checkAuth() async {
-    _token = await _storage.read('token');
-    _userRole = await _storage.read('user_role');
-    notifyListeners();
-    return _userRole;
-  }
-
-  Future<bool> login(String username, String password) async {
     try {
-      final response = await _authRepository.login(username, password);
+      _token = await _storage.read('token');
+      _role = await _storage.read('user_role');
       
-      await _storage.write('token', response.data.token);
-      await _storage.write('user_role', response.data.role.toLowerCase());
-      _token = response.data.token;
-      _userRole = response.data.role.toLowerCase();
+      debugPrint('🔍 AuthProvider: Check auth - Token: ${_token != null}, Role: $_role');
       
-      // Ambil info user dan simpan ke SharedPrefs
-      try {
-        final userResponse = await _authRepository.getUserInfo();
-        _userInfo = userResponse.data;
-        
-        // Simpan ke SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_info', json.encode(_userInfo!.toJson()));
-      } catch (e) {
-        // Abaikan error user info, tetap return sukses login
-        print('Error getting user info: $e');
+      // ✅ Validate stored data
+      if (_token != null && _role != null) {
+        // Optional: Validate token with API
+        notifyListeners();
+        return _role;
+      } else {
+        // Clear invalid data
+        await _clearAuth();
+        return null;
       }
-      
-      notifyListeners();
-      return response.status;
     } catch (e) {
-      rethrow;
+      debugPrint('❌ AuthProvider: Check auth error - $e');
+      await _clearAuth();
+      return null;
     }
   }
 
+  // ✅ Simple login with proper error handling
+  Future<bool> login(String username, String password) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      debugPrint('🚀 AuthProvider: Starting login process');
+      
+      final response = await _repository.login(username, password);
+      
+      if (response.status) {
+        // ✅ Normalize role to lowercase
+        _token = response.token;
+        _role = _normalizeRole(response.role);
+        _user = response.user;
+
+        // Save to secure storage
+        await _storage.write('token', _token!);
+        await _storage.write('user_role', _role!);
+
+        debugPrint('✅ AuthProvider: Login successful - Role: $_role');
+        
+        _error = null;
+        notifyListeners();
+        return true;
+      } else {
+        _error = response.message;
+        debugPrint('❌ AuthProvider: Login failed - ${response.message}');
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _error = _parseError(e.toString());
+      debugPrint('❌ AuthProvider: Login error - $e');
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ Simple logout
+  Future<void> logout() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _clearAuth();
+      debugPrint('✅ AuthProvider: Logout successful');
+    } catch (e) {
+      debugPrint('❌ AuthProvider: Logout error - $e');
+      // Force clear even if error
+      await _clearAuth();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ Registration with error handling
   Future<bool> register({
     required String username,
     required String email,
     required String password,
     required String passwordConfirmation,
   }) async {
-    return await _authRepository.register(
-      username: username,
-      email: email,
-      password: password,
-      passwordConfirmation: passwordConfirmation,
-    );
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final success = await _repository.register(
+        username: username,
+        email: email,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+      );
+      
+      if (!success) {
+        _error = 'Registrasi gagal';
+      }
+      
+      return success;
+    } catch (e) {
+      _error = _parseError(e.toString());
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  Future<void> logout() async {
-    // Bersihkan SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_info');
-    
-    // Hapus data dari secure storage
-    await _storage.clearAll();
-    
-    // Reset state
+  // ✅ Password reset methods with error handling
+  Future<bool> requestPasswordReset(String email) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      return await _repository.requestPasswordReset(email);
+    } catch (e) {
+      _error = _parseError(e.toString());
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> verifyOtp(String otp) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      return await _repository.verifyOtp(otp);
+    } catch (e) {
+      _error = _parseError(e.toString());
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resetPassword(String newPassword) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      return await _repository.resetPassword(newPassword);
+    } catch (e) {
+      _error = _parseError(e.toString());
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ Helper methods
+  String getHomeRoute() {
+    switch (_role) {
+      case 'siswa':
+        return '/student/home';
+      case 'guru':
+        return '/teacher/home';
+      case 'admin':
+        return '/admin/home';
+      default:
+        return '/login';
+    }
+  }
+
+  // ✅ Clear all auth data
+  Future<void> _clearAuth() async {
     _token = null;
-    _userRole = null;
-    _userInfo = null;
+    _role = null;
+    _user = null;
+    _error = null;
     
+    await _storage.clearAll();
     notifyListeners();
   }
 
-  // Method untuk request reset password
-  Future<bool> requestPasswordReset(String email) async {
-    return await _authRepository.requestPasswordReset(email);
+  // ✅ Normalize role from API response
+  String _normalizeRole(String apiRole) {
+    switch (apiRole.toLowerCase()) {
+      case 'siswa':
+      case 'student':
+        return 'siswa';
+      case 'guru':
+      case 'teacher':
+        return 'guru';
+      case 'admin':
+        return 'admin';
+      default:
+        return 'siswa'; // Default fallback
+    }
   }
 
-  // Method untuk verifikasi OTP
-  Future<bool> verifyOtp(String otp) async {
-    return await _authRepository.verifyOtp(otp);
+  // ✅ Parse error messages
+  String _parseError(String error) {
+    if (error.contains('Username atau password salah')) {
+      return 'Username atau password salah';
+    } else if (error.contains('401') || error.contains('unauthorized')) {
+      return 'Username atau password salah';
+    } else if (error.contains('not found') || error.contains('tidak ditemukan')) {
+      return 'Akun tidak ditemukan';
+    } else if (error.contains('validation') || error.contains('validasi')) {
+      return 'Data tidak valid';
+    } else if (error.contains('network') || error.contains('connection')) {
+      return 'Koneksi internet bermasalah';
+    } else {
+      return 'Terjadi kesalahan. Silakan coba lagi nanti.';
+    }
   }
-
-  // Method untuk reset password
-  Future<bool> resetPassword(String newPassword) async {
-    return await _authRepository.resetPassword(newPassword);
-  }
-
-  // Method untuk get user info jika perlu refresh
-  // Future<UserInfo?> refreshUserInfo() async {
-  //   try {
-  //     final response = await _authRepository.getUserInfo();
-  //     _userInfo = response.data;
-      
-  //     // Simpan ke SharedPreferences
-  //     final prefs = await SharedPreferences.getInstance();
-  //     await prefs.setString('user_info', json.encode(_userInfo!.toJson()));
-      
-  //     notifyListeners();
-  //     return _userInfo;
-  //   } catch (e) {
-  //     return null;
-  //   }
-  // }
 }

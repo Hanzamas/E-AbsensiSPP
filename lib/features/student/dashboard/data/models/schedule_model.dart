@@ -45,29 +45,4 @@ class Schedule {
   String get formattedJamMulai => jamMulai.length >= 5 ? jamMulai.substring(0, 5) : jamMulai;
   String get formattedJamSelesai => jamSelesai.length >= 5 ? jamSelesai.substring(0, 5) : jamSelesai;
   String get formattedWaktu => '$formattedJamMulai - $formattedJamSelesai';
-  
-  // Helper untuk cek jadwal sedang aktif
-  bool isCurrentlyActive() {
-    try {
-      final now = DateTime.now();
-      final dayIndex = now.weekday - 1; // 0 = Monday
-      final daysOfWeek = ['senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu', 'minggu'];
-      
-      // Jika bukan hari yang sama, jadwal tidak aktif
-      if (hari.toLowerCase() != daysOfWeek[dayIndex]) {
-        return false;
-      }
-      
-      // Format waktu sekarang untuk perbandingan
-      final currentHour = now.hour.toString().padLeft(2, '0');
-      final currentMinute = now.minute.toString().padLeft(2, '0');
-      final currentTime = '$currentHour:$currentMinute';
-      
-      // Check if current time is between jamMulai and jamSelesai
-      return currentTime.compareTo(formattedJamMulai) >= 0 && 
-             currentTime.compareTo(formattedJamSelesai) <= 0;
-    } catch (e) {
-      return false;
-    }
-  }
 }

@@ -1,6 +1,7 @@
 import '../service/teacher_dashboard_service.dart';
 import '../model/user_profile_model.dart';
 import '../model/schedule_model.dart';
+import 'package:flutter/foundation.dart'; // ✅ Add this import too
 
 class TeacherDashboardRepository {
   final TeacherDashboardService _service = TeacherDashboardService();
@@ -27,33 +28,71 @@ class TeacherDashboardRepository {
     }
   }
 
-  Future<Map<String, int>> getAttendanceStats() async {
-    try {
-      final rawData = await _service.getAttendanceData();
-      final today = DateTime.now();
-      
-      final todayAttendance = rawData.where((record) {
-        try {
-          final recordDate = DateTime.parse(record['tanggal']);
-          return recordDate.year == today.year &&
-                 recordDate.month == today.month &&
-                 recordDate.day == today.day;
-        } catch (e) {
-          return false;
-        }
-      }).toList();
-
+Future<Map<String, int>> getAttendanceStats() async {
+  try {
+    final List<dynamic> attendanceData = await _service.getAttendanceData();
+    
+    // ✅ Handle empty data gracefully
+    if (attendanceData.isEmpty) {
       return {
-        'total': todayAttendance.length,
-        'hadir': todayAttendance.where((r) => r['status']?.toString().toLowerCase() == 'hadir').length,
-        'alpha': todayAttendance.where((r) => r['status']?.toString().toLowerCase() == 'alpha').length,
-        'sakit': todayAttendance.where((r) => r['status']?.toString().toLowerCase() == 'sakit').length,
-        'izin': todayAttendance.where((r) => r['status']?.toString().toLowerCase() == 'izin').length,
+        'total': 0,
+        'hadir': 0,
+        'alpha': 0,
+        'sakit': 0,
+        'izin': 0,
       };
-    } catch (e) {
-      throw Exception('Repository Error - getAttendanceStats: $e');
     }
+
+    // Process stats from attendance data
+    int total = attendanceData.length;
+    int hadir = attendanceData.where((item) => item['status'] == 'Hadir').length;
+    int alpha = attendanceData.where((item) => item['status'] == 'Alpha').length;
+    int sakit = attendanceData.where((item) => item['status'] == 'Sakit').length;
+    int izin = attendanceData.where((item) => item['status'] == 'Izin').length;
+
+    return {
+      'total': total,
+      'hadir': hadir,
+      'alpha': alpha,
+      'sakit': sakit,
+      'izin': izin,
+    };
+  } catch (e) {
+    debugPrint('📊 Repository getAttendanceStats error: $e');
+    
+    // ✅ Return zero stats instead of throwing error
+    return {
+      'total': 0,
+      'hadir': 0,
+      'alpha': 0,
+      'sakit': 0,
+      'izin': 0,
+    };
   }
+}
+
+Future<List<dynamic>> getAttendanceData() async {
+  try {
+    final attendanceData = await _service.getAttendanceData();
+    
+    // Filter untuk hanya menampilkan data absensi hari ini
+    final today = DateTime.now();
+    final todayString = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    
+    // Filter untuk data hari ini saja
+    final todayData = attendanceData.where((item) {
+      final attendanceDate = item['tanggal'] != null 
+          ? DateTime.parse(item['tanggal']).toString().split(' ')[0]
+          : '';
+      return attendanceDate == todayString;
+    }).toList();
+    
+    return todayData.isEmpty ? [] : todayData;
+  } catch (e) {
+    debugPrint('📊 Repository getAttendanceData error: $e');
+    return []; // Return empty list instead of throwing error
+  }
+}
 
   Future<Map<String, dynamic>> startSession(int idPengajaran) async {
     try {

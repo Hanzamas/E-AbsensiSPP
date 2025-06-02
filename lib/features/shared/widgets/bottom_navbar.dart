@@ -22,8 +22,8 @@ final Map<String, List<NavItem>> navItemsByRole = {
   guruRole: [
     NavItem('Home', Icons.home, '/teacher/home'),
     NavItem('Absensi', Icons.article_outlined, '/teacher/attendance'),
-    NavItem('Kelas', Icons.school, '/teacher/classes'),  // Future feature
-    NavItem('Profile', Icons.person, '/teacher/profile'),
+    // ✅ Fix: Remove /teacher/classes karena belum ada
+    NavItem('Profile', Icons.person, '/teacher/profile'), // ✅ Change index
   ],
   adminRole: [
     NavItem('Home', Icons.home, '/admin/home'),
@@ -114,11 +114,13 @@ class CustomBottomNavBar extends StatelessWidget {
   void _onItemTapped(int index, String role, BuildContext context) {
     final items = navItemsByRole[role.toLowerCase()] ?? navItemsByRole[siswaRole]!;
     final path = items[index].route;
-    // Untuk profile, gunakan rute baru dengan format /:role/profile
+    
+    // ✅ Fix: Handle profile routes properly
     if (path.endsWith('/profile')) {
-      context.go('/$role/profile');
+      // Use role-specific profile route
+      context.go('/${role.toLowerCase()}/profile');
     } else {
       context.go(path);
     }
-  }
-} 
+  } 
+}

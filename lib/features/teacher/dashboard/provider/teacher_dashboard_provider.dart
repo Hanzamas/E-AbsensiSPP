@@ -13,43 +13,67 @@ class TeacherDashboardProvider with ChangeNotifier {
   // Data states
   UserProfileModel? _userProfile;
   List<ScheduleModel> _todaySchedule = [];
+  Map<String, dynamic> _attendanceData = {};
   Map<String, int> _attendanceStats = {};
   String? _error;
+  
+  // Filter states
+  int? _selectedClassId; // New: Track selected class ID for filtering
 
   // Getters
   bool get isLoading => _isLoading;
   bool get isStartingSession => _isStartingSession;
   UserProfileModel? get userProfile => _userProfile;
   List<ScheduleModel> get todaySchedule => _todaySchedule;
-  Map<String, int> get attendanceStats => _attendanceStats;
+  Map<String, int> get attendanceStats => _filteredAttendanceStats;
   String? get error => _error;
+  int? get selectedClassId => _selectedClassId;
 
-  // Computed properties
-  String get teacherName => _userProfile?.displayName ?? 'Guru';
-  String get greetingName => _userProfile?.greetingName ?? 'Pak/Bu Guru';
-  String get teacherRole => _userProfile?.role ?? 'teacher';
-  bool get hasClassToday => _todaySchedule.isNotEmpty;
-
-  // Stats getters
-  int get totalStudents => _attendanceStats['total'] ?? 0;
-  int get presentToday => _attendanceStats['hadir'] ?? 0;
-  int get absentToday => _attendanceStats['alpha'] ?? 0;
-  int get sickToday => _attendanceStats['sakit'] ?? 0;
-  int get permissionToday => _attendanceStats['izin'] ?? 0;
-
-  double get attendanceRate {
-    if (totalStudents == 0) return 0.0;
-    return (presentToday / totalStudents) * 100;
+  // Get today's classes for the filter dropdown
+  List<ScheduleModel> get todayClasses => _todaySchedule;
+  
+  // Get filtered attendance stats based on selected class
+  Map<String, int> get _filteredAttendanceStats {
+    if (_selectedClassId == null) {
+      return _attendanceStats; // Return all stats if no filter
+    }
+    
+    // Filter attendance data by selected class and recalculate stats
+    final filteredData = _attendanceData.entries
+        .where((entry) => entry.value['classId'] == _selectedClassId)
+        .map((e) => e.value)
+        .toList();
+    
+    if (filteredData.isEmpty) {
+      return {
+        'total': 0,
+        'hadir': 0,
+        'alpha': 0, 
+        'sakit': 0,
+        'izin': 0
+      };
+    }
+    
+    // Count statuses
+    int total = filteredData.length;
+    int hadir = filteredData.where((item) => item['status'] == 'Hadir').length;
+    int alpha = filteredData.where((item) => item['status'] == 'Alpha').length;
+    int sakit = filteredData.where((item) => item['status'] == 'Sakit').length;
+    int izin = filteredData.where((item) => item['status'] == 'Izin').length;
+    
+    return {
+      'total': total,
+      'hadir': hadir,
+      'alpha': alpha,
+      'sakit': sakit,
+      'izin': izin
+    };
   }
 
-  String get attendanceRateText => '${attendanceRate.toStringAsFixed(1)}%';
-
-  String get currentTimeGreeting {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Selamat Pagi';
-    if (hour < 15) return 'Selamat Siang';
-    if (hour < 18) return 'Selamat Sore';
-    return 'Selamat Malam';
+  // Select a class for filtering
+  void selectClass(int? classId) {
+    _selectedClassId = classId;
+    notifyListeners();
   }
 
   // Load dashboard data
@@ -62,12 +86,15 @@ class TeacherDashboardProvider with ChangeNotifier {
       final results = await Future.wait([
         _repository.getUserProfile(),
         _repository.getTodaySchedule(),
-        _repository.getAttendanceStats(),
+        _repository.getAttendanceData(),
       ]);
 
       _userProfile = results[0] as UserProfileModel;
       _todaySchedule = results[1] as List<ScheduleModel>;
-      _attendanceStats = results[2] as Map<String, int>;
+      
+      // Process attendance data
+      final attendanceData = results[2] as List<dynamic>;
+      _processAttendanceData(attendanceData);
       
       _error = null;
     } catch (e) {
@@ -77,6 +104,64 @@ class TeacherDashboardProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Process attendance data and create stats
+  void _processAttendanceData(List<dynamic> attendanceData) {
+    // Reset data
+    _attendanceData = {};
+    
+    // Process raw data into structured format with mapping to classes
+    for (final item in attendanceData) {
+      final String id = item['id_absensi']?.toString() ?? '';
+      final int? classId = _getClassIdByName(item['nama_kelas']);
+      
+      if (id.isNotEmpty) {
+        _attendanceData[id] = {
+          'id': id,
+          'mapel': item['nama_mapel'] ?? '',
+          'kelas': item['nama_kelas'] ?? '',
+          'classId': classId,
+          'tanggal': item['tanggal'] ?? '',
+          'status': item['status'] ?? 'Alpha',
+          'waktuScan': item['waktu_scan'],
+          'nis': item['nis'] ?? '',
+          'namaSiswa': item['nama_siswa'] ?? '',
+        };
+      }
+    }
+    
+    // Calculate overall stats
+    int total = _attendanceData.length;
+    int hadir = _attendanceData.values.where((item) => item['status'] == 'Hadir').length;
+    int alpha = _attendanceData.values.where((item) => item['status'] == 'Alpha').length;
+    int sakit = _attendanceData.values.where((item) => item['status'] == 'Sakit').length;
+    int izin = _attendanceData.values.where((item) => item['status'] == 'Izin').length;
+    
+    _attendanceStats = {
+      'total': total,
+      'hadir': hadir,
+      'alpha': alpha,
+      'sakit': sakit,
+      'izin': izin
+    };
+  }
+  
+  // Helper to find class ID by name
+  int? _getClassIdByName(String? className) {
+    if (className == null) return null;
+    
+    final matchingClass = _todaySchedule.firstWhere(
+      (schedule) => schedule.namaKelas == className,
+      orElse: () => ScheduleModel(
+        id: 0, idGuru: 0, idMapel: 0, idKelas: 0,
+        hari: '', jamMulai: '', jamSelesai: '',
+        createdAt: DateTime.now(), updatedAt: DateTime.now(),
+        namaGuru: '', namaMapel: '', namaKelas: '', tahunAjaran: '',
+      ),
+    );
+    
+    return matchingClass.id != 0 ? matchingClass.idKelas : null;
   }
 
   // Start learning session

@@ -27,11 +27,20 @@ class TeacherAttendanceProvider with ChangeNotifier {
   String? _selectedClass;
   String? _selectedStatus;
 
+  // Tambahkan property baru
+  List<String> _availableSubjects = [];
+  List<String> _availableClasses = [];
+  DateTime? _startDate;
+  DateTime? _endDate;
+
   // Getters - Loading states
   bool get isLoading => _isLoading;
   bool get isCreatingSession => _isCreatingSession;
   bool get isUpdatingAttendance => _isUpdatingAttendance;
   bool get isLoadingStats => _isLoadingStats;
+  // Tambahkan getters
+  List<String> get availableSubjects => _availableSubjects;
+  List<String> get availableClasses => _availableClasses;
   
   // Getters - Data states
   List<TeachingScheduleModel> get teachingSchedule => _teachingSchedule;
@@ -178,6 +187,54 @@ class TeacherAttendanceProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+    // Load metadata untuk filter
+  Future<void> loadFilterMetadata() async {
+    try {
+      final subjects = await _repository.getAvailableSubjects();
+      final classes = await _repository.getAvailableClasses();
+      
+      _availableSubjects = subjects;
+      _availableClasses = classes;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading filter metadata: $e');
+    }
+  }
+    // Tambahkan fungsi untuk mendapatkan tren kehadiran
+  Future<Map<String, List<double>>> getAttendanceTrend() async {
+    try {
+      final now = DateTime.now();
+      final result = <String, List<double>>{
+        'attendance': [],
+        'dates': [],
+      };
+      
+      // Get data for the last 7 days
+      for (int i = 6; i >= 0; i--) {
+        final date = now.subtract(Duration(days: i));
+        final stats = await _repository.getAttendanceStats(date);
+        
+        final total = stats['total'] ?? 0;
+        final present = stats['hadir'] ?? 0;
+        
+        double attendanceRate = 0;
+        if (total > 0) {
+          attendanceRate = (present / total) * 100;
+        }
+        
+        result['attendance']!.add(attendanceRate);
+        result['dates']!.add(date.day.toDouble());
+      }
+      
+      return result;
+    } catch (e) {
+      debugPrint('Error getting attendance trend: $e');
+      return {
+        'attendance': [0, 0, 0, 0, 0, 0, 0],
+        'dates': [1, 2, 3, 4, 5, 6, 7],
+      };
+    }
+  }
 
   // Get attendance by ID
   Future<AttendanceRecordModel?> getAttendanceById(int id) async {
@@ -193,6 +250,13 @@ class TeacherAttendanceProvider with ChangeNotifier {
   // Filter methods
   void setDateFilter(DateTime? date) {
     _selectedDate = date;
+    _applyFilters();
+    notifyListeners();
+  }
+  // Tambahkan setter untuk date range filter
+  void setDateRangeFilter(DateTime? start, DateTime? end) {
+    _startDate = start;
+    _endDate = end;
     _applyFilters();
     notifyListeners();
   }
@@ -224,38 +288,59 @@ class TeacherAttendanceProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void _applyFilters() {
-    _filteredAttendance = _attendanceHistory.where((record) {
-      bool matchDate = true;
-      bool matchSubject = true;
-      bool matchClass = true;
-      bool matchStatus = true;
+// Perbaikan pada _applyFilters() untuk mendukung date range
+void _applyFilters() {
+  _filteredAttendance = _attendanceHistory.where((record) {
+    bool matchDateRange = true;
+    bool matchSubject = true;
+    bool matchClass = true;
+    bool matchStatus = true;
 
-      // Date filter
-      if (_selectedDate != null) {
-        matchDate = record.tanggal.year == _selectedDate!.year &&
-                   record.tanggal.month == _selectedDate!.month &&
-                   record.tanggal.day == _selectedDate!.day;
-      }
+    // Single date filter
+    if (_selectedDate != null) {
+      matchDateRange = record.tanggal.year == _selectedDate!.year &&
+                     record.tanggal.month == _selectedDate!.month &&
+                     record.tanggal.day == _selectedDate!.day;
+    }
+    // Date range filter
+    else if (_startDate != null && _endDate != null) {
+      matchDateRange = record.tanggal.isAfter(_startDate!.subtract(const Duration(days: 1))) &&
+                     record.tanggal.isBefore(_endDate!.add(const Duration(days: 1)));
+    }
 
-      // Subject filter
-      if (_selectedSubject != null && _selectedSubject!.isNotEmpty) {
-        matchSubject = record.namaMapel.toLowerCase().contains(_selectedSubject!.toLowerCase());
-      }
+    // Subject filter
+    if (_selectedSubject != null && _selectedSubject!.isNotEmpty) {
+      matchSubject = record.namaMapel.toLowerCase() == _selectedSubject!.toLowerCase();
+    }
 
-      // Class filter
-      if (_selectedClass != null && _selectedClass!.isNotEmpty) {
-        matchClass = record.namaKelas.toLowerCase().contains(_selectedClass!.toLowerCase());
-      }
+    // Class filter
+    if (_selectedClass != null && _selectedClass!.isNotEmpty) {
+      matchClass = record.namaKelas.toLowerCase() == _selectedClass!.toLowerCase();
+    }
 
-      // Status filter
-      if (_selectedStatus != null && _selectedStatus!.isNotEmpty) {
-        matchStatus = record.status.toLowerCase() == _selectedStatus!.toLowerCase();
-      }
+    // Status filter
+    if (_selectedStatus != null && _selectedStatus!.isNotEmpty) {
+      matchStatus = record.status.toLowerCase() == _selectedStatus!.toLowerCase();
+    }
 
-      return matchDate && matchSubject && matchClass && matchStatus;
-    }).toList();
-  }
+    return matchDateRange && matchSubject && matchClass && matchStatus;
+  }).toList();
+}
+List<dynamic> getSchedulesByDay(String day) {
+  return _teachingSchedule
+      .where((schedule) => schedule.hari.toLowerCase() == day.toLowerCase())
+      .toList();
+}
+
+bool isScheduleToday(dynamic schedule) {
+  if (schedule == null) return false;
+  
+  final now = DateTime.now();
+  final dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+  final today = dayNames[now.weekday % 7];
+  
+  return schedule.hari.toLowerCase() == today.toLowerCase();
+}
 
   // Load all data
   Future<void> loadAllData() async {
@@ -263,6 +348,7 @@ class TeacherAttendanceProvider with ChangeNotifier {
       loadTeachingSchedule(),
       loadAttendanceHistory(),
       loadAttendanceStats(),
+      loadFilterMetadata(), // Tambahkan ini
     ]);
   }
 
