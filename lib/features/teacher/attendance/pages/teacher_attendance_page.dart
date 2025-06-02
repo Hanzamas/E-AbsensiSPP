@@ -1223,8 +1223,10 @@ class _ScheduleTab extends StatelessWidget {
                         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: _ScheduleCard(
                           schedule: schedule,
-                          onStartSession: isActive ? () => _startSession(context, schedule.id) : null,
+                          // PERBAIKAN: Selalu berikan fungsi, tapi cek active di dalam _ScheduleCard
+                          onStartSession: () => _startSession(context, schedule.id),
                           isStartingSession: provider.isCreatingSession,
+                          isSessionActive: isActive, // Tambahkan parameter baru
                           showBorder: false,
                         ),
                       );
@@ -3176,12 +3178,14 @@ class _ScheduleCard extends StatelessWidget {
   final dynamic schedule;
   final VoidCallback? onStartSession;
   final bool isStartingSession;
+  final bool isSessionActive; // Parameter baru
   final bool showBorder; // Parameter baru
 
   const _ScheduleCard({
     required this.schedule,
     this.onStartSession,
     required this.isStartingSession,
+    this.isSessionActive = true, // Default true
     this.showBorder = true, // Default true untuk backward compatibility
   });
 
@@ -3253,7 +3257,7 @@ class _ScheduleCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 // Disable tombol jika jadwal sudah lewat atau sedang memulai sesi
-                onPressed: (isPassed || isStartingSession) 
+                onPressed: (isPassed || !isSessionActive || isStartingSession)
                     ? null 
                     : onStartSession,
                 icon: isStartingSession
