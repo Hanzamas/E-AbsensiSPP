@@ -1,44 +1,53 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
 import 'package:e_absensi/core/api/api_endpoints.dart';
-import 'package:e_absensi/features/shared/auth/data/models/auth_models.dart';
-
+import '../models/auth_models.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   late final Dio _dio;
   String? _lastVerifiedOtp;
 
-  // Private constructor
   AuthService._internal() {
     _dio = DioClient().dio;
   }
 
-  // Singleton factory
   factory AuthService() => _instance;
 
+  // ✅ LOGIN - Simple and clean
   Future<LoginResponse> login(LoginRequest request) async {
     try {
+      debugPrint('🚀 AuthService: Attempting login for ${request.username}');
+      
       final response = await _dio.post(
         ApiEndpoints.login,
         data: request.toJson(),
       );
 
+      debugPrint('✅ AuthService: Login response received');
+      
       if (response.statusCode == 200) {
         return LoginResponse.fromJson(response.data);
       }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
+      throw Exception('Login failed: Invalid response');
     } on DioException catch (e) {
+      debugPrint('❌ AuthService: Login failed - ${e.message}');
+      
       if (e.response?.statusCode == 401) {
-        throw 'Username atau password salah';
+        throw Exception('Username atau password salah');
       } else if (e.response?.statusCode == 422) {
-        final errors = e.response?.data['errors'] as Map<String, dynamic>;
-        throw errors.values.first[0] as String;
+        final errors = e.response?.data['errors'];
+        if (errors != null) {
+          final firstError = errors.values.first;
+          throw Exception(firstError is List ? firstError.first : firstError);
+        }
       }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
+      throw Exception('Terjadi kesalahan. Silakan coba lagi nanti.');
     }
   }
 
+  // ✅ REGISTER - Simple
   Future<bool> register(RegisterRequest request) async {
     try {
       final response = await _dio.post(
@@ -46,54 +55,40 @@ class AuthService {
         data: request.toJson(),
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        return true;
-      }
-      throw 'Registrasi gagal';
+      return response.statusCode == 200 || response.statusCode == 201;
     } on DioException catch (e) {
       if (e.response?.statusCode == 422) {
-        final errors = e.response?.data['errors'] as Map<String, dynamic>;
-        final firstError = errors.values.first;
-        if (firstError is List && firstError.isNotEmpty) {
-          throw firstError.first.toString();
+        final errors = e.response?.data['errors'];
+        if (errors != null) {
+          final firstError = errors.values.first;
+          throw Exception(firstError is List ? firstError.first : firstError);
         }
-        throw 'Validasi gagal';
       } else if (e.response?.statusCode == 409) {
-        throw 'Email sudah terdaftar';
-      } else if (e.response?.statusCode == 400) {
-        final message = e.response?.data['message'] as String?;
-        throw message ?? 'Registrasi gagal';
+        throw Exception('Email sudah terdaftar');
       }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
+      throw Exception('Registrasi gagal');
     }
   }
 
+  // ✅ FORGOT PASSWORD
   Future<bool> requestPasswordReset(PasswordResetRequest request) async {
     try {
       final response = await _dio.post(
         ApiEndpoints.forgotPassword,
         data: request.toJson(),
       );
-
-      if (response.statusCode == 200) {
-        return true;
-      }
-      throw 'Gagal mengirim kode OTP';
+      return response.statusCode == 200;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 422) {
-        final errors = e.response?.data['errors'] as Map<String, dynamic>;
-        final firstError = errors.values.first;
-        if (firstError is List && firstError.isNotEmpty) {
-          throw firstError.first.toString();
-        }
-        throw 'Email tidak valid';
-      } else if (e.response?.statusCode == 404) {
-        throw 'Email tidak terdaftar';
+      if (e.response?.statusCode == 404) {
+        throw Exception('Email tidak terdaftar');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Format email tidak valid');
       }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
+      throw Exception('Gagal mengirim OTP');
     }
   }
 
+  // ✅ VERIFY OTP
   Future<bool> verifyOtp(OtpVerificationRequest request) async {
     try {
       final response = await _dio.post(
@@ -105,69 +100,32 @@ class AuthService {
         _lastVerifiedOtp = request.otp;
         return true;
       }
-      throw 'Kode OTP tidak valid';
+      return false;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 422) {
-        final errors = e.response?.data['errors'] as Map<String, dynamic>;
-        final firstError = errors.values.first;
-        if (firstError is List && firstError.isNotEmpty) {
-          throw firstError.first.toString();
-        }
-        throw 'Kode OTP tidak valid';
+      if (e.response?.statusCode == 401) {
+        throw Exception('Kode OTP tidak valid atau sudah kadaluarsa');
       } else if (e.response?.statusCode == 404) {
-        throw 'Email tidak terdaftar';
-      } else if (e.response?.statusCode == 401) {
-        throw 'Kode OTP tidak valid atau sudah kadaluarsa';
+        throw Exception('Email tidak terdaftar');
       }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
+      throw Exception('Kode OTP tidak valid');
     }
   }
 
+  // ✅ RESET PASSWORD
   Future<bool> resetPassword(PasswordChangeRequest request) async {
     try {
       final response = await _dio.post(
         '${ApiEndpoints.resetPassword}/$_lastVerifiedOtp',
         data: request.toJson(),
       );
-
-      if (response.statusCode == 200) {
-        return true;
-      }
-      throw 'Gagal mengubah password';
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 422) {
-        final errors = e.response?.data['errors'] as Map<String, dynamic>;
-        final firstError = errors.values.first;
-        if (firstError is List && firstError.isNotEmpty) {
-          throw firstError.first.toString();
-        }
-        throw 'Password tidak memenuhi kriteria';
-      } else if (e.response?.statusCode == 404) {
-        throw 'Email tidak terdaftar';
-      } else if (e.response?.statusCode == 401) {
-        throw 'Sesi reset password sudah kadaluarsa. Silakan memulai proses dari awal.';
-      }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
-    }
-  }
-
-  Future<UserInfoResponse> getUserInfo() async {
-    try {
-      final response = await _dio.get(ApiEndpoints.usersMy);
-      
-      if (response.statusCode == 200) {
-        return UserInfoResponse.fromJson(response.data);
-      }
-      throw 'Terjadi kesalahan. Silakan coba lagi nanti.';
+      return response.statusCode == 200;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        throw 'Session habis, silakan login kembali';
-      } else if (e.response?.statusCode == 404) {
-        throw 'Data user tidak ditemukan';
-      } else if (e.response?.statusCode == 500) {
-        throw 'Terjadi kesalahan server';
+        throw Exception('Sesi reset password sudah kadaluarsa');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Password tidak memenuhi kriteria');
       }
-      throw 'Gagal mendapatkan info user: ${e.message}';
+      throw Exception('Gagal mengubah password');
     }
   }
 }

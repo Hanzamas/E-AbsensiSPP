@@ -1,14 +1,15 @@
 import 'package:go_router/go_router.dart';
 import 'package:e_absensi/features/teacher/dashboard/pages/teacher_dashboard_page.dart';
-import 'package:e_absensi/features/teacher/attendance/pages/teacher_attendance_page.dart'; // Uncomment
-import 'package:e_absensi/features/teacher/attendance/pages/attendance_detail_page.dart'; // Add
+import 'package:e_absensi/features/teacher/attendance/pages/teacher_attendance_page.dart';
+import 'package:e_absensi/features/teacher/attendance/pages/attendance_detail_page.dart';
+import 'package:e_absensi/features/shared/profile/pages/profile_main_page.dart'; // ✅ Add import
 import 'package:e_absensi/core/utils/page_transition_helper.dart';
 
 class TeacherRoutes {
   static final List<RouteBase> routes = [
     // Teacher Dashboard
     GoRoute(
-      path: '/teacher/home',
+      path: '/teacher/home', // ✅ Change path to match existing navigation
       name: 'teacher-home',
       pageBuilder: (context, state) => PageTransitionHelper.fadeTransition(
         child: const TeacherDashboardPage(),
@@ -17,7 +18,7 @@ class TeacherRoutes {
       ),
     ),
     
-    // Teacher Attendance - Uncomment dan fix
+    // Teacher Attendance
     GoRoute(
       path: '/teacher/attendance',
       name: 'teacher-attendance',
@@ -28,7 +29,18 @@ class TeacherRoutes {
       ),
     ),
     
-    // Attendance Detail - Add this route
+    // ✅ ADD: Teacher Profile Route
+    GoRoute(
+      path: '/teacher/profile',
+      name: 'teacher-profile',
+      pageBuilder: (context, state) => PageTransitionHelper.slideRightTransition(
+        child: const ProfileMainPage(userRole: 'guru'),
+        duration: const Duration(milliseconds: 400),
+        key: state.pageKey,
+      ),
+    ),
+    
+    // Attendance Detail
     GoRoute(
       path: '/teacher/attendance/detail/:attendanceId',
       name: 'teacher-attendance-detail', 

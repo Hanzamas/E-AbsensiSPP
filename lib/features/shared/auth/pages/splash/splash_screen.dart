@@ -1,8 +1,6 @@
-// lib/features/shared/auth/pages/splash/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-// import '../../../../core/theme/app_theme.dart';
 import 'package:e_absensi/core/constants/app_strings.dart';
 import 'package:e_absensi/core/constants/assets.dart';
 import 'package:e_absensi/features/shared/animations/fade_in_animation.dart';
@@ -23,7 +21,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
     
-    // Inisialisasi animasi
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -47,31 +44,44 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(seconds: 2)); // Simulasi loading
+    // Minimum splash duration
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final authProvider = context.read<AuthProvider>();
-    final role = await authProvider.checkAuth();
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final role = await authProvider.checkAuth();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (role != null) {
-      switch (role) {
-        case 'student':
-          context.goNamed('student-home');
-          break;
-        case 'teacher':
-          context.goNamed('teacher-home');
-          break;
-        case 'admin':
-          context.goNamed('admin-home');
-          break;
-        default:
-          context.goNamed('login');
-      }
-    } else {
-      // Beri jeda sedikit sebelum navigasi agar animasi splash screen bisa selesai
+      // Small delay for better UX
       await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
+      if (role != null && authProvider.isAuthenticated) {
+        // ✅ Navigate based on stored role (already normalized)
+        debugPrint('🎯 Splash: Authenticated user with role: $role');
+        
+        switch (role) { // ✅ Match normalized role format
+          case 'siswa':
+            context.go('/student/home');
+            break;
+          case 'guru':
+            context.go('/teacher/home');
+            break;
+          case 'admin':
+            context.go('/admin/home');
+            break;
+          default:
+            debugPrint('❌ Unknown role: $role, redirecting to login');
+            context.goNamed('login');
+        }
+      } else {
+        debugPrint('🔍 Splash: No auth found, redirecting to login');
+        context.goNamed('login');
+      }
+    } catch (e) {
+      debugPrint('❌ Splash: Error during auth check - $e');
       if (!mounted) return;
       context.goNamed('login');
     }
@@ -127,7 +137,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 40),
-              // Teks dengan animasi
+              
+              // App Name
               FadeInAnimation(
                 duration: const Duration(milliseconds: 1000),
                 child: Text(
@@ -148,7 +159,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 16),
-              // Deskripsi aplikasi
+              
+              // App Description
               FadeInAnimation(
                 duration: const Duration(milliseconds: 1200),
                 offset: 30,
@@ -163,7 +175,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 60),
-              // Indikator loading
+              
+              // Loading Indicator
               const FadeInAnimation(
                 duration: Duration(milliseconds: 1500),
                 child: SizedBox(

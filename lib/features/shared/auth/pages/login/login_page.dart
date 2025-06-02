@@ -28,70 +28,55 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
-      
-      try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        final success = await authProvider.login(
-          _usernameController.text,
-          _passwordController.text,
+// In _handleLogin method, replace the navigation logic:
+
+Future<void> _handleLogin() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    setState(() => _isLoading = true);
+    
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.login(
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        // ✅ Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login berhasil!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
         );
 
+        // ✅ Navigate using AuthProvider's helper method
+        final homeRoute = authProvider.getHomeRoute();
+        debugPrint('🎯 Login successful, navigating to: $homeRoute');
+        
+        // Small delay for UX
+        await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) return;
-
-        if (success) {
-          final role = authProvider.userRole;
-
-          // Tambahkan delay untuk memastikan snackbar terlihat
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login berhasil!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          if (!mounted) return;
-
-          switch (role?.toLowerCase()) {
-            case 'siswa':
-              context.goNamed('student-home');
-              break;
-            case 'guru':
-              context.goNamed('teacher-home');
-              break;
-            case 'admin':
-              context.goNamed('admin-home');
-              break;
-            default:
-              _showError('Role tidak valid: ${role ?? "tidak diketahui"}');
-          }
-        } else {
-          _showError('Gagal login: Status tidak berhasil');
-        }
-      } catch (e) {
-        String errorMessage = e.toString();
-        if (errorMessage.contains('401') || errorMessage.contains('unauthorized')) {
-          errorMessage = 'Username atau password salah';
-        } else if (errorMessage.contains('not found') || errorMessage.contains('tidak ditemukan')) {
-          errorMessage = 'Akun tidak ditemukan';
-        } else if (errorMessage.contains('validation') || errorMessage.contains('validasi')) {
-          errorMessage = 'Username atau password tidak valid';
-        } else {
-          errorMessage = 'Terjadi kesalahan. Silakan coba lagi nanti. (${e.toString()})';
-        }
+        
+        context.go(homeRoute); // ✅ Use go() instead of goNamed()
+      } else {
+        // ✅ Use error from provider
+        final errorMessage = authProvider.error ?? 'Login gagal';
         _showError(errorMessage);
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+      }
+    } catch (e) {
+      debugPrint('❌ Login error: $e');
+      _showError('Terjadi kesalahan saat login. Silakan coba lagi.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
+}
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
