@@ -1218,11 +1218,12 @@ class _ScheduleTab extends StatelessWidget {
                   
                   if (provider.todaySchedule.isNotEmpty)
                     ...provider.todaySchedule.map((schedule) {
+                      final isActive = _isScheduleActive(schedule);
                       return Container(
                         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: _ScheduleCard(
                           schedule: schedule,
-                          onStartSession: () => _startSession(context, schedule.id),
+                          onStartSession: isActive ? () => _startSession(context, schedule.id) : null,
                           isStartingSession: provider.isCreatingSession,
                           showBorder: false,
                         ),
@@ -1293,6 +1294,31 @@ class _ScheduleTab extends StatelessWidget {
       ),
     );
   }
+
+  // Pada _ScheduleTab, tambahkan fungsi untuk mengecek apakah jadwal masih aktif
+bool _isScheduleActive(dynamic schedule) {
+  try {
+    // Parse jam selesai dari jadwal
+    final timeParts = schedule.jamSelesai.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+    
+    // Buat DateTime untuk waktu selesai hari ini
+    final now = DateTime.now();
+    final endTime = DateTime(
+      now.year, 
+      now.month, 
+      now.day,
+      hour,
+      minute,
+    );
+    
+    // Jadwal masih aktif jika waktu sekarang sebelum waktu selesai
+    return now.isBefore(endTime);
+  } catch (e) {
+    return false;
+  }
+}
   
   // Pindahkan implementasi tab jadwal ke method terpisah
 Widget _buildWeeklyScheduleTabs() {
