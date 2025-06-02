@@ -40,7 +40,7 @@ class _MyAppState extends State<MyApp> {
         // Student Providers
         ChangeNotifierProvider.value(
           value: HomeProvider(),
-
+        ),
         // Attendance Provider - menggunakan singleton pattern
         ChangeNotifierProvider.value(
           value: AttendanceProvider(),
