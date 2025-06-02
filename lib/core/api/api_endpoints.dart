@@ -23,7 +23,7 @@ class ApiEndpoints {
   // Siswa
   static const String getStudentProfile = '/profile/student';
   static const String updateStudent = '/students/update';
-  static const String getStudentAttendance = '/studens/attendance/my';
+  static const String getStudentAttendance = '/students/attendance/my';
   static const String getStudentDownloadAttendance = '/students/download-attendance';
   static const String scanStudentAttendance = '/studens/attendance/scan';
   static const String getStudentSchedule = '/students/schedule';
@@ -35,7 +35,7 @@ class ApiEndpoints {
   static const String updateTeacher = '/teachers/update';
   static const String getTeacherSchedule = '/teacher/teaching/my';
   static const String createLearningSession = '/teacher/learning-session/assign';
-  static const String getTeacherAttendance = '/teacher/attendance';
+  static const String getTeacherAttendance = '/teachers/attendance';
   static const String getTeacherAttendanceById = '/teacher/attendance'; // Will append /:id
   static const String updateTeacherAttendance = '/teachers/attendance/update'; // Will append /:id
   // Admin

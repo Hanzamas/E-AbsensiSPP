@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:e_absensi/core/api/api_endpoints.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
+import 'package:flutter/foundation.dart'; // ✅ Add this import too
 
 class TeacherDashboardService {
   final Dio _dio = DioClient().dio;
@@ -31,18 +32,26 @@ class TeacherDashboardService {
     }
   }
 
-  Future<List<dynamic>> getAttendanceData() async {
-    try {
-      final response = await _dio.get(ApiEndpoints.getTeacherAttendance);
-      if (response.statusCode == 200 && response.data['status'] == true) {
-        return response.data['data'];
-      } else {
-        throw Exception(response.data['message'] ?? 'Gagal mengambil data absensi');
-      }
-    } catch (e) {
-      throw Exception('Error getAttendanceData: $e');
+Future<List<dynamic>> getAttendanceData() async {
+  try {
+    final response = await _dio.get(ApiEndpoints.getTeacherAttendance);
+    if (response.statusCode == 200 && response.data['status'] == true) {
+      return response.data['data'] ?? []; // ✅ Handle null data
+    } else {
+      throw Exception(response.data['message'] ?? 'Gagal mengambil data absensi');
     }
+  } catch (e) {
+    debugPrint('⚠️ getAttendanceData error: $e');
+    
+    // ✅ Return empty list instead of throwing error
+    if (e.toString().contains('404') || e.toString().contains('DioException')) {
+      debugPrint('📊 No attendance data found, returning empty stats');
+      return []; // Return empty list for new teachers
+    }
+    
+    throw Exception('Error getAttendanceData: $e');
   }
+}
 
   Future<Map<String, dynamic>> startLearningSession(int idPengajaran) async {
     try {

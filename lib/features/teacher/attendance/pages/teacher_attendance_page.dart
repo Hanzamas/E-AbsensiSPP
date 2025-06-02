@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../provider/teacher_attendance_provider.dart';
+import '../../../shared/widgets/bottom_navbar.dart';
 
 class TeacherAttendancePage extends StatefulWidget {
   const TeacherAttendancePage({super.key});
@@ -33,17 +34,37 @@ class _TeacherAttendancePageState extends State<TeacherAttendancePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+      // ✅ UPDATE: AppBar dengan icon dan title konsisten
       appBar: AppBar(
-        title: const Text(
-          'Absensi Guru',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.assignment_turned_in,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Absensi',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false, // ✅ Hilangkan back button
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -79,6 +100,11 @@ class _TeacherAttendancePageState extends State<TeacherAttendancePage>
             ],
           );
         },
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 1, // Attendance = index 1
+        userRole: 'guru',
+        context: context,
       ),
     );
   }
@@ -185,6 +211,9 @@ class _ScheduleTab extends StatelessWidget {
                 title: 'Tidak Ada Kelas Hari Ini',
                 subtitle: 'Anda tidak memiliki jadwal mengajar hari ini',
               ),
+            
+            // ✅ ADD: Space for bottom navbar
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -335,7 +364,7 @@ class _HistoryTab extends StatelessWidget {
             onRefresh: () => provider.refreshData(),
             child: provider.filteredAttendance.isNotEmpty
                 ? ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100), // ✅ ADD: Bottom padding for navbar
                     itemCount: provider.filteredAttendance.length,
                     itemBuilder: (context, index) {
                       final record = provider.filteredAttendance[index];
@@ -394,6 +423,9 @@ class _QRCodeTab extends StatelessWidget {
               _buildActiveSessionCard()
             else
               _buildNoActiveSessionCard(),
+            
+            // ✅ ADD: Space for bottom navbar
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -493,7 +525,7 @@ class _QRCodeTab extends StatelessWidget {
   }
 }
 
-// Reusable Components
+// Reusable Components (unchanged)
 class _StatItem extends StatelessWidget {
   final String label;
   final String value;
