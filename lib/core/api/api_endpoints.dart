@@ -38,8 +38,10 @@ class ApiEndpoints {
   static const String getTeacherAttendance = '/teachers/attendance';
   static const String getTeacherAttendanceById = '/teacher/attendance'; // Will append /:id
   static const String updateTeacherAttendance = '/teachers/attendance/update'; // Will append /:id
+
   // Admin
-
-  
-
+  static const String getClasses = '/admin/classes';
+  static const String createClass = '/admin/classes/create';
+  static const String updateClass = '/admin/classes/update'; // Will append /:id
+  static const String deleteClass = '/admin/classes/delete'; // Will append /:id
 } 
