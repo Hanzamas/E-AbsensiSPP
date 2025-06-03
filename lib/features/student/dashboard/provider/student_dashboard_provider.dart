@@ -5,7 +5,9 @@ import '../data/models/schedule_model.dart';
 
 class StudentDashboardProvider with ChangeNotifier {
   final StudentDashboardRepository _repository = StudentDashboardRepository();
-
+  // Tambahkan property selectedSubject
+  String? _selectedSubject;
+  String? get selectedSubject => _selectedSubject;
   // Loading states
   bool _isLoading = false;
   
@@ -62,4 +64,46 @@ class StudentDashboardProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+    // Tambahkan method untuk mendapatkan daftar mata pelajaran
+  List<String> getAvailableSubjects() {
+    final List<String> subjects = [];
+    
+    // Ambil mata pelajaran dari jadwal
+    for (final schedule in _allSchedules) {
+      if (!subjects.contains(schedule.mapel) && schedule.mapel.isNotEmpty) {
+        subjects.add(schedule.mapel);
+      }
+    }
+    
+    // Tambahkan dari data kehadiran jika ada
+    final subjectStats = _attendanceStats['perMapel'] as Map?;
+    if (subjectStats != null) {
+      for (final subject in subjectStats.keys) {
+        if (!subjects.contains(subject) && subject.isNotEmpty) {
+          subjects.add(subject.toString());
+        }
+      }
+    }
+    
+    subjects.sort(); // Urutkan berdasarkan abjad
+    return subjects;
+  }
+  // Method untuk memuat statistik kehadiran dengan filter mata pelajaran
+  Future<void> loadAttendanceStatsBySubject(String? subject) async {
+    _isLoading = true;
+    _selectedSubject = subject;
+    notifyListeners();
+
+    try {
+      final stats = await _repository.getAttendanceStatsBySubject(subject);
+      _attendanceStats = stats;
+    } catch (e) {
+      debugPrint('Error loading attendance stats: $e');
+      // Gunakan data cache jika ada error
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
 }

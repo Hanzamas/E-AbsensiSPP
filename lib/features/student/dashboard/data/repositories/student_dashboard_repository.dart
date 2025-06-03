@@ -74,4 +74,22 @@ class StudentDashboardRepository {
       };
     }
   }
+
+  /// Get attendance statistics filtered by subject
+Future<Map<String, int>> getAttendanceStatsBySubject(String? subject) async {
+  try {
+    return await _service.getAttendanceStatsBySubject(subject);
+  } catch (e) {
+    debugPrint('📊 Repository getAttendanceStatsBySubject error: $e');
+    
+    // Return zero stats instead of throwing error
+    return {
+      'total': 0,
+      'hadir': 0,
+      'alpha': 0,
+      'sakit': 0,
+      'izin': 0,
+    };
+  }
+}
 }

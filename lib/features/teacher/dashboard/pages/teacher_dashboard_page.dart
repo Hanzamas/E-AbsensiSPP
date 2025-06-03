@@ -95,9 +95,9 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildAttendanceStats(provider),
-                            const SizedBox(height: 24),
                             _buildTodaySchedule(provider),
+                            const SizedBox(height: 24),
+                            _buildAttendanceStats(provider),
                             const SizedBox(height: 24),
                             _buildQuickActions(),
                             const SizedBox(height: 100),

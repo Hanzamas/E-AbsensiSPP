@@ -18,6 +18,7 @@ class StudentDashboardPage extends StatefulWidget {
 
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
   bool _isLoading = true;
+  String? _selectedSubject;
   bool _didInitLoad = false;
   static const List<String> hariList = [
     'senin', 'selasa', 'rabu', 'kamis', 'jum\'at', 'sabtu', 'minggu'
@@ -121,11 +122,14 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
             children: [
               _buildHeader(),
               const SizedBox(height: 24),
-              _buildMenuCards(),
-              const SizedBox(height: 24),
+              // 1. Jadwal Pelajaran di atas
               _buildScheduleSection(),
               const SizedBox(height: 24),
-              _buildAttendanceStatsSection(), // ✅ Replace pengumuman with stats
+              // 2. Statistik Kehadiran di tengah
+              _buildAttendanceStatsSection(),
+              const SizedBox(height: 24),
+              // 3. Menu Aksi Cepat di bawah
+              _buildMenuCards(),
               const SizedBox(height: 24),
             ],
           ),
@@ -208,31 +212,82 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     );
   }
 
-  Widget _buildMenuCards() {
+Widget _buildMenuCards() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: _HomeMenuCard(
-              icon: Assets.absensi,
-              label: 'Absensi',
-              onTap: () {
-                context.go('/student/attendance');
-              },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _HomeMenuCard(
-              icon: Assets.spp,
-              label: 'Pembayaran SPP',
-              onTap: () {
-                context.go('/student/spp');
-              },
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.touch_app,
+                      color: Color(0xFF2196F3),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Aksi Cepat',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Assets.absensi,
+                      label: 'Absensi',
+                      onTap: () {
+                        context.go('/student/attendance');
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Assets.spp,
+                      label: 'Pembayaran SPP',
+                      onTap: () {
+                        context.go('/student/spp');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -347,6 +402,8 @@ Widget _buildScheduleSection() {
   );
 }
 
+
+
   String _selectedDay = 'semua';
 
   Widget _buildFilterDropdown() {
@@ -398,155 +455,220 @@ Widget _buildScheduleSection() {
     );
   }
 
-  // ✅ Replace pengumuman with attendance stats (same design style)
-  Widget _buildAttendanceStatsSection() {
-    return Consumer<StudentDashboardProvider>(
-      builder: (context, provider, _) {
-        final stats = provider.attendanceStats;
-        final isLoading = provider.isLoading;
-        
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2196F3).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.analytics,
-                          color: Color(0xFF2196F3),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Statistik Kehadiran',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (stats.isEmpty || stats['total'] == 0)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: const Column(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.grey,
-                            size: 48,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Belum ada data absensi',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Data akan muncul setelah Anda melakukan absensi',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
+Widget _buildAttendanceStatsSection() {
+  return Consumer<StudentDashboardProvider>(
+    builder: (context, provider, _) {
+      final stats = provider.attendanceStats;
+      final isLoading = provider.isLoading;
+      
+      // Dapatkan daftar mata pelajaran dari provider
+      final subjects = provider.getAvailableSubjects();
+      
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Total',
-                            value: '${stats['total'] ?? 0}',
-                            color: const Color(0xFF718096),
-                            icon: Icons.school,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2196F3).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.analytics,
+                            color: Color(0xFF2196F3),
+                            size: 20,
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Hadir',
-                            value: '${stats['hadir'] ?? 0}',
-                            color: const Color(0xFF4CAF50),
-                            icon: Icons.check_circle,
+                        const Text(
+                          'Kehadiran',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF333333),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Alpha',
-                            value: '${stats['alpha'] ?? 0}',
-                            color: const Color(0xFFE53E3E),
-                            icon: Icons.cancel,
+                      ],
+                    ),
+                    // Filter Dropdown Mata Pelajaran
+                    _buildSubjectFilterDropdown(subjects),
+                  ],
+                ),
+              ),
+              if (isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (stats.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: const Column(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.grey,
+                          size: 48,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Belum ada data absensi',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Sakit/Izin',
-                            value: '${(stats['sakit'] ?? 0) + (stats['izin'] ?? 0)}',
-                            color: const Color(0xFFFF9800),
-                            icon: Icons.healing,
+                        SizedBox(height: 8),
+                        Text(
+                          'Data akan muncul setelah Anda melakukan absensi',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
                           ),
                         ),
                       ],
                     ),
                   ),
-                const SizedBox(height: 8),
-              ],
-            ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Total',
+                          value: '${stats['total'] ?? 0}',
+                          color: const Color(0xFF718096),
+                          icon: Icons.people,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Hadir',
+                          value: '${stats['hadir'] ?? 0}',
+                          color: const Color(0xFF4CAF50),
+                          icon: Icons.check_circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Alpha',
+                          value: '${stats['alpha'] ?? 0}',
+                          color: const Color(0xFFE53E3E),
+                          icon: Icons.cancel,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          title: 'S/I',
+                          value: '${(stats['sakit'] ?? 0) + (stats['izin'] ?? 0)}',
+                          color: const Color(0xFFFF9800),
+                          icon: Icons.healing,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
+// Widget dropdown filter mata pelajaran
+Widget _buildSubjectFilterDropdown(List<String> subjects) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: BoxDecoration(
+      color: const Color(0xFF2196F3).withOpacity(0.05),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: const Color(0xFF2196F3).withOpacity(0.2),
+      ),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<String?>(
+        value: _selectedSubject,
+        icon: const Icon(
+          Icons.arrow_drop_down,
+          color: Color(0xFF2196F3),
+        ),
+        hint: const Text(
+          'Semua Mapel',
+          style: TextStyle(
+            color: Color(0xFF2196F3),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        isDense: true,
+        borderRadius: BorderRadius.circular(8),
+        items: [
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('Semua Mapel'),
+          ),
+          ...subjects.map((subject) => DropdownMenuItem<String?>(
+            value: subject,
+            child: Text(subject),
+          )),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _selectedSubject = value;
+          });
+          // Reload stats dengan filter mata pelajaran
+          Provider.of<StudentDashboardProvider>(context, listen: false)
+              .loadAttendanceStatsBySubject(_selectedSubject);
+        },
+        style: const TextStyle(
+          color: Color(0xFF2196F3),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ),
+  );
+}
 
   // ✅ Keep ALL original table methods unchanged
   Widget _buildScheduleTable(List<Schedule> schedules) {
@@ -1094,6 +1216,51 @@ Widget _buildScheduleSection() {
           ),
         );
       }
+    );
+  }
+}
+
+// Tambahkan kelas untuk card aksi cepat dengan style baru
+class _QuickActionCard extends StatelessWidget {
+  final String icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F9FF),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF2196F3).withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(icon, height: 40),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2196F3),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
