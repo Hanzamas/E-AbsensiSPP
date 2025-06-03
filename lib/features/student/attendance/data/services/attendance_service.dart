@@ -18,37 +18,34 @@ class AttendanceService {
   factory AttendanceService() => _instance;
 
   Future<Map<String, dynamic>> getAttendanceHistory() async {
-    try {
-      final token = await _storage.read('token');
-      if (token == null) throw Exception('Token tidak ditemukan');
+  try {
+    final token = await _storage.read('token');
+    if (token == null) throw Exception('Token tidak ditemukan');
 
-      final response = await _dio.get(
-        ApiEndpoints.getAttendanceDetail,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
-      );
+    final response = await _dio.get(
+      ApiEndpoints.getAttendanceDetail, 
+      options: Options(headers: { 'Authorization': 'Bearer $token' }),
+    );
 
-      if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception(response.data['message'] ?? 'Gagal memuat data absensi');
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        throw Exception(e.response?.data['message'] ?? 'Bad request');
-      } else if (e.response?.statusCode == 404) {
-        throw Exception('Data absensi tidak ditemukan');
-      } else if (e.response?.statusCode == 500) {
-        throw Exception('Internal Server Error');
-      }
-      throw Exception('Gagal memuat data absensi: ${e.message}');
-    } catch (e) {
-      throw Exception('Gagal memuat data absensi: $e');
+    if (response.statusCode == 200) {
+      return response.data;        // { "status": true, "data": [ ... ] }
     }
+    // jika mau jaga‐jaga, bisa cek kode lain, tapi asumsikan di atas saja
+    return {'status': true, 'data': []};
+  } on DioException catch (e) {
+    if (e.response?.statusCode == 404) {
+      // ubah menjadi “data kosong” bukan lempar exception
+      return {'status': true, 'data': []};
+    }
+    if (e.response?.statusCode == 500) {
+      throw Exception('Internal Server Error');
+    }
+    throw Exception('Gagal memuat data absensi: ${e.message}');
+  } catch (e) {
+    throw Exception('Gagal memuat data absensi: $e');
   }
+}
+
 
   Future<Map<String, dynamic>> submitAttendance(String qrCode) async {
     try {

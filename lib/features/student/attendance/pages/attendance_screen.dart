@@ -275,7 +275,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               child: Text(
                 'Tidak ada data absensi.',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: Colors.white,
                   fontSize: 16,
                 ),
               ),
@@ -330,7 +330,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         ),
                         child: ListTile(
                           title: Text(
-                            item.subject,
+                            item.namaMapel,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -339,8 +339,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Tanggal: ${item.date}'),
-                              Text('Jam: ${item.time}'),
+                              Text('Tanggal: ${item.tanggal}'),
+                              Text('Jam Mulai: ${item.jam_mulai}'),
+                              Text('Jam Selesai: ${item.jam_selesai}'),
+                              Text('Waktu Scan: ${item.waktuScan}'),
                             ],
                           ),
                           trailing: Container(

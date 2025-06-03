@@ -28,7 +28,7 @@ class ApiEndpoints {
   static const String scanStudentAttendance = '/studens/attendance/scan';
   static const String getStudentSchedule = '/students/schedule';
   static const String getKelas = '/classes';
-  static const String getAttendanceDetail = '/studens/attendance/my';
+  static const String getAttendanceDetail = '/students/attendance/my';
   
   // Guru
   static const String getTeacherProfile = '/profile/teacher';
