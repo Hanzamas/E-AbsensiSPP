@@ -339,10 +339,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Tanggal: ${item.tanggal}'),
+                              Text('Tanggal: ${_dateFormat.format(item.tanggal)}'),
                               Text('Jam Mulai: ${item.jam_mulai}'),
                               Text('Jam Selesai: ${item.jam_selesai}'),
-                              Text('Waktu Scan: ${item.waktuScan}'),
                             ],
                           ),
                           trailing: Container(
