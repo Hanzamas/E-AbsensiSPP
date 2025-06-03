@@ -27,9 +27,9 @@ final Map<String, List<NavItem>> navItemsByRole = {
   ],
   adminRole: [
     NavItem('Home', Icons.home, '/admin/home'),
+    NavItem('Akademik', Icons.school, '/admin/akademik'),
     NavItem('Users', Icons.people, '/admin/users'),
-    NavItem('Settings', Icons.settings, '/admin/settings'),
-    NavItem('Profile', Icons.person, '/admin/profile'),
+    NavItem('Profil', Icons.person, '/admin/profile'),
   ],
 };
 
