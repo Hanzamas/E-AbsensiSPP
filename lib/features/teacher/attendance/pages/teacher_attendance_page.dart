@@ -309,9 +309,8 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
       ),
     );
   }
-   // Implementasi metode untuk menampilkan filter mata pelajaran
+  // Dialog filter Mata Pelajaran dengan tema biru yang konsisten
   void _showSubjectFilter() {
-    // Dapatkan daftar mata pelajaran unik dari provider
     final subjects = widget.provider.availableSubjects;
     
     showModalBottomSheet(
@@ -322,20 +321,35 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          // Header dengan warna tema biru
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE3F2FD),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
             child: Row(
               children: [
+                const Icon(
+                  Icons.book_outlined,
+                  color: Color(0xFF2196F3),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
                 const Text(
                   'Pilih Mata Pelajaran',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF2196F3),
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Color(0xFF2196F3),
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -346,22 +360,27 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
             child: ListView(
               children: [
                 ListTile(
+                  leading: const Icon(
+                    Icons.filter_list_off,
+                    color: Color(0xFF2196F3),
+                  ),
                   title: const Text('Semua Mata Pelajaran'),
                   selected: selectedSubject == null,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
                   onTap: () {
-                    setState(() {
-                      selectedSubject = null;
-                    });
+                    setState(() => selectedSubject = null);
                     Navigator.pop(context);
                   },
                 ),
                 ...subjects.map((subject) => ListTile(
+                  leading: const Icon(Icons.book),
                   title: Text(subject),
                   selected: selectedSubject == subject,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
                   onTap: () {
-                    setState(() {
-                      selectedSubject = subject;
-                    });
+                    setState(() => selectedSubject = subject);
                     Navigator.pop(context);
                   },
                 )),
@@ -641,17 +660,21 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                OutlinedButton.icon(
+                ElevatedButton.icon(
                   onPressed: () {
                     // Implement detail page navigation
                     _showMeetingDetail(meeting);
                   },
                   icon: const Icon(Icons.visibility, size: 18),
                   label: const Text('Detail'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF2196F3),
-                    side: const BorderSide(color: Color(0xFF2196F3)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2196F3),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],
@@ -762,8 +785,8 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
     );
   }
   
+  // Dialog filter Kelas dengan tema biru yang konsisten
   void _showClassFilter() {
-    // Get unique class names
     final classes = widget.provider.availableClasses;
     
     showModalBottomSheet(
@@ -774,20 +797,35 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          // Header dengan warna tema biru
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE3F2FD),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
             child: Row(
               children: [
+                const Icon(
+                  Icons.class_,
+                  color: Color(0xFF2196F3),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
                 const Text(
                   'Pilih Kelas',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF2196F3),
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Color(0xFF2196F3),
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -798,22 +836,27 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
             child: ListView(
               children: [
                 ListTile(
+                  leading: const Icon(
+                    Icons.filter_list_off,
+                    color: Color(0xFF2196F3),
+                  ),
                   title: const Text('Semua Kelas'),
                   selected: selectedClass == null,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
                   onTap: () {
-                    setState(() {
-                      selectedClass = null;
-                    });
+                    setState(() => selectedClass = null);
                     Navigator.pop(context);
                   },
                 ),
                 ...classes.map((className) => ListTile(
+                  leading: const Icon(Icons.class_outlined),
                   title: Text(className),
                   selected: selectedClass == className,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
                   onTap: () {
-                    setState(() {
-                      selectedClass = className;
-                    });
+                    setState(() => selectedClass = className);
                     Navigator.pop(context);
                   },
                 )),
@@ -825,13 +868,32 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
     );
   }
   
+  // Date Picker dengan tema biru yang konsisten
   void _showDatePicker(BuildContext context) async {
     final date = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF2196F3),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF2D3748),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2196F3),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+    
     if (date != null) {
       setState(() {
         selectedDate = date;
@@ -844,7 +906,6 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
   }
   
   void _showMeetingDetail(Map<String, dynamic> meeting) {
-    // Implement showing meeting details
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -864,57 +925,78 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with class info
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            meeting['subject'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '${meeting['class']} - ${_formatDate(meeting['date'])}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
+                // Header dengan warna biru tema aplikasi
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE3F2FD), // Background biru muda
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF2196F3), // Ikon container biru
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        child: const Icon(
+                          Icons.menu_book,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              meeting['subject'],
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2196F3), // Teks judul biru
+                              ),
+                            ),
+                            Text(
+                              '${meeting['class']} - ${_formatDate(meeting['date'])}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Color(0xFF2196F3)),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
                 ),
                 
-                const Divider(height: 24),
+                const SizedBox(height: 16),
                 
-                // Summary
+                // Ringkasan Kehadiran dengan tema biru aplikasi
                 Text(
                   'Ringkasan Kehadiran',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: const Color(0xFF2D3748),
                   ),
                 ),
                 const SizedBox(height: 12),
                 
-                // Stats row
+                // Stats row dengan warna tema konsisten
                 Row(
                   children: [
                     _DetailStatCard(
                       title: 'Total',
                       value: '${meeting['total']}',
-                      color: Colors.grey[700]!,
+                      color: const Color(0xFF64748B),
                     ),
                     const SizedBox(width: 8),
                     _DetailStatCard(
@@ -930,7 +1012,7 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
                     ),
                     const SizedBox(width: 8),
                     _DetailStatCard(
-                      title: 'Sakit/Izin',
+                      title: 'S/I',
                       value: '${meeting['sick'] + meeting['permission']}',
                       color: const Color(0xFFFF9800),
                     ),
@@ -939,31 +1021,45 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
                 
                 const SizedBox(height: 16),
                 
-                // Student list header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Daftar Siswa',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                // Daftar Siswa header dengan tema biru
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Daftar Siswa',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2196F3), // Teks biru untuk konsistensi
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${students.length} siswa',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD), // Background biru muda
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${students.length} siswa',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF2196F3), // Teks biru
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 
                 const SizedBox(height: 8),
                 
-                // Student list
+                // Daftar Siswa dengan sisi kiri warna status yang konsisten
                 Expanded(
                   child: ListView.builder(
                     controller: scrollController,
@@ -982,6 +1078,7 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
     );
   }
   
+  // Update _buildStudentItem dengan warna yang konsisten
   Widget _buildStudentItem(Map<String, dynamic> student) {
     final Color statusColor = _getStatusColor(student['status']);
     
@@ -989,15 +1086,16 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey[200]!),
       ),
       child: Row(
         children: [
+          // Side bar warna status
           Container(
             width: 8,
-            height: 40,
+            height: 48,
             decoration: BoxDecoration(
               color: statusColor,
               borderRadius: BorderRadius.circular(4),
@@ -1013,13 +1111,14 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
+                    color: Color(0xFF2D3748),
                   ),
                 ),
                 Text(
                   'NIS: ${student['nis']}',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: const Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -1028,27 +1127,39 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              // Badge status dengan warna konsisten
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  student['status'],
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getStatusIcon(student['status']),
+                      size: 12,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      student['status'],
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (student['scanTime'] != null)
                 Text(
                   'Scan: ${_formatScanTime(student['scanTime'])}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Color(0xFF64748B),
                   ),
                 ),
             ],
@@ -1056,6 +1167,22 @@ class _MeetingHistoryTabState extends State<_MeetingHistoryTab> {
         ],
       ),
     );
+  }
+
+    // Tambahkan metode untuk mendapatkan icon berdasarkan status
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'hadir':
+        return Icons.check_circle;
+      case 'alpha':
+        return Icons.cancel;
+      case 'sakit':
+        return Icons.healing;
+      case 'izin':
+        return Icons.event_busy;
+      default:
+        return Icons.help_outline;
+    }
   }
   
   Color _getStatusColor(String status) {
@@ -1857,218 +1984,405 @@ class _HistoryTabState extends State<_HistoryTab> {
   // State untuk multiple selection
   final Set<int> _selectedIds = <int>{};
   bool _isProcessing = false;
+  final ScrollController _scrollController = ScrollController();
   
   TeacherAttendanceProvider get provider => widget.provider;
 
-// Memodifikasi bagian filter section
-Widget build(BuildContext context) {
-  return Column(
-    children: [
-      // Enhanced Filter Section dengan Card
-      Card(
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Filter Riwayat Absensi',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3748),
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Main content with scrolling
+        RefreshIndicator(
+          onRefresh: () async {
+            await provider.refreshData();
+            setState(() => _selectedIds.clear());
+          },
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                // Padding atas untuk memberikan ruang jika bulk action bar muncul
+                SizedBox(height: _selectedIds.isNotEmpty ? 64 : 0),
+                
+                // Filter section - Dengan desain yang konsisten seperti tab Pertemuan
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Filter Riwayat Absensi',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Filter kelas dan mata pelajaran (baris pertama)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildFilterButton(
+                              label: 'Kelas',
+                              value: provider.selectedClass ?? 'Semua Kelas',
+                              icon: Icons.class_,
+                              onTap: () => _showClassFilter(context),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildFilterButton(
+                              label: 'Mata Pelajaran',
+                              value: provider.selectedSubject ?? 'Semua Mapel',
+                              icon: Icons.book_outlined,
+                              onTap: () => _showSubjectFilter(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Filter tanggal dan status (baris kedua)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildFilterButton(
+                              label: 'Tanggal',
+                              value: provider.selectedDate != null 
+                                  ? _formatDate(provider.selectedDate!) 
+                                  : 'Semua Tanggal',
+                              icon: Icons.calendar_today,
+                              onTap: () => _showDatePicker(context),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildFilterButton(
+                              label: 'Status',
+                              value: provider.selectedStatus ?? 'Semua Status',
+                              icon: Icons.check_circle_outline,
+                              onTap: () => _showStatusFilter(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Filter chips showing active filters
+                      if (provider.hasFiltersApplied)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Filter Aktif',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () => provider.clearFilters(),
+                                    icon: const Icon(Icons.clear_all, size: 16),
+                                    label: const Text('Hapus Filter'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.red.shade700,
+                                      padding: EdgeInsets.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    if (provider.selectedClass != null)
+                                      _buildFilterChip(
+                                        label: 'Kelas: ${provider.selectedClass}',
+                                        onRemove: () => provider.setClassFilter(null),
+                                      ),
+                                    if (provider.selectedSubject != null)
+                                      _buildFilterChip(
+                                        label: 'Mapel: ${provider.selectedSubject}',
+                                        onRemove: () => provider.setSubjectFilter(null),
+                                      ),
+                                    if (provider.selectedDate != null)
+                                      _buildFilterChip(
+                                        label: 'Tanggal: ${_formatDate(provider.selectedDate!)}',
+                                        onRemove: () => provider.setDateFilter(null),
+                                      ),
+                                    if (provider.selectedStatus != null)
+                                      _buildFilterChip(
+                                        label: 'Status: ${provider.selectedStatus}',
+                                        onRemove: () => provider.setStatusFilter(null),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFilterButton(
-                      label: 'Kelas',
-                      value: provider.selectedClass ?? 'Semua Kelas',
-                      icon: Icons.class_outlined,
-                      isSelected: provider.selectedClass != null,
-                      onTap: () => _showClassFilter(context),
+                
+                // Filter result count dengan desain yang lebih baik
+                if (provider.hasFiltersApplied)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE3F2FD),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBBDEFB)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Color(0xFF2196F3),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Ditemukan: ${provider.totalFilteredRecords} data',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF2196F3),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildFilterButton(
-                      label: 'Mata Pelajaran',
-                      value: provider.selectedSubject ?? 'Semua Mapel',
-                      icon: Icons.book_outlined,
-                      isSelected: provider.selectedSubject != null,
-                      onTap: () => _showSubjectFilter(context),
+                
+                // List siswa dengan card yang lebih sesuai tema
+                provider.filteredAttendance.isNotEmpty
+                  ? ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                      itemCount: provider.filteredAttendance.length,
+                      itemBuilder: (context, index) {
+                        final record = provider.filteredAttendance[index];
+                        final isSelected = _selectedIds.contains(record.idAbsensi);
+                        
+                        // Card dengan tema biru yang sesuai aplikasi
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isSelected ? const Color(0xFF2196F3) : Colors.transparent,
+                              width: isSelected ? 2 : 0,
+                            ),
+                          ),
+                          color: isSelected ? const Color(0xFFE3F2FD) : Colors.white,
+                          child: InkWell(
+                            onTap: () => context.push('/teacher/attendance/detail/${record.idAbsensi}'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  // Checkbox
+                                  SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: Checkbox(
+                                      value: isSelected,
+                                      onChanged: (selected) {
+                                        setState(() {
+                                          if (selected!) {
+                                            _selectedIds.add(record.idAbsensi);
+                                          } else {
+                                            _selectedIds.remove(record.idAbsensi);
+                                          }
+                                        });
+                                      },
+                                      activeColor: const Color(0xFF2196F3),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  
+                                  // Card content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          record.namaSiswa ?? 'Nama Siswa',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600, 
+                                            color: Color(0xFF2D3748),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${record.namaMapel} - ${record.namaKelas}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF718096),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            _buildStatusBadge(record.status ?? 'Alpha'),
+                                            const Spacer(),
+                                            Text(
+                                              record.formattedDate ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF718096),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Arrow icon
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Color(0xFF9E9E9E),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: _EmptyStateCard(
+                        icon: Icons.filter_alt_off,
+                        title: 'Tidak Ada Data',
+                        subtitle: 'Tidak ada data absensi dengan filter yang diterapkan',
+                      ),
                     ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Bulk action bar (fixed di atas saat siswa dipilih)
+        if (_selectedIds.isNotEmpty)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: const BoxDecoration(
+                color: Color(0xFF2196F3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: _buildFilterButton(
-                      label: 'Tanggal',
-                      value: provider.selectedDate != null 
-                          ? _formatDate(provider.selectedDate!) 
-                          : 'Semua Tanggal',
-                      icon: Icons.calendar_today,
-                      isSelected: provider.selectedDate != null,
-                      onTap: () => _showDatePicker(context),
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '${_selectedIds.length} siswa dipilih',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _selectedIds.length == provider.filteredAttendance.length
+                          ? () => setState(() => _selectedIds.clear())
+                          : () => setState(() => _selectedIds.addAll(
+                              provider.filteredAttendance.map((e) => e.idAbsensi)
+                            )),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: Text(
+                          _selectedIds.length == provider.filteredAttendance.length
+                            ? 'Batalkan Semua'
+                            : 'Pilih Semua',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildFilterButton(
-                      label: 'Status',
-                      value: provider.selectedStatus ?? 'Semua Status',
-                      icon: Icons.check_circle_outline,
-                      isSelected: provider.selectedStatus != null,
-                      onTap: () => _showStatusFilter(context),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Filter chips showing active filters
-                  if (provider.hasFiltersApplied)
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                  
+                  // Action buttons
+                  if (_isProcessing)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: LinearProgressIndicator(
+                        backgroundColor: Colors.white24,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  else
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
                         child: Row(
                           children: [
-                            if (provider.selectedClass != null)
-                              _buildFilterChip(
-                                label: 'Kelas: ${provider.selectedClass}',
-                                onRemove: () => provider.setClassFilter(null),
-                              ),
-                            if (provider.selectedSubject != null)
-                              _buildFilterChip(
-                                label: 'Mapel: ${provider.selectedSubject}',
-                                onRemove: () => provider.setSubjectFilter(null),
-                              ),
-                            if (provider.selectedDate != null)
-                              _buildFilterChip(
-                                label: 'Tanggal: ${_formatDate(provider.selectedDate!)}',
-                                onRemove: () => provider.setDateFilter(null),
-                              ),
-                            if (provider.selectedStatus != null)
-                              _buildFilterChip(
-                                label: 'Status: ${provider.selectedStatus}',
-                                onRemove: () => provider.setStatusFilter(null),
-                              ),
+                            _buildBulkActionButton('Hadir', Icons.check_circle, const Color(0xFF4CAF50)),
+                            const SizedBox(width: 8),
+                            _buildBulkActionButton('Alpha', Icons.cancel, const Color(0xFFE53E3E)),
+                            const SizedBox(width: 8),
+                            _buildBulkActionButton('Sakit', Icons.healing, const Color(0xFFFF9800)),
+                            const SizedBox(width: 8),
+                            _buildBulkActionButton('Izin', Icons.event_busy, const Color(0xFF9C27B0)),
                           ],
                         ),
                       ),
                     ),
-                  
-                  // Clear filters button
-                  if (provider.hasFiltersApplied)
-                    TextButton.icon(
-                      onPressed: () => provider.clearFilters(),
-                      icon: const Icon(Icons.clear_all, size: 16),
-                      label: const Text('Hapus Filter'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.red.shade700,
-                      ),
-                    ),
                 ],
               ),
-            ],
-          ),
-        ),
-      ),
-        // Filter result count
-        if (provider.hasFiltersApplied)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            color: Colors.grey.shade100,
-            child: Row(
-              children: [
-                Text(
-                  'Ditemukan: ${provider.totalFilteredRecords} data',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // Tambahkan bulk action bar saat ada item yang dipilih
-        if (_selectedIds.isNotEmpty)
-          _buildBulkActionBar(),
-        
-              // Ubah attendance list dengan card yang lebih jelas
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              await provider.refreshData();
-              setState(() => _selectedIds.clear());
-            },
-            child: provider.filteredAttendance.isNotEmpty
-                ? ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    itemCount: provider.filteredAttendance.length,
-                    itemBuilder: (context, index) {
-                      final record = provider.filteredAttendance[index];
-                      final isSelected = _selectedIds.contains(record.idAbsensi);
-                      
-                      // Tambahkan Card dengan elevation dan border yang lebih jelas
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: isSelected ? const Color(0xFF2196F3) : Colors.transparent,
-                            width: isSelected ? 2 : 0,
-                          ),
-                        ),
-                        child: _AttendanceCardWithCheckbox(
-                          record: record,
-                          isSelected: isSelected,
-                          onTap: () => context.push('/teacher/attendance/detail/${record.idAbsensi}'),
-                          onCheckboxChanged: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedIds.add(record.idAbsensi);
-                              } else {
-                                _selectedIds.remove(record.idAbsensi);
-                              }
-                            });
-                          },
-                        ),
-                      );
-                    },
-                  )
-                : const _EmptyStateCard(
-                    icon: Icons.filter_alt_off,
-                    title: 'Tidak Ada Data',
-                    subtitle: 'Tidak ada data absensi dengan filter yang diterapkan',
-                  ),
             ),
           ),
       ],
     );
   }
 
-  // UI untuk filter button yang konsisten
+  // Filter button dengan gaya yang konsisten dengan tab Pertemuan
   Widget _buildFilterButton({
     required String label,
     required String value,
     required IconData icon,
-    required bool isSelected,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -2076,19 +2390,12 @@ Widget build(BuildContext context) {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? const Color(0xFF2196F3) : Colors.grey.shade300
-          ),
+          border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? const Color(0xFFE3F2FD) : Colors.white,
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected ? const Color(0xFF2196F3) : Colors.grey.shade700,
-            ),
+            Icon(icon, size: 18, color: Colors.grey.shade700),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -2097,23 +2404,26 @@ Widget build(BuildContext context) {
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: Colors.grey.shade600,
-                      fontWeight: FontWeight.normal,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     value,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
+                    style: const TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: isSelected ? const Color(0xFF2196F3) : Colors.grey.shade900,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
+            ),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.grey.shade600,
             ),
           ],
         ),
@@ -2121,16 +2431,18 @@ Widget build(BuildContext context) {
     );
   }
 
+  // Filter chip dengan tema biru aplikasi
   Widget _buildFilterChip({
     required String label,
     required VoidCallback onRemove,
   }) {
     return Container(
-      margin: const EdgeInsets.only(right: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.only(right: 8, bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFFE3F2FD),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFBBDEFB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2138,23 +2450,105 @@ Widget build(BuildContext context) {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
               color: Color(0xFF2196F3),
             ),
           ),
           const SizedBox(width: 4),
           InkWell(
             onTap: onRemove,
-            child: const Icon(
-              Icons.close,
-              size: 12,
-              color: Color(0xFF2196F3),
+            borderRadius: BorderRadius.circular(12),
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(
+                Icons.close,
+                size: 14,
+                color: Color(0xFF2196F3),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+    // Tampilan status yang lebih modern
+  Widget _buildStatusBadge(String status) {
+    Color backgroundColor;
+    Color textColor;
+    IconData iconData;
+
+    switch (status.toLowerCase()) {
+      case 'hadir':
+        backgroundColor = const Color(0xFFE8F5E9);
+        textColor = const Color(0xFF4CAF50);
+        iconData = Icons.check_circle;
+        break;
+      case 'alpha':
+        backgroundColor = const Color(0xFFFFEBEE);
+        textColor = const Color(0xFFE53E3E);
+        iconData = Icons.cancel;
+        break;
+      case 'sakit':
+        backgroundColor = const Color(0xFFFFF8E1);
+        textColor = const Color(0xFFFF9800);
+        iconData = Icons.healing;
+        break;
+      case 'izin':
+        backgroundColor = const Color(0xFFE3F2FD);
+        textColor = const Color(0xFF2196F3);
+        iconData = Icons.event_busy;
+        break;
+      default:
+        backgroundColor = const Color(0xFFF5F5F5);
+        textColor = const Color(0xFF9E9E9E);
+        iconData = Icons.help_outline;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(iconData, size: 12, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            status,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+    // Tombol bulk action dengan tema yang sesuai
+  Widget _buildBulkActionButton(String status, IconData icon, Color color) {
+    return ElevatedButton.icon(
+      onPressed: () => _showBulkConfirmation(status),
+      icon: Icon(icon, size: 16),
+      label: Text(status),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  
 
   // Bulk Action Bar
   Widget _buildBulkActionBar() {
@@ -2216,19 +2610,87 @@ Widget build(BuildContext context) {
     );
   }
   
-  Widget _buildBulkActionButton(String status, IconData icon, Color color) {
-    return ElevatedButton.icon(
-      onPressed: () => _showBulkConfirmation(status),
-      icon: Icon(icon, size: 16),
-      label: Text(status),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        textStyle: const TextStyle(fontSize: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+    // Popup filter dengan tema yang konsisten
+  void _showClassFilter(BuildContext context) {
+    // Get unique class names
+    final classes = provider.availableClasses;
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header dengan warna tema
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE3F2FD),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.class_,
+                  color: Color(0xFF2196F3),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Pilih Kelas',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2196F3),
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Color(0xFF2196F3),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView(
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.filter_list_off,
+                    color: Color(0xFF2196F3),
+                  ),
+                  title: const Text('Semua Kelas'),
+                  selected: provider.selectedClass == null,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
+                  onTap: () {
+                    provider.setClassFilter(null);
+                    Navigator.pop(context);
+                  },
+                ),
+                ...classes.map((className) => ListTile(
+                  leading: const Icon(Icons.class_),
+                  title: Text(className),
+                  selected: provider.selectedClass == className,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
+                  onTap: () {
+                    provider.setClassFilter(className);
+                    Navigator.pop(context);
+                  },
+                )),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2314,188 +2776,286 @@ Widget build(BuildContext context) {
     }
   }
 
-  // Filter dialog methods
-  void _showDatePicker(BuildContext context) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: provider.selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-    );
-    if (date != null) {
-      provider.setDateFilter(date);
-    }
-  }
-
-  void _showStatusFilter(BuildContext context) {
-    final statuses = ['Hadir', 'Alpha', 'Sakit', 'Izin'];
-    
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                const Text(
-                  'Pilih Status',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
+// Perbaikan Date Picker dengan tema konsisten
+void _showDatePicker(BuildContext context) async {
+  final date = await showDatePicker(
+    context: context,
+    initialDate: provider.selectedDate ?? DateTime.now(),
+    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+    lastDate: DateTime.now().add(const Duration(days: 30)),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF2196F3),
+            onPrimary: Colors.white,
+            onSurface: Color(0xFF2D3748),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF2196F3),
             ),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView(
-              children: [
-                ListTile(
-                  title: const Text('Semua Status'),
-                  selected: provider.selectedStatus == null,
-                  onTap: () {
-                    provider.setStatusFilter(null);
-                    Navigator.pop(context);
-                  },
+        ),
+        child: child!,
+      );
+    },
+  );
+  
+  if (date != null) {
+    provider.setDateFilter(date);
+  }
+}
+
+// Perbaikan dialog filter Status
+void _showStatusFilter(BuildContext context) {
+  final statuses = ['Hadir', 'Alpha', 'Sakit', 'Izin'];
+  
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header dengan warna tema
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Color(0xFFE3F2FD),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Color(0xFF2196F3),
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Pilih Status',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2196F3),
                 ),
-                ...statuses.map((status) => ListTile(
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  color: Color(0xFF2196F3),
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView(
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.filter_list_off,
+                  color: Color(0xFF2196F3),
+                ),
+                title: const Text('Semua Status'),
+                selected: provider.selectedStatus == null,
+                selectedColor: const Color(0xFF2196F3),
+                selectedTileColor: const Color(0xFFE3F2FD),
+                onTap: () {
+                  provider.setStatusFilter(null);
+                  Navigator.pop(context);
+                },
+              ),
+              ...statuses.map((status) {
+                IconData icon;
+                Color iconColor;
+                
+                switch (status.toLowerCase()) {
+                  case 'hadir':
+                    icon = Icons.check_circle;
+                    iconColor = const Color(0xFF4CAF50);
+                    break;
+                  case 'alpha':
+                    icon = Icons.cancel;
+                    iconColor = const Color(0xFFE53E3E);
+                    break;
+                  case 'sakit':
+                    icon = Icons.healing;
+                    iconColor = const Color(0xFFFF9800);
+                    break;
+                  case 'izin':
+                    icon = Icons.event_busy;
+                    iconColor = const Color(0xFF2196F3);
+                    break;
+                  default:
+                    icon = Icons.help_outline;
+                    iconColor = Colors.grey;
+                }
+                
+                return ListTile(
+                  leading: Icon(icon, color: iconColor),
                   title: Text(status),
                   selected: provider.selectedStatus == status,
+                  selectedColor: const Color(0xFF2196F3),
+                  selectedTileColor: const Color(0xFFE3F2FD),
                   onTap: () {
                     provider.setStatusFilter(status);
                     Navigator.pop(context);
                   },
-                )),
-              ],
-            ),
+                );
+              }),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
-  void _showClassFilter(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                const Text(
-                  'Pilih Kelas',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView(
-              children: [
-                ListTile(
-                  title: const Text('Semua Kelas'),
-                  selected: provider.selectedClass == null,
-                  onTap: () {
-                    provider.setClassFilter(null);
-                    Navigator.pop(context);
-                  },
-                ),
-                ...provider.availableClasses.map((className) => ListTile(
-                  title: Text(className),
-                  selected: provider.selectedClass == className,
-                  onTap: () {
-                    provider.setClassFilter(className);
-                    Navigator.pop(context);
-                  },
-                )),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showClassFilter(BuildContext context) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+  //     ),
+  //     builder: (context) => Column(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         Padding(
+  //           padding: const EdgeInsets.all(16.0),
+  //           child: Row(
+  //             children: [
+  //               const Text(
+  //                 'Pilih Kelas',
+  //                 style: TextStyle(
+  //                   fontSize: 16,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //               const Spacer(),
+  //               IconButton(
+  //                 icon: const Icon(Icons.close),
+  //                 onPressed: () => Navigator.pop(context),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         const Divider(height: 1),
+  //         Expanded(
+  //           child: ListView(
+  //             children: [
+  //               ListTile(
+  //                 title: const Text('Semua Kelas'),
+  //                 selected: provider.selectedClass == null,
+  //                 onTap: () {
+  //                   provider.setClassFilter(null);
+  //                   Navigator.pop(context);
+  //                 },
+  //               ),
+  //               ...provider.availableClasses.map((className) => ListTile(
+  //                 title: Text(className),
+  //                 selected: provider.selectedClass == className,
+  //                 onTap: () {
+  //                   provider.setClassFilter(className);
+  //                   Navigator.pop(context);
+  //                 },
+  //               )),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  void _showSubjectFilter(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                const Text(
-                  'Pilih Mata Pelajaran',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
+// Perbaikan dialog filter Mata Pelajaran
+void _showSubjectFilter(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header dengan warna tema
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Color(0xFFE3F2FD),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView(
-              children: [
-                ListTile(
-                  title: const Text('Semua Mata Pelajaran'),
-                  selected: provider.selectedSubject == null,
-                  onTap: () {
-                    provider.setSubjectFilter(null);
-                    Navigator.pop(context);
-                  },
+          child: Row(
+            children: [
+              const Icon(
+                Icons.book_outlined,
+                color: Color(0xFF2196F3),
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Pilih Mata Pelajaran',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2196F3),
                 ),
-                ...provider.availableSubjects.map((subject) => ListTile(
-                  title: Text(subject),
-                  selected: provider.selectedSubject == subject,
-                  onTap: () {
-                    provider.setSubjectFilter(subject);
-                    Navigator.pop(context);
-                  },
-                )),
-              ],
-            ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  color: Color(0xFF2196F3),
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView(
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.filter_list_off,
+                  color: Color(0xFF2196F3),
+                ),
+                title: const Text('Semua Mata Pelajaran'),
+                selected: provider.selectedSubject == null,
+                selectedColor: const Color(0xFF2196F3),
+                selectedTileColor: const Color(0xFFE3F2FD),
+                onTap: () {
+                  provider.setSubjectFilter(null);
+                  Navigator.pop(context);
+                },
+              ),
+              ...provider.availableSubjects.map((subject) => ListTile(
+                leading: const Icon(
+                  Icons.book,
+                  color: Color(0xFF718096),
+                ),
+                title: Text(subject),
+                selected: provider.selectedSubject == subject,
+                selectedColor: const Color(0xFF2196F3),
+                selectedTileColor: const Color(0xFFE3F2FD),
+                onTap: () {
+                  provider.setSubjectFilter(subject);
+                  Navigator.pop(context);
+                },
+              )),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';

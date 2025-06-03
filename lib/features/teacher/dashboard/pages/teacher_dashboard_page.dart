@@ -299,30 +299,75 @@ Widget _buildAttendanceStats(TeacherDashboardProvider provider) {
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: Colors.white, // Ubah warna background menjadi putih
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: const Color(0xFFBBDEFB)), // Border warna biru muda
               ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int?>(
-                  isExpanded: true,
-                  value: provider.selectedClassId,
-                  hint: const Text('Filter berdasarkan kelas'),
-                  icon: const Icon(Icons.filter_list, size: 18),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('Semua Kelas'),
+              child: Theme(
+                // Terapkan tema untuk dropdown yang muncul
+                data: Theme.of(context).copyWith(
+                  // Warna popup menu
+                  canvasColor: Colors.white,
+                  // Warna saat item dipilih
+                  highlightColor: const Color(0xFFE3F2FD),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int?>(
+                    isExpanded: true,
+                    value: provider.selectedClassId,
+                    hint: const Text(
+                      'Filter berdasarkan kelas',
+                      style: TextStyle(color: Color(0xFF718096)),
                     ),
-                    ...todayClasses.map((classData) => DropdownMenuItem<int?>(
-                      value: classData.idKelas,
-                      child: Text('${classData.namaMapel} - ${classData.namaKelas}'),
-                    )),
-                  ],
-                  onChanged: (value) => provider.selectClass(value),
-                  style: TextStyle(
-                    color: Colors.grey.shade800,
-                    fontSize: 14,
+                    icon: const Icon(
+                      Icons.filter_list,
+                      size: 18,
+                      color: Color(0xFF2196F3), // Ikon biru
+                    ),
+                    // Mengatur popup menu dengan border radius
+                    menuMaxHeight: 300,
+                    dropdownColor: Colors.white,
+                    // Tambahkan border radius pada dropdown button
+                    borderRadius: BorderRadius.circular(8),
+                    // Styling untuk item yang dipilih
+                    selectedItemBuilder: (context) {
+                      return [
+                        const Center(
+                          child: Text(
+                            'Semua Kelas',
+                            style: TextStyle(
+                              color: Color(0xFF2196F3),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        ...todayClasses.map((classData) => Center(
+                          child: Text(
+                            '${classData.namaMapel} - ${classData.namaKelas}',
+                            style: const TextStyle(
+                              color: Color(0xFF2196F3),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )),
+                      ];
+                    },
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Semua Kelas'),
+                      ),
+                      ...todayClasses.map((classData) => DropdownMenuItem<int?>(
+                        value: classData.idKelas,
+                        child: Text('${classData.namaMapel} - ${classData.namaKelas}'),
+                      )),
+                    ],
+                    onChanged: (value) => provider.selectClass(value),
+                    style: const TextStyle(
+                      color: Color(0xFF2D3748),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
@@ -371,46 +416,55 @@ Widget _buildAttendanceStats(TeacherDashboardProvider provider) {
             const SizedBox(height: 20),
           ],
 
-          // Stats cards
-          // Perbaikan pada Row cards
+          // Memodifikasi bagian Row cards di widget _buildAttendanceStats
           Row(
             children: [
               Expanded(
-                child: _StatCard(
-                  title: 'Total',
-                  value: '${stats['total'] ?? 0}',
-                  color: const Color(0xFF718096),
-                  icon: Icons.people,
+                child: SizedBox(
+                  height: 100, // Tetapkan tinggi yang sama untuk semua card
+                  child: _StatCard(
+                    title: 'Total',
+                    value: '${stats['total'] ?? 0}',
+                    color: const Color(0xFF718096),
+                    icon: Icons.people,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StatCard(
-                  title: 'Hadir',
-                  value: '${stats['hadir'] ?? 0}',
-                  color: const Color(0xFF4CAF50),
-                  icon: Icons.check_circle,
+                child: SizedBox(
+                  height: 100, // Tetapkan tinggi yang sama untuk semua card
+                  child: _StatCard(
+                    title: 'Hadir',
+                    value: '${stats['hadir'] ?? 0}',
+                    color: const Color(0xFF4CAF50),
+                    icon: Icons.check_circle,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StatCard(
-                  title: 'Alpha',
-                  value: '${stats['alpha'] ?? 0}',
-                  color: const Color(0xFFE53E3E),
-                  icon: Icons.cancel,
+                child: SizedBox(
+                  height: 100, // Tetapkan tinggi yang sama untuk semua card
+                  child: _StatCard(
+                    title: 'Alpha',
+                    value: '${stats['alpha'] ?? 0}',
+                    color: const Color(0xFFE53E3E),
+                    icon: Icons.cancel,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                flex: 1, // Pastikan semua kartu memiliki flex yang sama
-                child: _StatCard(
-                  title: 'Sakit/Izin',
-                  value: '${(stats['sakit'] ?? 0) + (stats['izin'] ?? 0)}',
-                  color: const Color(0xFFFF9800),
-                  icon: Icons.healing,
-                  // Gunakan teks yang lebih kecil untuk "Sakit/Izin"
-                  titleFontSize: 10,
+                child: SizedBox(
+                  height: 100, // Tetapkan tinggi yang sama untuk semua card
+                  child: _StatCard(
+                    title: 'S/I', // Ubah menjadi teks yang lebih singkat
+                    value: '${(stats['sakit'] ?? 0) + (stats['izin'] ?? 0)}',
+                    color: const Color(0xFFFF9800),
+                    icon: Icons.healing,
+                    // Hapus titleFontSize untuk menggunakan ukuran font yang sama
+                  ),
                 ),
               ),
             ],
