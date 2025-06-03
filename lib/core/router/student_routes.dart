@@ -40,5 +40,16 @@ class StudentRoutes {
         key: state.pageKey,
       ),
     ),
+    GoRoute(
+      path: '/student/attendance/success',
+      name: 'student-attendance-success',
+      pageBuilder: (context, state) => PageTransitionHelper.buildPageWithTransition(
+        child: AttendanceSuccess.fromExtra(context, state),
+        type: TransitionType.scaleFade,
+        curve: Curves.easeOutQuint,
+        duration: const Duration(milliseconds: 500),
+        key: state.pageKey,
+      ),
+    ),
   ];
 }

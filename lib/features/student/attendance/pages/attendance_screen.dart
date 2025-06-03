@@ -26,6 +26,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     'Bahasa Inggris',
   ];
 
+  String? _selectedStatus;
+  final List<String> _statuses = [
+    'Hadir',
+    'Izin',
+    'Sakit',
+    'Alpha',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -169,6 +177,35 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.grey[200],
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                  ),
+                                  hint: const Text('Status Absensi'),
+                                  value: _selectedStatus,
+                                  items: ['All', ..._statuses].map((status) {
+                                    return DropdownMenuItem(
+                                      value: status,
+                                      child: Text(status),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _selectedStatus = val;
+                                      // TODO: Apply filter logic
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 12),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -275,7 +312,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               child: Text(
                 'Tidak ada data absensi.',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: Colors.white,
                   fontSize: 16,
                 ),
               ),
@@ -330,7 +367,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         ),
                         child: ListTile(
                           title: Text(
-                            item.subject,
+                            item.namaMapel,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -339,8 +376,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Tanggal: ${item.date}'),
-                              Text('Jam: ${item.time}'),
+                              Text('Tanggal: ${_dateFormat.format(item.tanggal)}'),
+                              Text('Jam Mulai: ${item.jam_mulai}'),
+                              Text('Jam Selesai: ${item.jam_selesai}'),
                             ],
                           ),
                           trailing: Container(
