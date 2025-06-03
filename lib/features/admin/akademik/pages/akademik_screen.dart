@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouter
 import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart'; // Import CustomBottomNavBar
+import 'package:e_absensi/features/admin/akademik/pages/class_list_screen.dart'; // Import ClassListScreen
+import 'package:e_absensi/features/admin/akademik/pages/add_class_screen.dart';
+import 'package:provider/provider.dart';
+import '../provider/class_provider.dart';
 
 class AdminAkademikScreen extends StatefulWidget {
   const AdminAkademikScreen({Key? key}) : super(key: key);
@@ -95,6 +99,8 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                                   _buildKelasSection(),
                                   const SizedBox(height: 24),
                                   _buildMapelSection(),
+                                  const SizedBox(height: 24),
+                                  _buildAssignGuruSection(),
                                   const SizedBox(height: 24),
                                   _buildTahunAjaranSection(),
                                   const SizedBox(height: 100),
@@ -240,7 +246,17 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     color: const Color(0xFF2196F3),
                     onTap: () {
                       print('Tambah Kelas tapped');
-                      // TODO: Navigate to add class page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddClassScreen(),
+                        ),
+                      ).then((success) {
+                        if (success == true) {
+                          // Refresh the class list if a new class was added
+                          Provider.of<ClassProvider>(context, listen: false).loadClasses();
+                        }
+                      });
                     },
                   ),
                 ),
@@ -253,7 +269,12 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     color: const Color(0xFF4CAF50),
                     onTap: () {
                       print('Daftar Kelas tapped');
-                      // TODO: Navigate to class list page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ClassListScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -335,6 +356,87 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     onTap: () {
                       print('Daftar Mapel tapped');
                       // TODO: Navigate to subject list page
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAssignGuruSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2196F3).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.assignment_rounded,
+                    color: Color(0xFF2196F3),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Assign Guru ke Kelas',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionCard(
+                    title: 'Assign Guru',
+                    subtitle: 'Atur Pengajaran Guru',
+                    icon: Icons.assignment_ind_rounded,
+                    color: const Color(0xFF2196F3),
+                    onTap: () {
+                      print('Assign Guru tapped');
+                      // TODO: Navigate to assign teacher page
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _QuickActionCard(
+                    title: 'Daftar Pengajaran',
+                    subtitle: 'Lihat & Edit Pengajaran',
+                    icon: Icons.list_alt,
+                    color: const Color(0xFF4CAF50),
+                    onTap: () {
+                      print('Daftar Pengajaran tapped');
+                      // TODO: Navigate to teaching list page
                     },
                   ),
                 ),

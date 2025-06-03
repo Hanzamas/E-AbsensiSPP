@@ -340,6 +340,38 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionCard(
+                    title: 'Import Guru',
+                    subtitle: 'Import Data Guru dari Excel',
+                    icon: Icons.upload_file_rounded,
+                    color: const Color(0xFFFF9800),
+                    onTap: () {
+                      print('Import Guru tapped');
+                      // TODO: Show import dialog
+                      _showImportDialog(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _QuickActionCard(
+                    title: 'Download Template',
+                    subtitle: 'Template Excel untuk Import',
+                    icon: Icons.download_rounded,
+                    color: const Color(0xFF9C27B0),
+                    onTap: () {
+                      print('Download Template tapped');
+                      // TODO: Download template Excel
+                      _downloadTemplate();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -425,6 +457,97 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         ),
       ),
     );
+  }
+
+  void _showImportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(
+                Icons.upload_file_rounded,
+                color: Color(0xFFFF9800),
+              ),
+              const SizedBox(width: 8),
+              const Text('Import Data Guru'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Upload file Excel (.xlsx) yang berisi data guru.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Validasi yang akan dilakukan:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildValidationItem('Username harus unik'),
+              _buildValidationItem('Email harus unik dan valid'),
+              _buildValidationItem('NIP harus unik'),
+              _buildValidationItem('Password minimal 6 karakter'),
+              _buildValidationItem('Role harus "guru"'),
+              _buildValidationItem('Semua field wajib diisi'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Batal'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                // TODO: Implement file picker and import logic
+                print('Import file tapped');
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.upload_file_rounded),
+              label: const Text('Pilih File'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF9800),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildValidationItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            size: 16,
+            color: Color(0xFF4CAF50),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _downloadTemplate() {
+    // TODO: Implement template download
+    print('Downloading template...');
   }
 }
 
