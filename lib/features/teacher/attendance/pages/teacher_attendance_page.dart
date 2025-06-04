@@ -2695,33 +2695,152 @@ class _HistoryTabState extends State<_HistoryTab> {
     );
   }
   
-  void _showBulkConfirmation(String status) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Ubah ke $status'),
-        content: Text(
-          'Anda akan mengubah status ${_selectedIds.length} siswa menjadi $status. Lanjutkan?'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _updateBulkStatus(status);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2196F3),
-            ),
-            child: const Text('Lanjutkan'),
-          ),
-        ],
-      ),
-    );
+void _showBulkConfirmation(String status) {
+  // Tentukan warna dan ikon berdasarkan status
+  Color statusColor;
+  IconData statusIcon;
+  
+  switch (status.toLowerCase()) {
+    case 'hadir':
+      statusColor = const Color(0xFF4CAF50);
+      statusIcon = Icons.check_circle;
+      break;
+    case 'alpha':
+      statusColor = const Color(0xFFE53E3E);
+      statusIcon = Icons.cancel;
+      break;
+    case 'sakit':
+      statusColor = const Color(0xFFFF9800);
+      statusIcon = Icons.healing;
+      break;
+    case 'izin':
+      statusColor = const Color(0xFF2196F3);
+      statusIcon = Icons.event_busy;
+      break;
+    default:
+      statusColor = const Color(0xFF718096);
+      statusIcon = Icons.help_outline;
   }
+
+  showDialog(
+    context: context,
+    builder: (context) => Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header dengan ikon status
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                statusIcon,
+                color: statusColor,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Title
+            Text(
+              'Ubah ke $status',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Content
+            Text(
+              'Anda akan mengubah status ${_selectedIds.length} siswa menjadi $status. Lanjutkan?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF64748B),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Action buttons dengan tema konsisten
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF64748B),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    child: const Text(
+                      'Batal',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _updateBulkStatus(status);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2196F3),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Lanjutkan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
   
   Future<void> _updateBulkStatus(String status) async {
     if (_selectedIds.isEmpty) return;
