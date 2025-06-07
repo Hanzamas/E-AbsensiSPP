@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouter
-import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart'; // Import CustomBottomNavBar
+import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart'; 
+import 'add_student_screen.dart';// Import CustomBottomNavBar
+import 'add_teacher_screen.dart';// Import CustomBottomNavBar
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({Key? key}) : super(key: key);
@@ -240,7 +242,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     color: const Color(0xFF2196F3),
                     onTap: () {
                       print('Tambah Siswa tapped');
-                      // TODO: Navigate to add student page
+                       Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddStudentScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -321,7 +328,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     color: const Color(0xFF2196F3),
                     onTap: () {
                       print('Tambah Guru tapped');
-                      // TODO: Navigate to add teacher page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddTeacherScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
