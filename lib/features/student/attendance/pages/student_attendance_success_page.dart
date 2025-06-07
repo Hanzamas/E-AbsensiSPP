@@ -3,7 +3,7 @@ import '../../../shared/widgets/bottom_navbar.dart';
 import 'package:go_router/go_router.dart';
 // import '../../../../core/constants/strings.dart';
 
-class AttendanceSuccess extends StatelessWidget {
+class StudentAttendanceSuccessPage extends StatelessWidget {
   final String subject;
   final String date;
   final String time;
@@ -13,7 +13,7 @@ class AttendanceSuccess extends StatelessWidget {
   static const int _selectedIndex = 1;
   static const String userRole = 'siswa';
 
-  const AttendanceSuccess({
+  const StudentAttendanceSuccessPage({
     Key? key,
     required this.subject,
     required this.date,
@@ -22,9 +22,9 @@ class AttendanceSuccess extends StatelessWidget {
   }) : super(key: key);
   
   // Constructor untuk menerima data dari GoRouter
-  static AttendanceSuccess fromExtra(BuildContext context, GoRouterState state) {
+  static StudentAttendanceSuccessPage fromExtra(BuildContext context, GoRouterState state) {
     final extra = state.extra as Map<String, dynamic>? ?? {};
-    return AttendanceSuccess(
+    return StudentAttendanceSuccessPage(
       subject: extra['subject'] ?? 'Tidak diketahui',
       date: extra['date'] ?? '-',
       time: extra['time'] ?? '-',

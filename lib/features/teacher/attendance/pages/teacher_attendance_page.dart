@@ -1297,17 +1297,23 @@ class _DetailStatCard extends StatelessWidget {
     );
   }
 }
-
-// Schedule Tab
-class _ScheduleTab extends StatelessWidget {
+class _ScheduleTab extends StatefulWidget {
   final TeacherAttendanceProvider provider;
 
   const _ScheduleTab({required this.provider});
 
   @override
+  State<_ScheduleTab> createState() => _ScheduleTabState();
+}
+
+// Schedule Tab
+class _ScheduleTabState extends State<_ScheduleTab> {
+ final Set<int> _startedSessions = <int>{};
+
+  @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () => provider.refreshData(),
+      onRefresh: () => widget.provider.refreshData(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -1343,17 +1349,19 @@ class _ScheduleTab extends StatelessWidget {
                     ),
                   ),
                   
-                  if (provider.todaySchedule.isNotEmpty)
-                    ...provider.todaySchedule.map((schedule) {
+                  if (widget.provider.todaySchedule.isNotEmpty)
+                    ...widget.provider.todaySchedule.map((schedule) {
                       final isActive = _isScheduleActive(schedule);
+                      final isSessionStarted = _startedSessions.contains(schedule.id);
                       return Container(
                         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: _ScheduleCard(
                           schedule: schedule,
                           // PERBAIKAN: Selalu berikan fungsi, tapi cek active di dalam _ScheduleCard
                           onStartSession: () => _startSession(context, schedule.id),
-                          isStartingSession: provider.isCreatingSession,
+                          isStartingSession: widget.provider.isCreatingSession,
                           isSessionActive: isActive, // Tambahkan parameter baru
+                          isSessionStarted: isSessionStarted,
                           showBorder: false,
                         ),
                       );
@@ -1493,7 +1501,7 @@ Widget _buildWeeklyScheduleTabs() {
           child: TabBarView(
             children: daysOfWeek.map((day) {
               // Filter jadwal berdasarkan hari menggunakan provider
-              final schedules = provider.getSchedulesByDay(day.toLowerCase());
+              final schedules = widget.provider.getSchedulesByDay(day.toLowerCase());
               
               if (schedules.isEmpty) {
                 return Center(
@@ -1527,7 +1535,7 @@ Widget _buildWeeklyScheduleTabs() {
                 separatorBuilder: (context, index) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final schedule = schedules[index];
-                  final isToday = provider.isScheduleToday(schedule);
+                  final isToday = widget.provider.isScheduleToday(schedule);
                   
                   return _WeeklyScheduleCard(
                     schedule: schedule,
@@ -1613,7 +1621,7 @@ Widget _buildWeeklyScheduleTabs() {
                       child: TabBarView(
                         children: daysOfWeek.map((day) {
                           // Filter jadwal berdasarkan hari menggunakan provider
-                          final schedules = provider.getSchedulesByDay(day.toLowerCase());
+                          final schedules = widget.provider.getSchedulesByDay(day.toLowerCase());
                           
                           if (schedules.isEmpty) {
                             return Center(
@@ -1647,7 +1655,7 @@ Widget _buildWeeklyScheduleTabs() {
                             separatorBuilder: (context, index) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final schedule = schedules[index];
-                              final isToday = provider.isScheduleToday(schedule);
+                              final isToday = widget.provider.isScheduleToday(schedule);
                               
                               return _WeeklyScheduleCard(
                                 schedule: schedule,
@@ -1707,7 +1715,7 @@ Widget _buildWeeklyScheduleTabs() {
               ),
             ),
             Text(
-              provider.attendanceRateText,
+              widget.provider.attendanceRateText,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -1720,12 +1728,12 @@ Widget _buildWeeklyScheduleTabs() {
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: LinearProgressIndicator(
-            value: provider.attendanceRate / 100,
+            value: widget.provider.attendanceRate / 100,
             backgroundColor: Colors.grey.shade200,
             valueColor: AlwaysStoppedAnimation<Color>(
-              provider.attendanceRate > 75 ? 
+              widget.provider.attendanceRate > 75 ? 
                 const Color(0xFF4CAF50) : 
-                provider.attendanceRate > 50 ?
+                widget.provider.attendanceRate > 50 ?
                   const Color(0xFFFFA000) :
                   const Color(0xFFF44336),
             ),
@@ -1750,25 +1758,25 @@ Widget _buildWeeklyScheduleTabs() {
                         PieChartData(
                           sections: [
                             PieChartSectionData(
-                              value: provider.presentToday.toDouble(),
+                              value: widget.provider.presentToday.toDouble(),
                               color: const Color(0xFF4CAF50),
                               radius: 50,
                               title: '',
                             ),
                             PieChartSectionData(
-                              value: provider.absentToday.toDouble(),
+                              value: widget.provider.absentToday.toDouble(),
                               color: const Color(0xFFF44336),
                               radius: 50,
                               title: '',
                             ),
                             PieChartSectionData(
-                              value: provider.sickToday.toDouble(),
+                              value: widget.provider.sickToday.toDouble(),
                               color: const Color(0xFFFF9800),
                               radius: 50,
                               title: '',
                             ),
                             PieChartSectionData(
-                              value: provider.permissionToday.toDouble(),
+                              value: widget.provider.permissionToday.toDouble(),
                               color: const Color(0xFF9C27B0),
                               radius: 50,
                               title: '',
@@ -1780,7 +1788,7 @@ Widget _buildWeeklyScheduleTabs() {
                       ),
                     ),
                     Text(
-                      '${provider.totalStudents}\nSiswa',
+                      '${widget.provider.totalStudents}\nSiswa',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
@@ -1798,13 +1806,13 @@ Widget _buildWeeklyScheduleTabs() {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildLegendItem('Hadir', provider.presentToday, const Color(0xFF4CAF50)),
+                      _buildLegendItem('Hadir', widget.provider.presentToday, const Color(0xFF4CAF50)),
                       const SizedBox(height: 8),
-                      _buildLegendItem('Alpha', provider.absentToday, const Color(0xFFF44336)),
+                      _buildLegendItem('Alpha', widget.provider.absentToday, const Color(0xFFF44336)),
                       const SizedBox(height: 8),
-                      _buildLegendItem('Sakit', provider.sickToday, const Color(0xFFFF9800)),
+                      _buildLegendItem('Sakit', widget.provider.sickToday, const Color(0xFFFF9800)),
                       const SizedBox(height: 8),
-                      _buildLegendItem('Izin', provider.permissionToday, const Color(0xFF9C27B0)),
+                      _buildLegendItem('Izin', widget.provider.permissionToday, const Color(0xFF9C27B0)),
                     ],
                   ),
                 ),
@@ -1842,10 +1850,14 @@ Widget _buildWeeklyScheduleTabs() {
   
 
   void _startSession(BuildContext context, int idPengajaran) async {
-    final success = await provider.createLearningSession(idPengajaran);
+    final success = await widget.provider.createLearningSession(idPengajaran);
     
     if (context.mounted) {
       if (success) {
+                // Tambahkan ID ke set sesi yang sudah dimulai
+        setState(() {
+          _startedSessions.add(idPengajaran);
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sesi pembelajaran berhasil dimulai'),
@@ -1856,7 +1868,7 @@ Widget _buildWeeklyScheduleTabs() {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memulai sesi: ${provider.error}'),
+            content: Text('Gagal memulai sesi: ${widget.provider.error}'),
             backgroundColor: const Color(0xFFE53E3E),
             behavior: SnackBarBehavior.floating,
           ),
@@ -1895,7 +1907,7 @@ Widget _buildWeeklyScheduleTabs() {
           SizedBox(
             height: 200,
             child: FutureBuilder<Map<String, List<double>>>(
-              future: provider.getAttendanceTrend(),
+              future: widget.provider.getAttendanceTrend(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -3875,6 +3887,7 @@ class _ScheduleCard extends StatelessWidget {
   final VoidCallback? onStartSession;
   final bool isStartingSession;
   final bool isSessionActive; // Parameter baru
+  final bool isSessionStarted; // Parameter baru
   final bool showBorder; // Parameter baru
 
   const _ScheduleCard({
@@ -3882,8 +3895,24 @@ class _ScheduleCard extends StatelessWidget {
     this.onStartSession,
     required this.isStartingSession,
     this.isSessionActive = true, // Default true
+    this.isSessionStarted = false, // Default false
     this.showBorder = true, // Default true untuk backward compatibility
   });
+
+  bool _isScheduleNotStarted() {
+    try {
+      final startTimeParts = schedule.jamMulai.split(':');
+      final startHour = int.parse(startTimeParts[0]);
+      final startMinute = int.parse(startTimeParts[1]);
+      
+      final now = DateTime.now();
+      final startTime = DateTime(now.year, now.month, now.day, startHour, startMinute);
+      
+      return now.isBefore(startTime);
+    } catch (e) {
+      return false;
+    }
+  }
 
     // Tambahkan metode untuk memeriksa apakah jadwal sudah lewat
   bool _isSchedulePassed() {
@@ -3953,34 +3982,14 @@ class _ScheduleCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 // Disable tombol jika jadwal sudah lewat atau sedang memulai sesi
-                onPressed: (isPassed || !isSessionActive || isStartingSession)
+                // Update kondisi onPressed di ElevatedButton yang sudah ada:
+                onPressed: (isPassed || !isSessionActive || isStartingSession || isSessionStarted || _isScheduleNotStarted())
                     ? null 
                     : onStartSession,
-                icon: isStartingSession
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Icon(
-                        isPassed ? Icons.lock_clock : Icons.play_arrow,
-                        size: 18
-                      ),
-                label: Text(
-                  isStartingSession 
-                      ? 'Memulai...' 
-                      : isPassed 
-                          ? 'Waktu Habis' 
-                          : 'Mulai Sesi'
-                ),
-                style: ElevatedButton.styleFrom(
-                  // Ubah warna jadi abu-abu kalau sudah lewat
-                  backgroundColor: isPassed 
-                      ? Colors.grey.shade400
-                      : const Color(0xFF4CAF50),
+                  icon: _buildButtonIcon(),
+                  label: Text(_getButtonText()),
+                  style: ElevatedButton.styleFrom(
+                  backgroundColor: _getButtonColor(isPassed),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -3993,6 +4002,54 @@ class _ScheduleCard extends StatelessWidget {
         ],
       ),
     );
+  }
+  // Update method _buildButtonIcon() yang sudah ada:
+  Widget _buildButtonIcon() {
+    if (isStartingSession) {
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    } else if (isSessionStarted) {
+      return const Icon(Icons.check_circle, size: 18);
+    } else if (_isScheduleNotStarted()) {
+      return const Icon(Icons.schedule, size: 18);
+    } else if (_isSchedulePassed()) {
+      return const Icon(Icons.timer_off, size: 18);
+    } else {
+      return const Icon(Icons.play_arrow, size: 18);
+    }
+  }
+  // Update method _getButtonText() yang sudah ada:
+  String _getButtonText() {
+    if (isStartingSession) {
+      return 'Memulai Sesi...';
+    } else if (isSessionStarted) {
+      return 'Sedang Berlangsung';
+    } else if (_isScheduleNotStarted()) {
+      return 'Belum Waktunya';
+    } else if (_isSchedulePassed()) {
+      return 'Waktu Habis';
+    } else {
+      return 'Mulai Sesi';
+    }
+  }
+
+  // Update method _getButtonColor() yang sudah ada:
+  Color _getButtonColor(bool isPassed) {
+    if (isPassed) {
+      return Colors.grey.shade400;
+    } else if (isSessionStarted) {
+      return const Color(0xFF2196F3); // Biru untuk sedang berlangsung
+    } else if (_isScheduleNotStarted()) {
+      return const Color(0xFFFF9800); // Orange untuk belum waktunya
+    } else {
+      return const Color(0xFF4CAF50); // Hijau untuk mulai sesi
+    }
   }
 }
 

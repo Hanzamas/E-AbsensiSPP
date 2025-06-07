@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:e_absensi/features/student/dashboard/pages/student_dashboard_page.dart';
-import 'package:e_absensi/features/student/attendance/pages/attendance_screen.dart';
-import 'package:e_absensi/features/student/attendance/pages/attendance_scan.dart';
-import 'package:e_absensi/features/student/attendance/pages/attendance_success.dart';
+import 'package:e_absensi/features/student/attendance/pages/student_attendance_page.dart';
+import 'package:e_absensi/features/student/attendance/pages/student_qr_scan_page.dart';
+import 'package:e_absensi/features/student/attendance/pages/student_attendance_success_page.dart';
 import 'package:e_absensi/features/student/spp/pages/spp_page.dart';
 import 'package:e_absensi/features/student/spp/pages/spp_detail_page.dart';
 import 'package:e_absensi/features/student/spp/pages/spp_barcode_page.dart';
@@ -25,7 +25,7 @@ class StudentRoutes {
       path: '/student/attendance',
       name: 'student-attendance',
       pageBuilder: (context, state) => PageTransitionHelper.slideRightTransition(
-        child: const AttendanceScreen(),
+        child: const StudentAttendancePage(),
         duration: const Duration(milliseconds: 400),
         key: state.pageKey,
       ),
@@ -34,7 +34,7 @@ class StudentRoutes {
       path: '/student/attendance/scan',
       name: 'student-attendance-scan',
       pageBuilder: (context, state) => PageTransitionHelper.buildPageWithTransition(
-        child: const AttendanceQr(),
+        child: const StudentQrScanPage(),
         type: TransitionType.slideUp,
         duration: const Duration(milliseconds: 400),
         key: state.pageKey,
@@ -44,7 +44,7 @@ class StudentRoutes {
       path: '/student/attendance/success',
       name: 'student-attendance-success',
       pageBuilder: (context, state) => PageTransitionHelper.buildPageWithTransition(
-        child: AttendanceSuccess.fromExtra(context, state),
+        child: StudentAttendanceSuccessPage.fromExtra(context, state),
         type: TransitionType.scaleFade,
         curve: Curves.easeOutQuint,
         duration: const Duration(milliseconds: 500),
