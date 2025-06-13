@@ -12,10 +12,8 @@ class ScheduleTab extends StatefulWidget {
 }
 
 class _ScheduleTabState extends State<ScheduleTab> {
-  // ✅ Fix: Initialize as nullable, set in initState
   String? _selectedDay;
   
-  // ✅ Remove "Hari Ini" - langsung list hari
   final List<Map<String, String>> _days = [
     {'label': 'Senin', 'value': 'senin'},
     {'label': 'Selasa', 'value': 'selasa'},
@@ -29,7 +27,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
   @override
   void initState() {
     super.initState();
-    // ✅ Set default day in initState
     _selectedDay = _getCurrentDay();
   }
 
@@ -37,10 +34,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Day Selector
         _buildDaySelector(),
-        
-        // Schedule Content
         Expanded(child: _buildScheduleContent()),
       ],
     );
@@ -100,9 +94,8 @@ class _ScheduleTabState extends State<ScheduleTab> {
   }
 
   Widget _buildDayChip(String label, String value) {
-    // ✅ Check for null safety
-    final isSelected = _selectedDay == value;
-    final isToday = value == _getCurrentDay();
+    final isSelected = _normalizeDay(_selectedDay ?? '') == _normalizeDay(value);
+    final isToday = _normalizeDay(value) == _normalizeDay(_getCurrentDay());
     
     return Container(
       margin: const EdgeInsets.only(right: 8),
@@ -163,7 +156,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
   }
 
   Widget _buildScheduleContent() {
-    // ✅ Check if _selectedDay is null
     if (_selectedDay == null) {
       return const Center(
         child: CircularProgressIndicator(
@@ -180,7 +172,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
       );
     }
 
-    // ✅ Filter schedule untuk hari yang dipilih
     final daySchedules = _getSchedulesForSelectedDay();
 
     if (daySchedules.isEmpty) {
@@ -202,11 +193,9 @@ class _ScheduleTabState extends State<ScheduleTab> {
   }
 
   Widget _buildScheduleCard(dynamic schedule) {
-    // ✅ Null safety check
     if (_selectedDay == null) return const SizedBox.shrink();
     
-    // ✅ Check if selected day is today
-    final isToday = _selectedDay == _getCurrentDay();
+    final isToday = _normalizeDay(_selectedDay!) == _normalizeDay(_getCurrentDay());
     final attendanceStatus = isToday 
         ? widget.provider.getAttendanceStatusForSchedule(schedule)
         : 'Tidak Tersedia';
@@ -232,7 +221,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header dengan status
             Row(
               children: [
                 Expanded(
@@ -258,7 +246,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
                     ],
                   ),
                 ),
-                // ✅ Show status only for today
                 if (isToday)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -287,7 +274,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
             
             const SizedBox(height: 16),
             
-            // Info detail
             Row(
               children: [
                 Expanded(
@@ -328,12 +314,10 @@ class _ScheduleTabState extends State<ScheduleTab> {
               ],
             ),
             
-            // ✅ Action buttons - HANYA untuk hari ini
             if (isToday) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
-                  // ✅ Scan button - hanya jika bisa scan
                   if (canScan)
                     Expanded(
                       child: ElevatedButton.icon(
@@ -350,10 +334,8 @@ class _ScheduleTabState extends State<ScheduleTab> {
                       ),
                     ),
                   
-                  // ✅ Spacing jika ada scan button
                   if (canScan) const SizedBox(width: 12),
                   
-                  // ✅ Detail button - selalu ada untuk hari ini
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _showScheduleDetail(schedule),
@@ -438,11 +420,10 @@ class _ScheduleTabState extends State<ScheduleTab> {
     );
   }
 
-  // ✅ Enhanced Schedule Detail Modal
   Widget _buildScheduleDetailModal(dynamic schedule) {
     if (_selectedDay == null) return const SizedBox.shrink();
     
-    final isToday = _selectedDay == _getCurrentDay();
+    final isToday = _normalizeDay(_selectedDay!) == _normalizeDay(_getCurrentDay());
     final attendanceStatus = isToday 
         ? widget.provider.getAttendanceStatusForSchedule(schedule)
         : 'Tidak Tersedia';
@@ -457,7 +438,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -489,12 +469,10 @@ class _ScheduleTabState extends State<ScheduleTab> {
             ),
           ),
           
-          // Content
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                // Subject & Teacher
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -528,7 +506,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
                 
                 const SizedBox(height: 20),
                 
-                // Schedule Details
                 _buildDetailRow(
                   Icons.calendar_today, 
                   'Hari', 
@@ -553,7 +530,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
                   '${schedule.kapasitas ?? 0} siswa'
                 ),
                 
-                // ✅ Status - hanya untuk hari ini
                 if (isToday) ...[
                   const SizedBox(height: 12),
                   _buildDetailRow(
@@ -566,7 +542,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
                 
                 const SizedBox(height: 24),
                 
-                // ✅ Action buttons untuk hari ini
                 if (isToday) ...[
                   Row(
                     children: [
@@ -608,7 +583,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
                     ],
                   ),
                 ] else ...[
-                  // Untuk hari lain, hanya tombol tutup
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -675,10 +649,36 @@ class _ScheduleTabState extends State<ScheduleTab> {
   // Helper methods
   List<dynamic> _getSchedulesForSelectedDay() {
     if (_selectedDay == null) return [];
-    return widget.provider.schedules.where((s) => s.hari.toLowerCase() == _selectedDay).toList();
+    
+    return widget.provider.schedules.where((s) {
+      final scheduleDay = _normalizeDay(s.hari?.toLowerCase()?.trim() ?? '');
+      final selectedDay = _normalizeDay(_selectedDay?.toLowerCase()?.trim() ?? '');
+      return scheduleDay == selectedDay;
+    }).toList();
   }
 
-  // ✅ Get current day - static method
+  String _normalizeDay(String day) {
+    final normalized = day
+        .toLowerCase()
+        .trim()
+        .replaceAll("'", '')
+        .replaceAll("'", '')
+        .replaceAll(" ", '');
+    
+    const dayMap = {
+      'senin': 'senin',
+      'selasa': 'selasa', 
+      'rabu': 'rabu',
+      'kamis': 'kamis',
+      'jumat': 'jumat',
+      'jumaat': 'jumat',
+      'sabtu': 'sabtu',
+      'minggu': 'minggu',
+    };
+    
+    return dayMap[normalized] ?? normalized;
+  }
+
   String _getCurrentDay() {
     final today = DateTime.now().weekday;
     const days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
@@ -689,7 +689,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
     return widget.provider.getAttendanceStatusForSchedule(schedule);
   }
 
-  // ✅ Can scan - dengan time validation
   bool _canScanQR(dynamic schedule) {
     final status = _getAttendanceStatusForSchedule(schedule);
     if (status != 'Belum Absen') return false;
@@ -697,7 +696,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
     final now = DateTime.now();
     
     try {
-      // Parse jam mulai dan selesai
       final startTimeParts = schedule.jamMulai.split(':');
       final endTimeParts = schedule.jamSelesai.split(':');
       
@@ -711,7 +709,6 @@ class _ScheduleTabState extends State<ScheduleTab> {
         int.parse(endTimeParts[0]), int.parse(endTimeParts[1])
       );
       
-      // Bisa scan jika waktu dalam rentang jadwal (dengan toleransi 15 menit sebelum mulai)
       final scanStartTime = startTime.subtract(const Duration(minutes: 15));
       return now.isAfter(scanStartTime) && now.isBefore(endTime);
     } catch (e) {
@@ -767,9 +764,12 @@ class _ScheduleTabState extends State<ScheduleTab> {
       'rabu': 'Rabu',
       'kamis': 'Kamis',
       'jumat': 'Jumat',
+      'jumaat': 'Jumat',
       'sabtu': 'Sabtu',
       'minggu': 'Minggu',
     };
-    return dayMap[day.toLowerCase()] ?? day;
+    
+    final normalized = _normalizeDay(day);
+    return dayMap[normalized] ?? day;
   }
 }
