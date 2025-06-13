@@ -44,4 +44,8 @@ class ApiEndpoints {
   static const String createClass = '/admin/classes/create';
   static const String updateClass = '/admin/classes/update'; // Will append /:id
   static const String deleteClass = '/admin/classes/delete'; // Will append /:id
+  static const String getStudents = '/admin/students';
+  static const String deleteStudent = '/admin/students/delete'; // Will append /:id
+  static const String createStudentadmin = '/admin/students/create';
+  static const String updateStudentadmin = '/admin/students/update'; // Will append /:id
 } 

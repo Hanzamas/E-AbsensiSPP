@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouter
-import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart'; 
-import 'add_student_screen.dart';// Import CustomBottomNavBar
-import 'add_teacher_screen.dart';// Import CustomBottomNavBar
+import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart';
+import 'add_student_screen.dart'; // Import CustomBottomNavBar
+import 'add_teacher_screen.dart'; // Import CustomBottomNavBar
+import '../provider/student_provider.dart';
+import 'student_list_screen.dart';
+import 'package:provider/provider.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({Key? key}) : super(key: key);
@@ -62,52 +65,55 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2196F3)),
-                ),
-              )
-            : _error != null
+        child:
+            _isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF2196F3),
+                    ),
+                  ),
+                )
+                : _error != null
                 ? _buildErrorState(_error!)
                 : RefreshIndicator(
-                    onRefresh: _refreshData,
-                    color: const Color(0xFF2196F3),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF2196F3), Color(0xFF64B5F6)],
-                          stops: [0.0, 0.8],
-                        ),
+                  onRefresh: _refreshData,
+                  color: const Color(0xFF2196F3),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF2196F3), Color(0xFF64B5F6)],
+                        stops: [0.0, 0.8],
                       ),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader(),
-                            const SizedBox(height: 24),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSiswaSection(),
-                                  const SizedBox(height: 24),
-                                  _buildGuruSection(),
-                                  const SizedBox(height: 24),
-                                  _buildAdminSection(),
-                                  const SizedBox(height: 100),
-                                ],
-                              ),
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSiswaSection(),
+                                const SizedBox(height: 24),
+                                _buildGuruSection(),
+                                const SizedBox(height: 24),
+                                _buildAdminSection(),
+                                const SizedBox(height: 100),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: currentIndex,
@@ -124,11 +130,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Color(0xFFE53E3E),
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Color(0xFFE53E3E)),
             const SizedBox(height: 16),
             const Text(
               'Terjadi Kesalahan',
@@ -142,10 +144,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF718096),
-              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF718096)),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -155,7 +154,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2196F3),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -242,7 +244,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     color: const Color(0xFF2196F3),
                     onTap: () {
                       print('Tambah Siswa tapped');
-                       Navigator.push(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const AddStudentScreen(),
@@ -260,7 +262,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     color: const Color(0xFF4CAF50),
                     onTap: () {
                       print('Daftar Siswa tapped');
-                      // TODO: Navigate to student list page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => StudentProvider(),
+                                child: const StudentListScreen(),
+                              ),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -478,10 +489,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         return AlertDialog(
           title: Row(
             children: [
-              const Icon(
-                Icons.upload_file_rounded,
-                color: Color(0xFFFF9800),
-              ),
+              const Icon(Icons.upload_file_rounded, color: Color(0xFFFF9800)),
               const SizedBox(width: 8),
               const Text('Import Data Guru'),
             ],
@@ -497,10 +505,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               const SizedBox(height: 16),
               const Text(
                 'Validasi yang akan dilakukan:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
               _buildValidationItem('Username harus unik'),
@@ -548,10 +553,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             color: Color(0xFF4CAF50),
           ),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text(text, style: const TextStyle(fontSize: 12)),
         ],
       ),
     );
@@ -587,9 +589,7 @@ class _QuickActionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey.shade200,
-          ),
+          border: Border.all(color: Colors.grey.shade200),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -601,11 +601,7 @@ class _QuickActionCard extends StatelessWidget {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 12),
             Text(
@@ -620,10 +616,7 @@ class _QuickActionCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF718096),
-              ),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF718096)),
               textAlign: TextAlign.center,
             ),
           ],
@@ -631,4 +624,4 @@ class _QuickActionCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

@@ -5,26 +5,25 @@ import 'dart:convert';
 import '../data/models/student_model.dart';
 import '../provider/student_provider.dart';
 
-class AddStudentScreen extends StatefulWidget {
-  const AddStudentScreen({Key? key}) : super(key: key);
+class EditStudentScreen extends StatefulWidget {
+  final Student student;
+  const EditStudentScreen({Key? key, required this.student}) : super(key: key);
 
   @override
-  _AddStudentScreenState createState() => _AddStudentScreenState();
+  _EditStudentScreenState createState() => _EditStudentScreenState();
 }
 
-class _AddStudentScreenState extends State<AddStudentScreen> {
+class _EditStudentScreenState extends State<EditStudentScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _kelasController = TextEditingController();
-  final _nisController = TextEditingController();
-  final _nama_lengkapController = TextEditingController();
-  final _tgl_lahirController = TextEditingController();
-  final _temp_lahirController = TextEditingController();
-  final _alamatController = TextEditingController();
-  final _waliController = TextEditingController();
-  final _waliwa_waliController = TextEditingController();
+  late TextEditingController _usernameController;
+  late TextEditingController _emailController;
+  late TextEditingController _nisController;
+  late TextEditingController _namaLengkapController;
+  late TextEditingController _tglLahirController;
+  late TextEditingController _tempLahirController;
+  late TextEditingController _alamatController;
+  late TextEditingController _waliController;
+  late TextEditingController _waWaliController;
 
   String? _selectedJenisKelamin;
   DateTime? _selectedDate;
@@ -32,51 +31,51 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   @override
   void initState() {
     super.initState();
-    // _usernameController = TextEditingController(text: widget.student.username);
-    // _emailController = TextEditingController(text: widget.student.email);
-    // _nisController = TextEditingController(text: widget.student.nis);
-    // _namaLengkapController = TextEditingController(
-    //   text: widget.student.namaLengkap,
-    // );
-    // _tempLahirController = TextEditingController(
-    //   text: widget.student.tempatLahir,
-    // );
-    // _alamatController = TextEditingController(text: widget.student.alamat);
-    // _waliController = TextEditingController(text: widget.student.wali);
-    // _waWaliController = TextEditingController(text: widget.student.waWali);
+    _usernameController = TextEditingController(text: widget.student.username);
+    _emailController = TextEditingController(text: widget.student.email);
+    _nisController = TextEditingController(text: widget.student.nis);
+    _namaLengkapController = TextEditingController(
+      text: widget.student.namaLengkap,
+    );
+    _tempLahirController = TextEditingController(
+      text: widget.student.tempatLahir,
+    );
+    _alamatController = TextEditingController(text: widget.student.alamat);
+    _waliController = TextEditingController(text: widget.student.wali);
+    _waWaliController = TextEditingController(text: widget.student.waWali);
 
-    // // Memeriksa validitas data jenis kelamin sebelum menampilkannya
-    // final initialJenisKelamin = widget.student.jenisKelamin;
-    // if (initialJenisKelamin == 'L' || initialJenisKelamin == 'P') {
-    //   _selectedJenisKelamin = initialJenisKelamin;
-    // } else {
-    //   // Jika data dari server adalah "" atau tidak valid, set ke null
-    //   _selectedJenisKelamin = null;
-    // }
+    // Memeriksa validitas data jenis kelamin sebelum menampilkannya
+    final initialJenisKelamin = widget.student.jenisKelamin;
+    if (initialJenisKelamin == 'L' || initialJenisKelamin == 'P') {
+      _selectedJenisKelamin = initialJenisKelamin;
+    } else {
+      // Jika data dari server adalah "" atau tidak valid, set ke null
+      _selectedJenisKelamin = null;
+    }
 
-    // _tglLahirController = TextEditingController();
-    // try {
-    //   _selectedDate = DateTime.parse(widget.student.tanggalLahir);
-    //   // Validasi tanggal yang diparsing
-    //   final DateTime today = DateTime.now();
-    //   final DateTime maxDate = DateTime(today.year + 1, 12, 31);
-    //   final DateTime minDate = DateTime(1980);
+    _tglLahirController = TextEditingController();
+    try {
+      _selectedDate = DateTime.parse(widget.student.tanggalLahir);
+      // Validasi tanggal yang diparsing
+      final DateTime today = DateTime.now();
+      final DateTime maxDate = DateTime(today.year + 1, 12, 31);
+      final DateTime minDate = DateTime(1980);
 
-    //   // Jika tanggal di luar rentang yang wajar, reset ke null
-    //   if (_selectedDate!.isAfter(maxDate) || _selectedDate!.isBefore(minDate)) {
-    //     print(
-    //       'Tanggal tidak valid: ${widget.student.tanggalLahir}. Reset ke null.',
-    //     );
-    //     _selectedDate = null;
-    //     _tglLahirController.text = "";
-    //   } else {
-    //     _tglLahirController.text = _formatDateIndonesian(_selectedDate!);
-    //   }
-    // } catch (e) {
-    //   print('Error parsing tanggal: ${widget.student.tanggalLahir}. Error: $e');
-    //   _selectedDate = null;
-    //   _tglLahirController.text = ""; // Biarkan kosong jika format tidak valid
-    // }
+      // Jika tanggal di luar rentang yang wajar, reset ke null
+      if (_selectedDate!.isAfter(maxDate) || _selectedDate!.isBefore(minDate)) {
+        print(
+          'Tanggal tidak valid: ${widget.student.tanggalLahir}. Reset ke null.',
+        );
+        _selectedDate = null;
+        _tglLahirController.text = "";
+      } else {
+        _tglLahirController.text = _formatDateIndonesian(_selectedDate!);
+      }
+    } catch (e) {
+      print('Error parsing tanggal: ${widget.student.tanggalLahir}. Error: $e');
+      _selectedDate = null;
+      _tglLahirController.text = ""; // Biarkan kosong jika format tidak valid
+    }
   }
 
   @override
@@ -84,12 +83,12 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _nisController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
-    _nama_lengkapController.dispose();
-    _tgl_lahirController.dispose();
-    _temp_lahirController.dispose();
+    _namaLengkapController.dispose();
+    _tglLahirController.dispose();
+    _tempLahirController.dispose();
     _alamatController.dispose();
     _waliController.dispose();
-    _waliwa_waliController.dispose();
+    _waWaliController.dispose();
     super.dispose();
   }
 
@@ -129,7 +128,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _tgl_lahirController.text = _formatDateIndonesian(_selectedDate!);
+        _tglLahirController.text = _formatDateIndonesian(_selectedDate!);
       });
     }
   }
@@ -155,69 +154,69 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     return '${date.day} ${months[date.month]} ${date.year}';
   }
 
-  // Future<void> _submitForm() async {
-  //   if (_formKey.currentState!.validate()) {
-  //     if (_selectedDate == null) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Tanggal lahir tidak boleh kosong'),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //       return;
-  //     }
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      if (_selectedDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tanggal lahir tidak boleh kosong'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-  //     final provider = Provider.of<StudentProvider>(context, listen: false);
-  //     final formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+      final provider = Provider.of<StudentProvider>(context, listen: false);
+      final formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
 
-  //     final studentData = {
-  //       'username': _usernameController.text,
-  //       'email': _emailController.text,
-  //       'nis': _nisController.text,
-  //       'nama_lengkap': _namaLengkapController.text,
-  //       'jenis_kelamin': _selectedJenisKelamin,
-  //       'tanggal_lahir': formattedDate,
-  //       'tempat_lahir': _tempLahirController.text,
-  //       'alamat': _alamatController.text,
-  //       'wali': _waliController.text,
-  //       'wa_wali': _waWaliController.text,
-  //       'id_kelas': widget.student.idKelas,
-  //     };
+      final studentData = {
+        'username': _usernameController.text,
+        'email': _emailController.text,
+        'nis': _nisController.text,
+        'nama_lengkap': _namaLengkapController.text,
+        'jenis_kelamin': _selectedJenisKelamin,
+        'tanggal_lahir': formattedDate,
+        'tempat_lahir': _tempLahirController.text,
+        'alamat': _alamatController.text,
+        'wali': _waliController.text,
+        'wa_wali': _waWaliController.text,
+        'id_kelas': widget.student.idKelas,
+      };
 
-  //     print('Data yang dikirim ke server:');
-  //     print(jsonEncode(studentData));
+      print('Data yang dikirim ke server:');
+      print(jsonEncode(studentData));
 
-  //     final success = await provider.updateStudent(
-  //       widget.student.id,
-  //       studentData,
-  //     );
+      final success = await provider.updateStudent(
+        widget.student.id,
+        studentData,
+      );
 
-  //     if (success && mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Data siswa berhasil diperbarui'),
-  //           backgroundColor: Colors.green,
-  //         ),
-  //       );
-  //       Navigator.pop(context, true);
-  //     } else if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'Gagal memperbarui data: ${provider.error ?? "Periksa kembali data Anda"}',
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data siswa berhasil diperbarui'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memperbarui data: ${provider.error ?? "Periksa kembali data Anda"}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tambah Siswa'),
+        title: Text('Edit ${widget.student.namaLengkap}'),
         backgroundColor: const Color(0xFF2196F3),
       ),
       body: SafeArea(
@@ -229,7 +228,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInputField(
-                  controller: _nama_lengkapController,
+                  controller: _namaLengkapController,
                   label: 'Nama Lengkap',
                   icon: Icons.person_rounded,
                 ),
@@ -244,7 +243,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 _buildDropdownField(),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _tgl_lahirController,
+                  controller: _tglLahirController,
                   decoration: InputDecoration(
                     labelText: 'Tanggal Lahir',
                     prefixIcon: Icon(
@@ -267,7 +266,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildInputField(
-                  controller: _temp_lahirController,
+                  controller: _tempLahirController,
                   label: 'Tempat Lahir',
                   icon: Icons.location_on_rounded,
                 ),
@@ -285,7 +284,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildInputField(
-                  controller: _waliwa_waliController,
+                  controller: _waWaliController,
                   label: 'No. WhatsApp Wali',
                   icon: Icons.phone_rounded,
                   keyboardType: TextInputType.phone,
@@ -309,7 +308,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: (){},
+                    onPressed: _submitForm,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: const Color(0xFF2196F3),
