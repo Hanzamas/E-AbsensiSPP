@@ -21,25 +21,71 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildFilterSection(),
-        Expanded(
-          child: widget.provider.isLoadingHistory
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2196F3)),
-                  ),
-                )
-              : widget.provider.error != null
-                  ? _buildErrorState()
-                  : _buildContent(),
+    if (widget.provider.isLoadingHistory) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2196F3)),
         ),
-      ],
+      );
+    }
+
+    if (widget.provider.error != null) {
+      return _buildErrorState();
+    }
+
+    return _buildMainContent();
+  }
+
+  // ✅ Main Content - Single ScrollView untuk semua
+  Widget _buildMainContent() {
+    final filteredHistory = _getFilteredHistory();
+    
+    if (widget.provider.paymentHistory.isEmpty) {
+      return Column(
+        children: [
+          _buildFilterSection(),
+          Expanded(child: _buildEmptyState()),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => widget.provider.refresh(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ✅ Filter Section - Part of main scroll
+            _buildFilterSection(),
+            
+            // ✅ Content Area
+            if (filteredHistory.isEmpty)
+              _buildEmptyFilteredStateInline()
+            else ...[
+              // Quick Stats
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildQuickStats(filteredHistory),
+              ),
+              const SizedBox(height: 16),
+              
+              // History List
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildHistoryList(filteredHistory),
+              ),
+            ],
+            
+            // Bottom padding
+            const SizedBox(height: 80),
+          ],
+        ),
+      ),
     );
   }
 
-  // ✅ Filter Section - Scrollable & Expandable
+  // ✅ Filter Section - Natural Scrolling
   Widget _buildFilterSection() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -97,94 +143,82 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
             ),
           ),
           
-          // Expandable Filter Content
+          // ✅ Expandable Filter Content - NATURAL HEIGHT
           if (_isFilterExpanded) ...[
             const SizedBox(height: 16),
             
-            // Scrollable Filter Area
-            SizedBox(
-              height: 250,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Year Filter
-                    _buildDropdownField(
-                      label: 'Tahun',
-                      value: _selectedYear ?? 'Semua Tahun',
-                      items: ['Semua Tahun', ...(_getAvailableYears())],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedYear = value == 'Semua Tahun' ? null : value;
-                        });
-                      },
+            // Year Filter
+            _buildDropdownField(
+              label: 'Tahun',
+              value: _selectedYear ?? 'Semua Tahun',
+              items: ['Semua Tahun', ...(_getAvailableYears())],
+              onChanged: (value) {
+                setState(() {
+                  _selectedYear = value == 'Semua Tahun' ? null : value;
+                });
+              },
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Status Filter
+            _buildDropdownField(
+              label: 'Status',
+              value: _selectedStatus ?? 'Semua Status',
+              items: const ['Semua Status', 'Sukses', 'Pending', 'Gagal'],
+              onChanged: (value) {
+                setState(() {
+                  _selectedStatus = value == 'Semua Status' ? null : value;
+                });
+              },
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Date Range Filter
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Rentang Tanggal',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => _selectDateRange(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Status Filter
-                    _buildDropdownField(
-                      label: 'Status',
-                      value: _selectedStatus ?? 'Semua Status',
-                      items: const ['Semua Status', 'Sukses', 'Pending', 'Gagal'],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedStatus = value == 'Semua Status' ? null : value;
-                        });
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Date Range Filter
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        const Text(
-                          'Rentang Tanggal',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: () => _selectDateRange(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today, color: Colors.grey.shade600, size: 20),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _selectedDateRange != null
-                                        ? '${_formatDate(_selectedDateRange!.start)} - ${_formatDate(_selectedDateRange!.end)}'
-                                        : 'Pilih rentang tanggal',
-                                    style: TextStyle(
-                                      color: _selectedDateRange != null 
-                                          ? const Color(0xFF1E293B)
-                                          : Colors.grey.shade600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
-                              ],
+                        Icon(Icons.calendar_today, color: Colors.grey.shade600, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedDateRange != null
+                                ? '${_formatDate(_selectedDateRange!.start)} - ${_formatDate(_selectedDateRange!.end)}'
+                                : 'Pilih rentang tanggal',
+                            style: TextStyle(
+                              color: _selectedDateRange != null 
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.grey.shade600,
+                              fontSize: 14,
                             ),
                           ),
                         ),
+                        Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
                       ],
                     ),
-                    
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
             
             const SizedBox(height: 16),
@@ -271,42 +305,6 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
           onChanged: onChanged,
         ),
       ],
-    );
-  }
-
-  // Content Area
-  Widget _buildContent() {
-    final filteredHistory = _getFilteredHistory();
-    
-    if (widget.provider.paymentHistory.isEmpty) {
-      return _buildEmptyState();
-    }
-    
-    if (filteredHistory.isEmpty) {
-      return _buildEmptyFilteredState();
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => widget.provider.refresh(),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Quick Stats
-              _buildQuickStats(filteredHistory),
-              const SizedBox(height: 16),
-              
-              // History List
-              _buildHistoryList(filteredHistory),
-              
-              const SizedBox(height: 80),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -731,7 +729,7 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
     );
   }
 
-  // Empty States
+  // ✅ Empty States
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -765,12 +763,12 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
     );
   }
 
-  Widget _buildEmptyFilteredState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+  // ✅ Empty Filtered State - Inline version
+  Widget _buildEmptyFilteredStateInline() {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.search_off,
@@ -795,6 +793,17 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _resetFilters,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2196F3),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text('Reset Filter'),
             ),
           ],
@@ -858,6 +867,9 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
 
   // Helper Methods
   List<String> _getAvailableYears() {
+    if (widget.provider.paymentHistory.isEmpty) {
+      return [];
+    }
     final years = widget.provider.paymentHistory
         .map((payment) => payment.tahun)
         .toSet()
@@ -917,6 +929,8 @@ class _SppHistoryTabState extends State<SppHistoryTab> {
   }
 
   void _copyReferenceId(String referenceId) {
+    if (referenceId.isEmpty) return;
+    
     Clipboard.setData(ClipboardData(text: referenceId));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
