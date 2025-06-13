@@ -16,7 +16,7 @@ final Map<String, List<NavItem>> navItemsByRole = {
   siswaRole: [
     NavItem('Home', Icons.home, '/student/home'),
     NavItem('Absensi', Icons.article_outlined, '/student/attendance'),
-    NavItem('SPP', Icons.credit_card, '/student/spp'),
+    NavItem('SPP', Icons.payment, '/student/spp'),
     NavItem('Profile', Icons.person, '/student/profile'),
   ],
   guruRole: [

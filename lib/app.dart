@@ -6,7 +6,7 @@ import 'package:e_absensi/features/shared/auth/provider/auth_provider.dart';
 // Import baru untuk student dashboard
 import 'package:e_absensi/features/student/dashboard/provider/student_dashboard_provider.dart';
 import 'package:e_absensi/features/student/attendance/provider/student_attendance_provider.dart';
-import 'package:e_absensi/features/student/spp/provider/spp_provider.dart';
+import 'package:e_absensi/features/student/spp/provider/student_spp_provider.dart';
 import 'package:e_absensi/features/shared/profile/provider/profile_provider.dart';
 import 'package:e_absensi/features/shared/settings/provider/settings_provider.dart';
 
@@ -48,10 +48,10 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(
           value: StudentAttendanceProvider(),
         ),
-        // // SPP Provider - menggunakan singleton pattern
-        // ChangeNotifierProvider.value(
-        //   value: SppProvider(),
-        // ),
+        // SPP Provider - menggunakan singleton pattern
+        ChangeNotifierProvider.value(
+          value: StudentSppProvider(),
+        ),
         
         // Teacher Providers
         ChangeNotifierProvider.value(

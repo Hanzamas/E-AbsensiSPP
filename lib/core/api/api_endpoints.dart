@@ -29,6 +29,9 @@ class ApiEndpoints {
   static const String getStudentSchedule = '/students/schedule';
   static const String getKelas = '/classes';
   static const String getAttendanceDetail = '/students/attendance/my';
+  static const String getStudentSppBill = '/students/spp-bill'; // Tagihan yang belum dibayar
+  static const String payStudentSpp = '/students/pay-spp'; // Create QRIS payment
+  static const String getStudentPaymentHistory = '/students/payment-history'; // Histori pembayaran
   
   // Guru
   static const String getTeacherProfile = '/profile/teacher';
