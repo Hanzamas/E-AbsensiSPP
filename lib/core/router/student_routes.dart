@@ -9,6 +9,7 @@ import 'package:e_absensi/features/student/spp/pages/spp_detail_page.dart';
 import 'package:e_absensi/features/student/spp/pages/spp_barcode_page.dart';
 import 'package:e_absensi/features/student/spp/pages/spp_verify_page.dart';
 import 'package:e_absensi/core/utils/page_transition_helper.dart';
+import 'package:e_absensi/features/student/spp/pages/student_spp_page.dart';
 
 class StudentRoutes {
   static final List<RouteBase> routes = [
@@ -48,6 +49,15 @@ class StudentRoutes {
         type: TransitionType.scaleFade,
         curve: Curves.easeOutQuint,
         duration: const Duration(milliseconds: 500),
+        key: state.pageKey,
+      ),
+    ),
+    GoRoute(
+      path: '/student/spp',
+      name: 'student-spp',
+      pageBuilder: (context, state) => PageTransitionHelper.slideRightTransition(
+        child: const StudentSppPage(), // ✅ Use the new StudentSppPage
+        duration: const Duration(milliseconds: 400),
         key: state.pageKey,
       ),
     ),
