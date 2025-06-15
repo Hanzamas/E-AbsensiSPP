@@ -51,4 +51,11 @@ class ApiEndpoints {
   static const String deleteStudent = '/admin/students/delete'; // Will append /:id
   static const String createStudentadmin = '/admin/students/create';
   static const String updateStudentadmin = '/admin/students/update'; // Will append /:id
+  static const String getTeachersAdmin = '/admin/teachers';
+  static const String createTeacherAdmin = '/admin/teachers/create';
+  static const String updateTeacherAdmin = '/admin/teachers/update';
+  static const String deleteTeacherAdmin = '/admin/teachers/delete';
+  static const String getFormatDownloadTeacher = '/admin/teachers/template-excel';
+  static const String importTeacher = '/admin/teachers/import-excel';
+
 } 

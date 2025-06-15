@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/models/student_model.dart';
+import '../../data/models/student_model.dart';
 
 class StudentDetailScreen extends StatelessWidget {
   final Student student;
@@ -31,9 +31,9 @@ class StudentDetailScreen extends StatelessWidget {
               'Kelas': student.namaKelas,
               'Jenis Kelamin': student.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan',
               'Tempat Lahir': student.tempatLahir,
-              'Tanggal Lahir': student.tanggalLahir, // Consider formatting this date
+              'Tanggal Lahir': _formatDate(student.tanggalLahir), // Consider formatting this date
               'Alamat': student.alamat,
-              'Email': student.email,
+              // 'Email': student.email,
               'Username': student.username,
             }),
             const SizedBox(height: 20),
@@ -78,3 +78,14 @@ class StudentDetailScreen extends StatelessWidget {
     );
   }
 }
+
+  // Method untuk format tanggal
+  String _formatDate(String date) {
+    if (date.isEmpty) return 'Tidak tersedia';
+    try {
+      final DateTime parsedDate = DateTime.parse(date);
+      return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
+    } catch (e) {
+      return date; // Return original if parsing fails
+    }
+  }

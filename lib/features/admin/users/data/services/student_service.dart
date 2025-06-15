@@ -4,88 +4,175 @@ import 'package:e_absensi/core/api/api_endpoints.dart';
 import 'package:e_absensi/core/api/dio_client.dart';
 
 class StudentService {
-  // final Dio _dio = Dio();
   final Dio _dio = DioClient().dio;
 
   // Fetches all students from the API
   Future<List<Student>> getStudents() async {
     try {
-      // Assuming the endpoint is '/admin/students'
       final response = await _dio.get(ApiEndpoints.getStudents);
+
+      print('Raw API Response: ${response.data}'); // Debug log
 
       if (response.statusCode == 200 && response.data['status'] == true) {
         final List<dynamic> studentData = response.data['data'];
-        return studentData.map((json) => Student.fromJson(json)).toList();
+        
+        // Debug log untuk melihat struktur data
+        print('Student data count: ${studentData.length}');
+        if (studentData.isNotEmpty) {
+          print('First student data: ${studentData.first}');
+        }
+        
+        final List<Student> students = studentData.map((json) {
+          try {
+            final student = Student.fromJson(json);
+            print('Parsed student: ${student.namaLengkap}, Email: ${student.email}'); // Debug log
+            return student;
+          } catch (e) {
+            print('Error parsing student data: $json, Error: $e');
+            rethrow;
+          }
+        }).toList();
+        
+        return students;
       } else {
         throw Exception('Failed to load students: ${response.data['message']}');
       }
+    } on DioException catch (e) {
+      // Handle Dio specific errors
+      if (e.response != null) {
+        print('Dio error response: ${e.response!.data}'); // Debug log
+        throw Exception('Server error: ${e.response!.data['message'] ?? 'Unknown error'}');
+      } else {
+        throw Exception('Network error: ${e.message}');
+      }
     } catch (e) {
-      // Handle Dio errors or other exceptions
-      print(e);
+      print('Error in getStudents: $e');
       throw Exception('Failed to connect to the server.');
     }
   }
 
-    Future<Student> createStudent(Map<String, dynamic> studentData) async {
+  // Creates a new student
+  Future<void> createStudent(Map<String, dynamic> data) async {
     try {
+      print('Sending student data: $data'); // Debug log
+      
       final response = await _dio.post(
         ApiEndpoints.createStudentadmin,
-        data: studentData,
+        data: data,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
-      // API bisa merespons dengan status 200 (OK) atau 201 (Created)
-      if ((response.statusCode == 200 || response.statusCode == 201) &&
-          response.data['status'] == true) {
-        return Student.fromJson(response.data['data']);
+      print('Response status: ${response.statusCode}'); // Debug log
+      print('Response data: ${response.data}'); // Debug log
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data['status'] == true) {
+          // Success
+          return;
+        } else {
+          throw Exception(
+            response.data['message'] ?? 'Gagal menambahkan siswa',
+          );
+        }
       } else {
-        // Jika status dari API adalah false
         throw Exception(
-            response.data['message'] ?? 'Gagal membuat siswa.');
+          'HTTP Error ${response.statusCode}: ${response.data['message'] ?? 'Unknown error'}',
+        );
       }
-    } on DioError catch (e) {
-      // Menangkap error spesifik dari Dio (misal: 404, 422, 500)
-      // Pesan error dari server biasanya ada di e.response.data
-      String errorMessage = "Terjadi kesalahan pada server.";
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        errorMessage = e.response!.data['message'];
+    } on DioException catch (e) {
+      print('DioException in createStudent: ${e.toString()}'); // Debug log
+      
+      if (e.response != null) {
+        final errorMessage = e.response!.data is Map
+            ? e.response!.data['message'] ?? 'Server error'
+            : 'Server error';
+        throw Exception('Gagal menambahkan siswa: $errorMessage');
+      } else if (e.type == DioExceptionType.connectionTimeout) {
+        throw Exception('Koneksi timeout. Periksa koneksi internet Anda.');
+      } else if (e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Server tidak merespons. Coba lagi nanti.');
+      } else {
+        throw Exception('Network error: ${e.message}');
       }
-      // Lemparkan exception dengan pesan yang lebih jelas
-      throw Exception(errorMessage);
     } catch (e) {
-      // Menangkap error lainnya
-      throw Exception("Gagal terhubung atau terjadi kesalahan lain: $e");
+      print('General error in createStudent: $e'); // Debug log
+      throw Exception('Error saat menambahkan siswa: $e');
     }
   }
 
+  // Updates an existing student
   Future<void> updateStudent(int id, Map<String, dynamic> studentData) async {
     try {
       final response = await _dio.put(
-        '${ApiEndpoints.updateStudentadmin}/$id', // Asumsi endpoint PUT
+        '${ApiEndpoints.updateStudentadmin}/$id',
         data: studentData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
-      if (response.statusCode != 200) {
+      
+      if (response.statusCode == 200) {
+        if (response.data['status'] == true) {
+          return;
+        } else {
+          throw Exception(
+            response.data['message'] ?? 'Gagal memperbarui siswa',
+          );
+        }
+      } else {
         throw Exception(
-          'Gagal memperbarui siswa: ${response.data?['message']}',
+          'HTTP Error ${response.statusCode}: ${response.data?['message'] ?? 'Unknown error'}',
         );
       }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorMessage = e.response!.data is Map
+            ? e.response!.data['message'] ?? 'Server error'
+            : 'Server error';
+        throw Exception('Gagal memperbarui siswa: $errorMessage');
+      } else {
+        throw Exception('Network error: ${e.message}');
+      }
     } catch (e) {
-      throw Exception('Gagal memperbarui siswa $e.');
+      throw Exception('Error saat memperbarui siswa: $e');
     }
   }
 
   // Deletes a student by their ID
   Future<void> deleteStudent(int id) async {
     try {
-      // NOTE: Assumes a standard REST API endpoint like '/admin/students/{id}'
       final response = await _dio.delete('${ApiEndpoints.deleteStudent}/$id');
-      if (response.statusCode != 200) {
-        throw Exception('Failed to delete student.');
+      
+      if (response.statusCode == 200) {
+        if (response.data['status'] == true) {
+          return;
+        } else {
+          throw Exception(
+            response.data['message'] ?? 'Gagal menghapus siswa',
+          );
+        }
+      } else {
+        throw Exception(
+          'HTTP Error ${response.statusCode}: ${response.data?['message'] ?? 'Unknown error'}',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorMessage = e.response!.data is Map
+            ? e.response!.data['message'] ?? 'Server error'
+            : 'Server error';
+        throw Exception('Gagal menghapus siswa: $errorMessage');
+      } else {
+        throw Exception('Network error: ${e.message}');
       }
     } catch (e) {
-      throw Exception('Failed to delete student $e.');
+      throw Exception('Error saat menghapus siswa: $e');
     }
   }
-
-  // NOTE: The update logic would go here, likely sending a PUT or POST request.
-  // The implementation depends on your API's update endpoint.
 }
