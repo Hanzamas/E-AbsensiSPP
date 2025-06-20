@@ -1,4 +1,5 @@
 class Teacher {
+  final int id; // TAMBAHKAN BARIS INI
   final int idUsers;
   final String username;
   final String email;
@@ -12,6 +13,7 @@ class Teacher {
   final String pendidikanTerakhir;
 
   Teacher({
+    required this.id, // TAMBAHKAN BARIS INI
     required this.idUsers,
     required this.username,
     required this.email,
@@ -27,6 +29,7 @@ class Teacher {
 
   factory Teacher.fromJson(Map<String, dynamic> json) {
     return Teacher(
+      id: json['id_guru'] ?? 0, // TAMBAHKAN BARIS INI
       idUsers: json['id_users'] ?? 0,
       username: json['username'] ?? '',
       email: json['email'] ?? '',

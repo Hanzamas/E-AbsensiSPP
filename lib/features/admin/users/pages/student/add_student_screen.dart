@@ -1,13 +1,14 @@
-// screens/add_student_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/student_provider.dart';
-import '../../widgets/custom_input_field.dart';
-import '../../widgets/custom_date_field.dart';
-import '../../widgets/custom_loading_button.dart';
+import '../../../../shared/widgets/custom_input_field.dart';
+import '../../../../shared/widgets/custom_date_field.dart';
+import '../../../../shared/widgets/custom_loading_button.dart';
 import '../../widgets/gender_dropdown_widget.dart';
 import '../../widgets/date_picker_helper.dart';
 import '../../widgets/form_section_header.dart';
+// --- TAMBAHKAN IMPORT BARU ---
+import '../../widgets/custom_dropdown_field.dart';
 
 class AddStudentScreen extends StatefulWidget {
   const AddStudentScreen({Key? key}) : super(key: key);
@@ -23,7 +24,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _kelasController = TextEditingController();
+  // final _kelasController = TextEditingController(); // Hapus controller ini
   final _nisController = TextEditingController();
   final _nama_lengkapController = TextEditingController();
   final _tgl_lahirController = TextEditingController();
@@ -34,7 +35,18 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
 
   String? _selectedJenisKelamin;
   DateTime? _selectedDate;
+  // --- TAMBAHKAN STATE UNTUK ID KELAS ---
+  int? _selectedKelasId;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Panggil provider untuk memuat data kelas saat layar dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<StudentProvider>(context, listen: false).loadDependencies();
+    });
+  }
 
   @override
   void dispose() {
@@ -42,7 +54,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _kelasController.dispose();
+    // _kelasController.dispose(); // Hapus
     _nama_lengkapController.dispose();
     _tgl_lahirController.dispose();
     _temp_lahirController.dispose();
@@ -70,22 +82,28 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
 
   Future<void> _saveStudent() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Validasi tambahan untuk dropdown
+    if (_selectedKelasId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kelas wajib dipilih'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
-    // Format tanggal ke YYYY-MM-DD untuk API
     String? formattedDate;
     if (_selectedDate != null) {
       formattedDate =
           '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
     }
 
-    // Siapkan payload sesuai dokumentasi API
     final payload = {
       "username": _usernameController.text.trim(),
       "email": _emailController.text.trim(),
       "password": _passwordController.text.trim(),
-      "id_kelas": int.tryParse(_kelasController.text.trim()) ?? 0,
+      "id_kelas": _selectedKelasId, // Gunakan state ID kelas
       "nis": _nisController.text.trim(),
       "nama_lengkap": _nama_lengkapController.text.trim(),
       "jenis_kelamin": _selectedJenisKelamin ?? "",
@@ -150,7 +168,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   icon: Icons.person_rounded,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _nisController,
                   label: 'NIS',
@@ -158,7 +175,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16),
-
                 GenderDropdownWidget(
                   selectedGender: _selectedJenisKelamin,
                   onChanged:
@@ -167,7 +183,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                       }),
                 ),
                 const SizedBox(height: 16),
-
                 CustomDateField(
                   controller: _tgl_lahirController,
                   label: 'Tanggal Lahir',
@@ -175,28 +190,24 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   onTap: _selectDate,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _temp_lahirController,
                   label: 'Tempat Lahir',
                   icon: Icons.location_on_rounded,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _alamatController,
                   label: 'Alamat',
                   icon: Icons.home_rounded,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _waliController,
                   label: 'Nama Wali',
                   icon: Icons.person_outline_rounded,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _waliwa_waliController,
                   label: 'No. WhatsApp Wali',
@@ -204,11 +215,33 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 16),
-                CustomInputField(
-                  controller: _kelasController,
-                  label: 'ID Kelas',
-                  icon: Icons.class_,
-                  keyboardType: TextInputType.number,
+                // --- GANTI INPUT FIELD DENGAN DROPDOWN ---
+                Consumer<StudentProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading && provider.classes.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    return CustomDropdownField(
+                      value: _selectedKelasId?.toString(),
+                      label: 'Kelas',
+                      icon: Icons.class_,
+                      items: provider.classes.map((kelas) {
+                        return DropdownMenuItem<String>(
+                          value: kelas.id.toString(),
+                          child: Text(kelas.displayName),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedKelasId = int.tryParse(value ?? '');
+                        });
+                      },
+                      validator: (value) => value == null ? 'Kelas harus dipilih' : null,
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 const FormSectionHeader(title: 'Informasi Akun'),
@@ -219,7 +252,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   keyboardType: TextInputType.text,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _emailController,
                   label: 'Email',
@@ -227,7 +259,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
-
                 CustomInputField(
                   controller: _passwordController,
                   label: 'Password',
@@ -235,7 +266,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   isPassword: true,
                 ),
                 const SizedBox(height: 24),
-
                 CustomLoadingButton(
                   isLoading: _isLoading,
                   onPressed: _saveStudent,

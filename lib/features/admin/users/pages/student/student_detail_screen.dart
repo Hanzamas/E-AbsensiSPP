@@ -33,7 +33,7 @@ class StudentDetailScreen extends StatelessWidget {
               'Tempat Lahir': student.tempatLahir,
               'Tanggal Lahir': _formatDate(student.tanggalLahir), // Consider formatting this date
               'Alamat': student.alamat,
-              // 'Email': student.email,
+              'Email': student.email,
               'Username': student.username,
             }),
             const SizedBox(height: 20),

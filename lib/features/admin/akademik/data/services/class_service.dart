@@ -1,92 +1,97 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:e_absensi/core/api/api_endpoints.dart';
+import 'package:e_absensi/core/api/dio_client.dart';
 import '../models/class_model.dart';
 
 class ClassService {
-  final String baseUrl = 'YOUR_API_BASE_URL'; // TODO: Replace with actual base URL
+  final Dio _dio = DioClient().dio;
 
+  /// Mengambil semua data kelas dari API
   Future<List<ClassModel>> getAllClasses() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/admin/classes'));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['status'] == true) {
-          final List<dynamic> classesData = responseData['data'];
-          return classesData.map((data) => ClassModel.fromJson(data)).toList();
-        }
-        throw Exception(responseData['message']);
+      final response = await _dio.get(ApiEndpoints.getClasses);
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        final List<dynamic> classesData = response.data['data'] ?? [];
+        return classesData.map((data) => ClassModel.fromJson(data)).toList();
       }
-      throw Exception('Failed to load classes');
+      throw Exception(response.data['message'] ?? 'Gagal mengambil data kelas');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ??
+            'Terjadi kesalahan saat mengambil data kelas',
+      );
     } catch (e) {
       throw Exception('Error: $e');
     }
   }
 
-  Future<ClassModel> createClass(ClassModel classData) async {
+  /// Mengirim data kelas baru ke API
+  Future<void> createClass(ClassModel classData) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/admin/classes/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(classData.toCreateJson()),
+      final response = await _dio.post(
+        ApiEndpoints.createClass,
+        data: classData.toCreateJson(),
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['status'] == true) {
-          // Since the API only returns insertId, we'll create a new ClassModel
-          // with the returned ID and the input data
-          return ClassModel(
-            id: responseData['data']['insertId'],
-            nama: classData.nama,
-            kapasitas: classData.kapasitas,
-            idTahunAjaran: classData.idTahunAjaran,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
-        }
-        throw Exception(responseData['message']);
+      if ((response.statusCode != 200 && response.statusCode != 201) ||
+          response.data['status'] != true) {
+        throw Exception(response.data['message'] ?? 'Gagal membuat kelas');
       }
-      throw Exception('Failed to create class');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Terjadi kesalahan saat membuat kelas',
+      );
     } catch (e) {
       throw Exception('Error: $e');
     }
   }
 
+  /// Mengirim data pembaruan kelas ke API
   Future<ClassModel> updateClass(int id, ClassModel classData) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/admin/classes/update/$id'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(classData.toUpdateJson()),
+      final response = await _dio.put(
+        '${ApiEndpoints.updateClass}/$id',
+        data: classData.toUpdateJson(),
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['status'] == true) {
-          return ClassModel.fromJson(responseData['data']);
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        final data = response.data['data'];
+        if (data == null) {
+          throw Exception('Data kelas tidak ditemukan dalam respons');
         }
-        throw Exception(responseData['message']);
+
+        // 🔍 Tambahkan logging untuk debug
+        print('Response data: $data');
+        print('Data types: ${data.map((k, v) => MapEntry(k, v.runtimeType))}');
+
+        return ClassModel.fromJson(data);
       }
-      throw Exception('Failed to update class');
+      throw Exception(response.data['message'] ?? 'Gagal mengupdate kelas');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ??
+            'Terjadi kesalahan saat mengupdate kelas',
+      );
     } catch (e) {
+      print('Parse error: $e'); // 🔍 Log error parsing
       throw Exception('Error: $e');
     }
   }
 
+  /// Menghapus data kelas dari API berdasarkan ID
   Future<bool> deleteClass(int id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/admin/classes/delete/$id'),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        return responseData['status'] == true;
+      final response = await _dio.delete('${ApiEndpoints.deleteClass}/$id');
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        return true;
       }
-      throw Exception('Failed to delete class');
+      throw Exception(response.data['message'] ?? 'Gagal menghapus kelas');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Terjadi kesalahan saat menghapus kelas',
+      );
     } catch (e) {
       throw Exception('Error: $e');
     }
   }
-} 
+}

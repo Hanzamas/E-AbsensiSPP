@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // Import GoRouter
-import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart'; // Import CustomBottomNavBar
-import 'package:e_absensi/features/admin/akademik/pages/class_list_screen.dart'; // Import ClassListScreen
-import 'package:e_absensi/features/admin/akademik/pages/add_class_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:e_absensi/features/shared/widgets/bottom_navbar.dart';
+import 'package:e_absensi/features/admin/akademik/pages/academic_class/class_list_screen.dart';
+import 'package:e_absensi/features/admin/akademik/pages/academic_class/add_class_screen.dart';
+import 'package:e_absensi/features/admin/akademik/pages/academic_subject/subject_list_screen.dart';
+import 'package:e_absensi/features/admin/akademik/pages/academic_subject/add_subject_screen.dart';
 import 'package:provider/provider.dart';
 import '../provider/class_provider.dart';
+import '../provider/academic_year_provider.dart';
+import 'academic_year/add_academic_year_screen.dart';
+import 'academic_year/academic_year_list_screen.dart';
+import 'academic_teaching/add_teaching_screen.dart';
+import 'academic_teaching/teaching_list_screen.dart';
+import '../provider/teaching_provider.dart';
 
 class AdminAkademikScreen extends StatefulWidget {
   const AdminAkademikScreen({Key? key}) : super(key: key);
@@ -64,54 +72,57 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2196F3)),
-                ),
-              )
-            : _error != null
+        child:
+            _isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF2196F3),
+                    ),
+                  ),
+                )
+                : _error != null
                 ? _buildErrorState(_error!)
                 : RefreshIndicator(
-                    onRefresh: _refreshData,
-                    color: const Color(0xFF2196F3),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF2196F3), Color(0xFF64B5F6)],
-                          stops: [0.0, 0.8],
-                        ),
+                  onRefresh: _refreshData,
+                  color: const Color(0xFF2196F3),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF2196F3), Color(0xFF64B5F6)],
+                        stops: [0.0, 0.8],
                       ),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader(),
-                            const SizedBox(height: 24),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildKelasSection(),
-                                  const SizedBox(height: 24),
-                                  _buildMapelSection(),
-                                  const SizedBox(height: 24),
-                                  _buildAssignGuruSection(),
-                                  const SizedBox(height: 24),
-                                  _buildTahunAjaranSection(),
-                                  const SizedBox(height: 100),
-                                ],
-                              ),
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildKelasSection(),
+                                const SizedBox(height: 24),
+                                _buildMapelSection(),
+                                const SizedBox(height: 24),
+                                _buildAssignGuruSection(),
+                                const SizedBox(height: 24),
+                                _buildTahunAjaranSection(),
+                                const SizedBox(height: 100),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: currentIndex,
@@ -128,11 +139,7 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Color(0xFFE53E3E),
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Color(0xFFE53E3E)),
             const SizedBox(height: 16),
             const Text(
               'Terjadi Kesalahan',
@@ -146,10 +153,7 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF718096),
-              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF718096)),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -159,7 +163,10 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2196F3),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -254,7 +261,10 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                       ).then((success) {
                         if (success == true) {
                           // Refresh the class list if a new class was added
-                          Provider.of<ClassProvider>(context, listen: false).loadClasses();
+                          Provider.of<ClassProvider>(
+                            context,
+                            listen: false,
+                          ).loadClasses();
                         }
                       });
                     },
@@ -342,7 +352,12 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     color: const Color(0xFF2196F3),
                     onTap: () {
                       print('Tambah Mapel tapped');
-                      // TODO: Navigate to add subject page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddSubjectScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -355,7 +370,12 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     color: const Color(0xFF4CAF50),
                     onTap: () {
                       print('Daftar Mapel tapped');
-                      // TODO: Navigate to subject list page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SubjectListScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -423,7 +443,17 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     color: const Color(0xFF2196F3),
                     onTap: () {
                       print('Assign Guru tapped');
-                      // TODO: Navigate to assign teacher page
+                      // Navigasi ke halaman tambah pengajaran dengan provider baru
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => TeachingProvider(),
+                                child: const AddTeachingScreen(),
+                              ),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -436,7 +466,17 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     color: const Color(0xFF4CAF50),
                     onTap: () {
                       print('Daftar Pengajaran tapped');
-                      // TODO: Navigate to teaching list page
+                      // Navigasi ke halaman daftar pengajaran dengan provider baru
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => TeachingProvider(),
+                                child: const TeachingListScreen(),
+                              ),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -503,8 +543,19 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     icon: Icons.add_circle_outline,
                     color: const Color(0xFF2196F3),
                     onTap: () {
+                      // ====== PERUBAHAN DI SINI ======
                       print('Tambah Tahun Ajaran tapped');
-                      // TODO: Navigate to add academic year page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => AcademicYearProvider(),
+                                child: const AddAcademicYearScreen(),
+                              ),
+                        ),
+                      );
+                      // ================================
                     },
                   ),
                 ),
@@ -516,8 +567,19 @@ class _AdminAkademikScreenState extends State<AdminAkademikScreen> {
                     icon: Icons.list_alt,
                     color: const Color(0xFF4CAF50),
                     onTap: () {
+                      // ====== PERUBAHAN DI SINI ======
                       print('Daftar Tahun Ajaran tapped');
-                      // TODO: Navigate to academic year list page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => AcademicYearProvider(),
+                                child: const AcademicYearListScreen(),
+                              ),
+                        ),
+                      );
+                      // ================================
                     },
                   ),
                 ),
@@ -554,9 +616,7 @@ class _QuickActionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey.shade200,
-          ),
+          border: Border.all(color: Colors.grey.shade200),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -568,11 +628,7 @@ class _QuickActionCard extends StatelessWidget {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 12),
             Text(
@@ -587,10 +643,7 @@ class _QuickActionCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF718096),
-              ),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF718096)),
               textAlign: TextAlign.center,
             ),
           ],
@@ -598,4 +651,4 @@ class _QuickActionCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

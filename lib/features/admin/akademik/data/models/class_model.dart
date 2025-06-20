@@ -15,11 +15,16 @@ class ClassModel {
 
   factory ClassModel.fromJson(Map<String, dynamic> json) {
     return ClassModel(
-      id: json['id'] ?? 0,
-      namaKelas: json['nama_kelas'] ?? '',
-      kapasitas: json['kapasitas'] ?? 0,
-      idTahunAjaran: json['id_tahun_ajaran'] ?? 0,
-      tahunAjaran: json['tahun_ajaran'] ?? '',
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+
+      // Handle both 'nama_kelas' and 'nama' from API
+      namaKelas:
+          json['nama_kelas']?.toString() ?? json['nama']?.toString() ?? '',
+
+      kapasitas: int.tryParse(json['kapasitas']?.toString() ?? '0') ?? 0,
+      idTahunAjaran:
+          int.tryParse(json['id_tahun_ajaran']?.toString() ?? '0') ?? 0,
+      tahunAjaran: json['tahun_ajaran']?.toString() ?? '',
     );
   }
 
@@ -33,22 +38,27 @@ class ClassModel {
     };
   }
 
+  // --- PERBAIKAN DI SINI ---
+  // Menyesuaikan dengan body request API yang meminta key 'nama'
   Map<String, dynamic> toCreateJson() {
     return {
-      'nama_kelas': namaKelas,
+      'nama': namaKelas, // Diganti dari 'nama_kelas' menjadi 'nama'
       'kapasitas': kapasitas,
       'id_tahun_ajaran': idTahunAjaran,
     };
   }
 
+  // --- PERBAIKAN DI SINI ---
+  // Menyesuaikan dengan body request API yang meminta key 'nama'
   Map<String, dynamic> toUpdateJson() {
     return {
-      'nama_kelas': namaKelas,
+      'nama': namaKelas, // Diganti dari 'nama_kelas' menjadi 'nama'
       'kapasitas': kapasitas,
       'id_tahun_ajaran': idTahunAjaran,
     };
   }
+  // --- AKHIR PERBAIKAN ---
 
   // Helper method untuk menampilkan nama kelas dengan tahun ajaran
   String get displayName => '$namaKelas ($tahunAjaran)';
-} 
+}
