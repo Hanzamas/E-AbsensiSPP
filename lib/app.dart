@@ -16,6 +16,7 @@ import 'package:e_absensi/features/teacher/attendance/provider/teacher_attendanc
 
 // Import admin providers
 import 'package:e_absensi/features/admin/akademik/provider/class_provider.dart';
+import 'package:e_absensi/features/admin/akademik/provider/subject_provider.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -66,10 +67,15 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider.value(
           value: SettingsProvider(),
-        ),
-        // Admin Providers
+        ),        // Admin Providers
         ChangeNotifierProvider.value(
           value: ClassProvider(),
+        ),
+        ChangeNotifierProvider.value(
+          value: SubjectProvider(),
+        ),
+        ChangeNotifierProvider.value(
+          value: SubjectProvider(),
         ),
       ],
       child: MaterialApp.router(

@@ -28,6 +28,7 @@ class TeacherDetailScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildInfoCard('Informasi Guru', {
+              'ID Guru': teacher.id.toString(),
               'Nama Lengkap': teacher.namaLengkap,
               'NIP': teacher.nip,
               'Jenis Kelamin': teacher.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan',

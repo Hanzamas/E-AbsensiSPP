@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../../data/models/student_model.dart';
 import '../../provider/student_provider.dart';
-import '../../widgets/custom_input_field.dart';
-import '../../widgets/custom_date_field.dart';
+import '../../../../shared/widgets/custom_input_field.dart';
+import '../../../../shared/widgets/custom_date_field.dart';
 import '../../widgets/gender_dropdown_widget.dart';
-import '../../widgets/custom_loading_button.dart';
+import '../../../../shared/widgets/custom_loading_button.dart';
 import '../../widgets/form_section_header.dart';
 import '../../widgets/date_picker_helper.dart';
+// --- TAMBAHKAN IMPORT BARU ---
+import '../../widgets/custom_dropdown_field.dart';
 
 class EditStudentScreen extends StatefulWidget {
   final Student student;
@@ -33,6 +35,9 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
 
   String? _selectedJenisKelamin;
   DateTime? _selectedDate;
+  // --- TAMBAHKAN STATE UNTUK ID KELAS ---
+  int? _selectedKelasId;
+
 
   @override
   void initState() {
@@ -40,6 +45,12 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
     _initializeControllers();
     _initializeGender();
     _initializeDate();
+    // --- INISIALISASI ID KELAS ---
+    _selectedKelasId = widget.student.idKelas;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<StudentProvider>(context, listen: false).loadDependencies();
+    });
   }
 
   void _initializeControllers() {
@@ -115,6 +126,13 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
         );
         return;
       }
+      
+      if (_selectedKelasId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kelas wajib dipilih'), backgroundColor: Colors.red),
+        );
+        return;
+      }
 
       final provider = Provider.of<StudentProvider>(context, listen: false);
       final formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
@@ -130,7 +148,7 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
         'alamat': _alamatController.text,
         'wali': _waliController.text,
         'wa_wali': _waWaliController.text,
-        'id_kelas': widget.student.idKelas,
+        'id_kelas': _selectedKelasId, // Gunakan ID kelas yang baru
       };
 
       print('Data yang dikirim ke server:');
@@ -231,6 +249,38 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
                   icon: Icons.phone_rounded,
                   keyboardType: TextInputType.phone,
                 ),
+                const SizedBox(height: 16),
+                // --- DROPDOWN UNTUK KELAS ---
+                Consumer<StudentProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading && provider.classes.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    
+                    final kelasExists = provider.classes.any((k) => k.id == _selectedKelasId);
+
+                    return CustomDropdownField(
+                      value: kelasExists ? _selectedKelasId?.toString() : null,
+                      label: 'Kelas',
+                      icon: Icons.class_,
+                      items: provider.classes.map((kelas) {
+                        return DropdownMenuItem<String>(
+                          value: kelas.id.toString(),
+                          child: Text(kelas.displayName),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedKelasId = int.tryParse(value ?? '');
+                        });
+                      },
+                      validator: (value) => value == null ? 'Kelas harus dipilih' : null,
+                    );
+                  },
+                ),
                 const SizedBox(height: 24),
                 const FormSectionHeader(title: 'Informasi Akun'),
                 CustomInputField(
@@ -243,7 +293,6 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
                   controller: _emailController,
                   label: 'Email',
                   icon: Icons.email,
-                  // isRequired: false,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 24),

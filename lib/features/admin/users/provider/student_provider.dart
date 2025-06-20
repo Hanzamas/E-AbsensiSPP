@@ -2,21 +2,51 @@ import 'package:flutter/material.dart';
 import '../data/models/student_model.dart';
 import '../data/repositories/student_repository.dart';
 import '../widgets/filter_and_sort_widget.dart';
+// --- TAMBAHKAN IMPORT BARU ---
+import '../../akademik/data/models/class_model.dart';
+import '../../akademik/data/repositories/class_repository.dart';
+
 
 class StudentProvider with ChangeNotifier {
   final StudentRepository _studentRepository = StudentRepository();
+  // --- TAMBAHKAN REPOSITORY KELAS ---
+  final ClassRepository _classRepository = ClassRepository();
 
-  List<Student> _students = []; // Daftar master dari API
-  List<Student> _filteredStudents = []; // Daftar yang akan dilihat oleh UI
+  List<Student> _students = [];
+  List<Student> _filteredStudents = [];
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
   SortOrder _sortOrder = SortOrder.az;
 
-  // Getter yang digunakan oleh UI, selalu merujuk ke daftar yang sudah difilter
+  // --- TAMBAHKAN STATE UNTUK KELAS ---
+  List<ClassModel> _classes = [];
+
+  // --- TAMBAHKAN GETTER UNTUK KELAS ---
+  List<ClassModel> get classes => _classes;
+  
   List<Student> get students => _filteredStudents;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  // --- METHOD BARU: MEMUAT DEPENDENSI (KELAS) UNTUK FORM ---
+  Future<void> loadDependencies() async {
+    // Hindari fetch berulang jika data sudah ada
+    if (_classes.isNotEmpty) return;
+
+    _isLoading = true;
+    notifyListeners();
+    try {
+      _classes = await _classRepository.getAllClasses();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      print('Error fetching classes for student form: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   // Clear error message
   void clearError() {
@@ -34,6 +64,10 @@ class StudentProvider with ChangeNotifier {
     try {
       // 1. Ambil data mentah dari repository
       _students = await _studentRepository.getStudents();
+      // Ambil juga data kelas jika belum ada
+      if (_classes.isEmpty) {
+        _classes = await _classRepository.getAllClasses();
+      }
 
       // 2. Panggil method internal untuk mengisi _filteredStudents dari _students
       _applyFilterAndSort();

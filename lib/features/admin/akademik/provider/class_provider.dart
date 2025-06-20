@@ -1,52 +1,110 @@
 import 'package:flutter/material.dart';
 import '../data/repositories/class_repository.dart';
 import '../data/models/class_model.dart';
+import '../data/models/academic_year_model.dart';
+import '../data/repositories/academic_year_repository.dart';
+import '../../users/widgets/filter_and_sort_widget.dart';
+
 
 class ClassProvider extends ChangeNotifier {
-  static final ClassProvider _instance = ClassProvider._internal();
   final ClassRepository _repository = ClassRepository();
-  
+  final AcademicYearRepository _academicYearRepository = AcademicYearRepository();
+
   bool _isLoading = false;
   String? _error;
-  List<ClassModel> _classes = [];
+  
+  List<ClassModel> _classes = []; // Daftar master
+  List<ClassModel> _filteredClasses = []; // Daftar untuk UI
+  List<AcademicYearModel> _academicYears = [];
 
-  // Private constructor
-  ClassProvider._internal();
-
-  // Singleton factory
-  factory ClassProvider() => _instance;
+  String _searchQuery = '';
+  SortOrder _sortOrder = SortOrder.az;
 
   // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
-  List<ClassModel> get classes => _classes;
+  List<ClassModel> get classes => _filteredClasses;
+  List<AcademicYearModel> get academicYears => _academicYears;
+  bool get isFilterActive => _searchQuery.isNotEmpty;
+  bool get isMasterListEmpty => _classes.isEmpty;
 
-  // Load all classes
+  void _applyFilterAndSort() {
+    _filteredClasses = List.from(_classes);
+
+    // Filter berdasarkan nama kelas
+    if (_searchQuery.isNotEmpty) {
+      _filteredClasses = _filteredClasses
+          .where((classData) => classData.namaKelas
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()))
+          .toList();
+    }
+
+    // Urutkan
+    _filteredClasses.sort((a, b) {
+      final comparison = a.namaKelas.toLowerCase().compareTo(b.namaKelas.toLowerCase());
+      return _sortOrder == SortOrder.az ? comparison : -comparison;
+    });
+
+  }
+
+  void applyFilters(String query, SortOrder order) {
+    _searchQuery = query;
+    _sortOrder = order;
+    _applyFilterAndSort();
+    notifyListeners();
+  }
+
+  void resetFilters() {
+    _searchQuery = '';
+    _sortOrder = SortOrder.az;
+    _applyFilterAndSort();
+    notifyListeners();
+  }
+
   Future<void> loadClasses() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
+      final results = await Future.wait([
+        _repository.getAllClasses(),
+        _academicYearRepository.getAllAcademicYears(),
+      ]);
 
-      _classes = await _repository.getAllClasses();
+      _classes = results[0] as List<ClassModel>;
+      _academicYears = results[1] as List<AcademicYearModel>;
+      _applyFilterAndSort();
     } catch (e) {
       _error = e.toString();
-      debugPrint('Error loading classes: $e');
+      debugPrint('Error loading classes or academic years: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Create new class
-  Future<bool> createClass(ClassModel classData) async {
+  Future<void> fetchAcademicYears() async {
+    if (_academicYears.isNotEmpty) return;
+    _isLoading = true;
+    notifyListeners();
     try {
-      _isLoading = true;
-      _error = null;
+      _academicYears = await _academicYearRepository.getAllAcademicYears();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
       notifyListeners();
+    }
+  }
 
-      final newClass = await _repository.createClass(classData);
-      _classes.add(newClass);
+  Future<bool> createClass(ClassModel classData) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _repository.createClass(classData);
+      await loadClasses(); // Muat ulang dan filter
       return true;
     } catch (e) {
       _error = e.toString();
@@ -58,17 +116,26 @@ class ClassProvider extends ChangeNotifier {
     }
   }
 
-  // Update existing class
   Future<bool> updateClass(int id, ClassModel classData) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
       final updatedClass = await _repository.updateClass(id, classData);
       final index = _classes.indexWhere((c) => c.id == id);
+
       if (index != -1) {
-        _classes[index] = updatedClass;
+        final preservedClass = ClassModel(
+          id: updatedClass.id,
+          namaKelas: updatedClass.namaKelas,
+          kapasitas: updatedClass.kapasitas,
+          idTahunAjaran: updatedClass.idTahunAjaran,
+          tahunAjaran: updatedClass.tahunAjaran.isEmpty
+              ? _classes[index].tahunAjaran
+              : updatedClass.tahunAjaran,
+        );
+        _classes[index] = preservedClass;
+        _applyFilterAndSort(); // Filter ulang
       }
       return true;
     } catch (e) {
@@ -81,16 +148,15 @@ class ClassProvider extends ChangeNotifier {
     }
   }
 
-  // Delete class
   Future<bool> deleteClass(int id) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
       final success = await _repository.deleteClass(id);
       if (success) {
         _classes.removeWhere((c) => c.id == id);
+        _applyFilterAndSort(); // Filter ulang
       }
       return success;
     } catch (e) {
@@ -103,9 +169,8 @@ class ClassProvider extends ChangeNotifier {
     }
   }
 
-  // Clear error
   void clearError() {
     _error = null;
     notifyListeners();
   }
-} 
+}

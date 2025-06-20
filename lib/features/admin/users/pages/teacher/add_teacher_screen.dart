@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/teacher_provider.dart';
-import '../../widgets/custom_input_field.dart';
-import '../../widgets/custom_date_field.dart';
+import '../../../../shared/widgets/custom_input_field.dart';
+import '../../../../shared/widgets/custom_date_field.dart';
 import '../../widgets/gender_dropdown_widget.dart';
-import '../../widgets/custom_loading_button.dart';
+import '../../../../shared/widgets/custom_loading_button.dart';
 import '../../widgets/form_section_header.dart';
 import '../../widgets/date_picker_helper.dart';
 
