@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // ✅ ADD
-import 'dart:convert'; // ✅ ADD
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
+import 'dart:async';
 import '../data/repository/teacher_attendance_repository.dart';
 import '../data/model/teaching_schedule_model.dart';
 import '../data/model/learning_session_model.dart';
@@ -8,7 +9,7 @@ import '../data/model/attendance_record_model.dart';
 
 class TeacherAttendanceProvider with ChangeNotifier {
   final TeacherAttendanceRepository _repository = TeacherAttendanceRepository();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage(); // ✅ ADD
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // Loading states
   bool _isLoading = false;
@@ -16,20 +17,18 @@ class TeacherAttendanceProvider with ChangeNotifier {
   bool _isUpdatingAttendance = false;
   bool _isLoadingStats = false;
   
-  // ✅ ENHANCED: Session management with persistence
-  final Set<int> _activeSessionIds = <int>{};
-  final Set<int> _completedSessionIds = <int>{};
-  final Map<int, LearningSessionModel> _sessionData = {}; // ✅ Store session data
-  DateTime? _lastSessionCheck;
+  // ✅ NEW: Session management with persistence using 'active_learning_session' key
+  LearningSessionModel? _activeSession;
+  Timer? _sessionCheckTimer;
   
-  // Data states (existing...)
+  // Data states
   List<TeachingScheduleModel> _teachingSchedule = [];
   List<AttendanceRecordModel> _attendanceHistory = [];
   List<AttendanceRecordModel> _filteredAttendance = [];
   Map<String, int> _attendanceStats = {};
   String? _error;
   
-  // Filter states (existing...)
+  // Filter states
   DateTime? _selectedDate;
   String? _selectedSubject;
   String? _selectedClass;
@@ -39,7 +38,7 @@ class TeacherAttendanceProvider with ChangeNotifier {
   DateTime? _startDate;
   DateTime? _endDate;
 
-  // Getters - Loading states
+  // Getters
   bool get isLoading => _isLoading;
   bool get isCreatingSession => _isCreatingSession;
   bool get isUpdatingAttendance => _isUpdatingAttendance;
@@ -47,278 +46,191 @@ class TeacherAttendanceProvider with ChangeNotifier {
   List<String> get availableSubjects => _availableSubjects;
   List<String> get availableClasses => _availableClasses;
   
-  // Getters - Data states
   List<TeachingScheduleModel> get teachingSchedule => _teachingSchedule;
   List<AttendanceRecordModel> get attendanceHistory => _attendanceHistory;
   List<AttendanceRecordModel> get filteredAttendance => _filteredAttendance;
   Map<String, int> get attendanceStats => _attendanceStats;
   String? get error => _error;
   
-  // Getters - Filter states
   DateTime? get selectedDate => _selectedDate;
   String? get selectedSubject => _selectedSubject;
   String? get selectedClass => _selectedClass;
   String? get selectedStatus => _selectedStatus;
 
-  // ✅ ENHANCED: Session state getters
-  Set<int> get activeSessionIds => Set.unmodifiable(_activeSessionIds);
-  Set<int> get completedSessionIds => Set.unmodifiable(_completedSessionIds);
+  // ✅ NEW: Session state getters
+  LearningSessionModel? get activeSession => _activeSession;
+  bool get hasActiveSession => _activeSession != null && _isSessionStillValid();
   
-  bool isSessionActive(int scheduleId) => _activeSessionIds.contains(scheduleId);
-  bool isSessionCompleted(int scheduleId) => _completedSessionIds.contains(scheduleId);
-
-  // ✅ FIXED: hasActiveSession with time validation
-  bool get hasActiveSession {
-    if (_activeSessionIds.isEmpty) return false;
-    
-    final now = DateTime.now();
-    for (final sessionId in _activeSessionIds) {
-      final sessionData = _sessionData[sessionId];
-      if (sessionData != null) {
-        try {
-          final endTimeParts = sessionData.jamSelesai.split(':');
-          final endTime = DateTime(
-            now.year, now.month, now.day,
-            int.parse(endTimeParts[0]),
-            int.parse(endTimeParts[1]),
-          );
-          
-          if (now.isBefore(endTime)) {
-            return true;
-          }
-        } catch (e) {
-          debugPrint('Error checking session time: $e');
-        }
-      }
-    }
-    return false;
-  }
-
-  // ✅ FIXED: activeSession getter with stored data
-  LearningSessionModel? get activeSession {
-    if (!hasActiveSession || _activeSessionIds.isEmpty) return null;
-    
-    final now = DateTime.now();
-    for (final sessionId in _activeSessionIds) {
-      final sessionData = _sessionData[sessionId];
-      if (sessionData != null) {
-        try {
-          final endTimeParts = sessionData.jamSelesai.split(':');
-          final endTime = DateTime(
-            now.year, now.month, now.day,
-            int.parse(endTimeParts[0]),
-            int.parse(endTimeParts[1]),
-          );
-          
-          if (now.isBefore(endTime)) {
-            return sessionData;
-          }
-        } catch (e) {
-          debugPrint('Error getting active session: $e');
-        }
-      }
-    }
-    return null;
-  }
-
-  // Computed properties
-  List<TeachingScheduleModel> get todaySchedule {
-    final today = _getCurrentDay();
-    return _teachingSchedule.where((schedule) {
-      final scheduleDay = _normalizeDay(schedule.hari);
-      final currentDay = _normalizeDay(today);
-      return scheduleDay == currentDay;
-    }).toList();
+  bool isSessionActive(int scheduleId) {
+    return _activeSession?.idPengajaran == scheduleId && hasActiveSession;
   }
   
-  List<TeachingScheduleModel> get activeSchedule => 
-      _teachingSchedule.where((schedule) => schedule.isActiveNow).toList();
-  
-  bool get hasTodayClasses => todaySchedule.isNotEmpty;
-  bool get hasActiveClasses => activeSchedule.isNotEmpty;
-  
-  // Stats getters (existing...)
-  int get totalStudents => _attendanceStats['total'] ?? 0;
-  int get presentToday => _attendanceStats['hadir'] ?? 0;
-  int get absentToday => _attendanceStats['alpha'] ?? 0;
-  int get sickToday => _attendanceStats['sakit'] ?? 0;
-  int get permissionToday => _attendanceStats['izin'] ?? 0;
-
-  double get attendanceRate {
-    if (totalStudents == 0) return 0.0;
-    return (presentToday / totalStudents) * 100;
+  bool isSessionCompleted(int scheduleId) {
+    return _activeSession?.idPengajaran == scheduleId && !_isSessionStillValid();
   }
 
-  String get attendanceRateText => '${attendanceRate.toStringAsFixed(1)}%';
-
-  // ✅ ADD: Session persistence methods
-  Future<void> _saveSessionData() async {
+  // ✅ NEW: Save active session to storage
+  Future<void> _saveActiveSession(LearningSessionModel session) async {
     try {
-      final sessionJson = {
-        'activeSessionIds': _activeSessionIds.toList(),
-        'completedSessionIds': _completedSessionIds.toList(),
-        'sessionData': _sessionData.map((key, value) => MapEntry(
-          key.toString(),
-          {
-            'idSesi': value.idSesi,
-            'idPengajaran': value.idPengajaran,
-            'date': value.date,
-            'qrToken': value.qrToken,
-            'jamMulai': value.jamMulai,
-            'jamSelesai': value.jamSelesai,
-          }
-        )),
-        'lastSessionCheck': _lastSessionCheck?.millisecondsSinceEpoch,
+      final sessionData = {
+        'id_sesi': session.idSesi,
+        'id_pengajaran': session.idPengajaran,
+        'qr_token': session.qrToken,
+        'date': session.date,
+        'jam_mulai': session.jamMulai,
+        'jam_selesai': session.jamSelesai,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
       };
       
       await _storage.write(
-        key: 'teacher_session_data',
-        value: jsonEncode(sessionJson),
+        key: 'active_learning_session',
+        value: jsonEncode(sessionData),
       );
+      
+      debugPrint('✅ Session saved to storage: ${session.qrToken}');
     } catch (e) {
-      debugPrint('Error saving session data: $e');
+      debugPrint('❌ Error saving session: $e');
     }
   }
 
-  Future<void> _loadSessionData() async {
+  // ✅ NEW: Load active session from storage
+  Future<void> loadActiveSession() async {
     try {
-      final sessionDataString = await _storage.read(key: 'teacher_session_data');
-      if (sessionDataString != null) {
-        final sessionJson = jsonDecode(sessionDataString);
+      final sessionString = await _storage.read(key: 'active_learning_session');
+      
+      if (sessionString != null) {
+        final sessionData = jsonDecode(sessionString);
         
-        _activeSessionIds.clear();
-        _activeSessionIds.addAll(
-          (sessionJson['activeSessionIds'] as List).cast<int>()
-        );
-        
-        _completedSessionIds.clear();
-        _completedSessionIds.addAll(
-          (sessionJson['completedSessionIds'] as List).cast<int>()
-        );
-        
-        _sessionData.clear();
-        final sessionDataMap = sessionJson['sessionData'] as Map<String, dynamic>;
-        sessionDataMap.forEach((key, value) {
-          _sessionData[int.parse(key)] = LearningSessionModel(
-            idSesi: value['idSesi'],
-            idPengajaran: value['idPengajaran'],
-            date: value['date'],
-            qrToken: value['qrToken'],
-            jamMulai: value['jamMulai'],
-            jamSelesai: value['jamSelesai'],
+        // ✅ Check if session is still valid (not expired)
+        if (_isSessionDataValid(sessionData)) {
+          _activeSession = LearningSessionModel(
+            idSesi: sessionData['id_sesi'],
+            idPengajaran: sessionData['id_pengajaran'],
+            qrToken: sessionData['qr_token'],
+            date: sessionData['date'],
+            jamMulai: sessionData['jam_mulai'],
+            jamSelesai: sessionData['jam_selesai'],
           );
-        });
-        
-        if (sessionJson['lastSessionCheck'] != null) {
-          _lastSessionCheck = DateTime.fromMillisecondsSinceEpoch(
-            sessionJson['lastSessionCheck']
-          );
+          
+          debugPrint('✅ Active session restored: ${_activeSession!.qrToken}');
+          
+          // ✅ Start monitoring
+          _startSessionMonitoring();
+          notifyListeners();
+        } else {
+          // ✅ Session expired, clear it
+          await _clearActiveSession();
+          debugPrint('⏰ Session expired, cleared from storage');
         }
-        
-        // Check if sessions are still valid
-        await checkSessionStatus();
       }
     } catch (e) {
-      debugPrint('Error loading session data: $e');
+      debugPrint('❌ Error loading active session: $e');
+      await _clearActiveSession();
     }
   }
 
-  Future<void> _clearSessionData() async {
+  // ✅ NEW: Check if session data is still valid
+  bool _isSessionDataValid(Map<String, dynamic> sessionData) {
     try {
-      await _storage.delete(key: 'teacher_session_data');
-      _activeSessionIds.clear();
-      _completedSessionIds.clear();
-      _sessionData.clear();
-      _lastSessionCheck = null;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final sessionDate = DateTime.parse(sessionData['date']);
+      
+      // ✅ Check if session is for today
+      if (!_isSameDay(today, sessionDate)) {
+        return false;
+      }
+      
+      // ✅ Check if current time is before session end time
+      final endTimeParts = sessionData['jam_selesai'].split(':');
+      final endTime = DateTime(
+        now.year, now.month, now.day,
+        int.parse(endTimeParts[0]),
+        int.parse(endTimeParts[1]),
+      );
+      
+      return now.isBefore(endTime);
     } catch (e) {
-      debugPrint('Error clearing session data: $e');
+      debugPrint('❌ Error checking session validity: $e');
+      return false;
     }
   }
 
-  // ✅ ADD: Helper methods
-  String _normalizeDay(String day) {
-    final normalized = day
-        .toLowerCase()
-        .trim()
-        .replaceAll("'", '')
-        .replaceAll("'", '')
-        .replaceAll(" ", '');
+  // ✅ NEW: Check if current session is still valid
+  bool _isSessionStillValid() {
+    if (_activeSession == null) return false;
     
-    const dayMap = {
-      'senin': 'senin',
-      'selasa': 'selasa', 
-      'rabu': 'rabu',
-      'kamis': 'kamis',
-      'jumat': 'jumat',
-      'jumaat': 'jumat',
-      'sabtu': 'sabtu',
-      'minggu': 'minggu',
-    };
-    
-    return dayMap[normalized] ?? normalized;
-  }
-
-  String _getCurrentDay() {
-    final today = DateTime.now().weekday;
-    const days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
-    return days[today - 1];
-  }
-
-  // ✅ ENHANCED: Load teaching schedule with session data
-  Future<void> loadTeachingSchedule() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      _teachingSchedule = await _repository.getTeachingSchedule();
-      await _loadSessionData(); // ✅ Load persisted session data
-      _error = null;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final sessionDate = DateTime.parse(_activeSession!.date);
+      
+      // Check if session is for today
+      if (!_isSameDay(today, sessionDate)) {
+        return false;
+      }
+      
+      // Check if current time is before session end time
+      final endTimeParts = _activeSession!.jamSelesai.split(':');
+      final endTime = DateTime(
+        now.year, now.month, now.day,
+        int.parse(endTimeParts[0]),
+        int.parse(endTimeParts[1]),
+      );
+      
+      return now.isBefore(endTime);
     } catch (e) {
-      _error = e.toString().replaceAll('Exception: ', '');
-      debugPrint('Error loading teaching schedule: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      debugPrint('❌ Error checking session validity: $e');
+      return false;
     }
   }
 
-  // Load attendance history (existing...)
-  Future<void> loadAttendanceHistory() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+  // ✅ NEW: Helper method to check same day
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year && 
+           date1.month == date2.month && 
+           date1.day == date2.day;
+  }
 
+  // ✅ NEW: Clear active session from storage
+  Future<void> _clearActiveSession() async {
     try {
-      _attendanceHistory = await _repository.getAttendanceHistory();
-      _applyFilters();
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceAll('Exception: ', '');
-      debugPrint('Error loading attendance history: $e');
-    } finally {
-      _isLoading = false;
+      await _storage.delete(key: 'active_learning_session');
+      _activeSession = null;
+      _stopSessionMonitoring();
+      debugPrint('✅ Active session cleared from storage');
       notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Error clearing active session: $e');
     }
   }
 
-  // Load attendance stats (existing...)
-  Future<void> loadAttendanceStats([DateTime? date]) async {
-    _isLoadingStats = true;
-    notifyListeners();
+  // ✅ NEW: Start session monitoring timer
+  void _startSessionMonitoring() {
+    _sessionCheckTimer?.cancel();
+    _sessionCheckTimer = Timer.periodic(
+      const Duration(minutes: 1), // Check every minute
+      (timer) => _checkSessionExpiry(),
+    );
+    debugPrint('✅ Session monitoring started');
+  }
 
-    try {
-      _attendanceStats = await _repository.getAttendanceStats(date);
-    } catch (e) {
-      debugPrint('Error loading attendance stats: $e');
-      _attendanceStats = {};
-    } finally {
-      _isLoadingStats = false;
-      notifyListeners();
+  // ✅ NEW: Stop session monitoring timer
+  void _stopSessionMonitoring() {
+    _sessionCheckTimer?.cancel();
+    _sessionCheckTimer = null;
+    debugPrint('🛑 Session monitoring stopped');
+  }
+
+  // ✅ NEW: Auto-check session expiry
+  Future<void> _checkSessionExpiry() async {
+    if (_activeSession != null && !_isSessionStillValid()) {
+      await _clearActiveSession();
+      debugPrint('⏰ Session auto-expired and cleared');
     }
   }
 
-  // ✅ FIXED: Create learning session with persistence
+  // ✅ ENHANCED: Create learning session with persistence
   Future<bool> createLearningSession(int idPengajaran) async {
     // ✅ Prevent multiple session creation
     if (isSessionActive(idPengajaran) || _isCreatingSession) {
@@ -333,13 +245,14 @@ class TeacherAttendanceProvider with ChangeNotifier {
       final result = await _repository.createLearningSession(idPengajaran);
       
       if (result != null) {
-        // ✅ Add to active sessions and store data
-        _activeSessionIds.add(idPengajaran);
-        _sessionData[idPengajaran] = result;
-        _lastSessionCheck = DateTime.now();
+        // ✅ Set active session
+        _activeSession = result;
         
         // ✅ Save to storage for persistence
-        await _saveSessionData();
+        await _saveActiveSession(result);
+        
+        // ✅ Start monitoring
+        _startSessionMonitoring();
         
         // ✅ Load updated data
         await Future.wait([
@@ -362,7 +275,125 @@ class TeacherAttendanceProvider with ChangeNotifier {
     }
   }
 
-  // Update attendance status (existing...)
+  // ✅ ENHANCED: Load teaching schedule with session restoration
+  Future<void> loadTeachingSchedule() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _teachingSchedule = await _repository.getTeachingSchedule();
+      
+      // ✅ Load any active session from storage
+      await loadActiveSession();
+      
+      _error = null;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      debugPrint('Error loading teaching schedule: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ NEW: Reset provider to initial state
+  void resetToInitialState() {
+    try {
+      debugPrint('🔄 TeacherAttendanceProvider: Resetting to initial state...');
+      
+      // Stop monitoring
+      _stopSessionMonitoring();
+      
+      // Reset data
+      _teachingSchedule = [];
+      _attendanceHistory = [];
+      _filteredAttendance = [];
+      _attendanceStats = {};
+      _availableSubjects = [];
+      _availableClasses = [];
+      _activeSession = null;
+      
+      // Reset states
+      _isLoading = false;
+      _isCreatingSession = false;
+      _isUpdatingAttendance = false;
+      _isLoadingStats = false;
+      _error = null;
+      _selectedDate = null;
+      _selectedSubject = null;
+      _selectedClass = null;
+      _selectedStatus = null;
+      _startDate = null;
+      _endDate = null;
+      
+      debugPrint('✅ TeacherAttendanceProvider: Reset complete');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ TeacherAttendanceProvider: Reset error - $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _stopSessionMonitoring();
+    super.dispose();
+  }
+
+  // ✅ Load all data with session monitoring
+  Future<void> loadAllData() async {
+    await Future.wait([
+      loadTeachingSchedule(),
+      loadAttendanceHistory(),
+      loadAttendanceStats(),
+      loadFilterMetadata(),
+    ]);
+  }
+
+  // ✅ Refresh all data with session check
+  Future<void> refreshData() async {
+    await _checkSessionExpiry();
+    await loadAllData();
+  }
+
+  // ... rest of existing methods (load methods, filters, etc.) remain the same ...
+  
+  // Load attendance history
+  Future<void> loadAttendanceHistory() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _attendanceHistory = await _repository.getAttendanceHistory();
+      _applyFilters();
+      _error = null;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      debugPrint('Error loading attendance history: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load attendance stats
+  Future<void> loadAttendanceStats([DateTime? date]) async {
+    _isLoadingStats = true;
+    notifyListeners();
+
+    try {
+      _attendanceStats = await _repository.getAttendanceStats(date);
+    } catch (e) {
+      debugPrint('Error loading attendance stats: $e');
+      _attendanceStats = {};
+    } finally {
+      _isLoadingStats = false;
+      notifyListeners();
+    }
+  }
+
+  // Update attendance status
   Future<bool> updateAttendanceStatus(int id, String status, String? keterangan) async {
     _isUpdatingAttendance = true;
     _error = null;
@@ -388,7 +419,7 @@ class TeacherAttendanceProvider with ChangeNotifier {
     }
   }
 
-  // Load metadata untuk filter (existing...)
+  // Load metadata untuk filter
   Future<void> loadFilterMetadata() async {
     try {
       final subjects = await _repository.getAvailableSubjects();
@@ -402,48 +433,7 @@ class TeacherAttendanceProvider with ChangeNotifier {
     }
   }
 
-  // ✅ ENHANCED: Check and update session status with persistence
-  Future<void> checkSessionStatus() async {
-    try {
-      final now = DateTime.now();
-      final toRemove = <int>{};
-      
-      for (final sessionId in _activeSessionIds) {
-        final sessionData = _sessionData[sessionId];
-        if (sessionData != null) {
-          final endTimeParts = sessionData.jamSelesai.split(':');
-          final endTime = DateTime(
-            now.year, now.month, now.day,
-            int.parse(endTimeParts[0]),
-            int.parse(endTimeParts[1]),
-          );
-          
-          if (now.isAfter(endTime)) {
-            toRemove.add(sessionId);
-            _completedSessionIds.add(sessionId);
-          }
-        }
-      }
-      
-      _activeSessionIds.removeAll(toRemove);
-      _lastSessionCheck = now;
-      
-      if (toRemove.isNotEmpty) {
-        await _saveSessionData(); // ✅ Save updated state
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('Error checking session status: $e');
-    }
-  }
-
-  // ✅ ENHANCED: Clear session data (for logout) with storage cleanup
-  Future<void> clearSessionData() async {
-    await _clearSessionData();
-    notifyListeners();
-  }
-
-  // Get attendance by ID (existing...)
+  // Get attendance by ID
   Future<AttendanceRecordModel?> getAttendanceById(int id) async {
     try {
       return await _repository.getAttendanceById(id);
@@ -454,7 +444,7 @@ class TeacherAttendanceProvider with ChangeNotifier {
     }
   }
 
-  // Filter methods (existing...)
+  // Filter methods
   void setDateFilter(DateTime? date) {
     _selectedDate = date;
     _applyFilters();
@@ -495,7 +485,7 @@ class TeacherAttendanceProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Apply filters (existing...)
+  // Apply filters
   void _applyFilters() {
     _filteredAttendance = _attendanceHistory.where((record) {
       bool matchDateRange = true;
@@ -528,37 +518,12 @@ class TeacherAttendanceProvider with ChangeNotifier {
     }).toList();
   }
 
-  List<TeachingScheduleModel> getSchedulesByDay(String day) {
-    return _teachingSchedule.where((schedule) {
-      final scheduleDay = _normalizeDay(schedule.hari);
-      final filterDay = _normalizeDay(day);
-      return scheduleDay == filterDay;
-    }).toList();
-  }
-
-  // Load all data (existing...)
-  Future<void> loadAllData() async {
-    await Future.wait([
-      loadTeachingSchedule(),
-      loadAttendanceHistory(),
-      loadAttendanceStats(),
-      loadFilterMetadata(),
-    ]);
-  }
-
-  // ✅ ENHANCED: Refresh all data with session check
-  Future<void> refreshData() async {
-    await checkSessionStatus();
-    await loadAllData();
-  }
-
-  // Clear error (existing...)
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  // Helper methods (existing...)
+  // Helper methods
   bool get hasFiltersApplied => 
       _selectedDate != null || 
       (_selectedSubject != null && _selectedSubject!.isNotEmpty) ||
@@ -573,6 +538,73 @@ class TeacherAttendanceProvider with ChangeNotifier {
     } catch (e) {
       return null;
     }
+  }
+
+  // Computed properties
+  List<TeachingScheduleModel> get todaySchedule {
+    final today = _getCurrentDay();
+    return _teachingSchedule.where((schedule) {
+      final scheduleDay = _normalizeDay(schedule.hari);
+      final currentDay = _normalizeDay(today);
+      return scheduleDay == currentDay;
+    }).toList();
+  }
+  
+  List<TeachingScheduleModel> get activeSchedule => 
+      _teachingSchedule.where((schedule) => schedule.isActiveNow).toList();
+  
+  bool get hasTodayClasses => todaySchedule.isNotEmpty;
+  bool get hasActiveClasses => activeSchedule.isNotEmpty;
+  
+  // Stats getters
+  int get totalStudents => _attendanceStats['total'] ?? 0;
+  int get presentToday => _attendanceStats['hadir'] ?? 0;
+  int get absentToday => _attendanceStats['alpha'] ?? 0;
+  int get sickToday => _attendanceStats['sakit'] ?? 0;
+  int get permissionToday => _attendanceStats['izin'] ?? 0;
+
+  double get attendanceRate {
+    if (totalStudents == 0) return 0.0;
+    return (presentToday / totalStudents) * 100;
+  }
+
+  String get attendanceRateText => '${attendanceRate.toStringAsFixed(1)}%';
+
+  // Helper methods
+  String _normalizeDay(String day) {
+    final normalized = day
+        .toLowerCase()
+        .trim()
+        .replaceAll("'", '')
+        .replaceAll("'", '')
+        .replaceAll(" ", '');
+    
+    const dayMap = {
+      'senin': 'senin',
+      'selasa': 'selasa', 
+      'rabu': 'rabu',
+      'kamis': 'kamis',
+      'jumat': 'jumat',
+      'jumaat': 'jumat',
+      'sabtu': 'sabtu',
+      'minggu': 'minggu',
+    };
+    
+    return dayMap[normalized] ?? normalized;
+  }
+
+  String _getCurrentDay() {
+    final today = DateTime.now().weekday;
+    const days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+    return days[today - 1];
+  }
+
+  List<TeachingScheduleModel> getSchedulesByDay(String day) {
+    return _teachingSchedule.where((schedule) {
+      final scheduleDay = _normalizeDay(schedule.hari);
+      final filterDay = _normalizeDay(day);
+      return scheduleDay == filterDay;
+    }).toList();
   }
 
   List<TeachingScheduleModel> get todayActiveSchedule {
@@ -595,7 +627,6 @@ class TeacherAttendanceProvider with ChangeNotifier {
     }).toList();
   }
 
-  // Existing methods untuk compatibility...
   Future<Map<String, List<double>>> getAttendanceTrend() async {
     try {
       final now = DateTime.now();

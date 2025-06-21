@@ -99,18 +99,33 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ✅ Simple logout
-  Future<void> logout() async {
+  // ✅ ENHANCED: Logout with selective clearing (keeps session data)
+  Future<void> logout([BuildContext? context]) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _clearAuth();
-      debugPrint('✅ AuthProvider: Logout successful');
+      
+      // ✅ Clear only auth data (keep session data for persistence)
+      _token = null;
+      _role = null;
+      _user = null;
+      _error = null;
+      
+      // ✅ Clear only auth-related storage keys (DON'T clear session data)
+      await _storage.delete('token');
+      await _storage.delete('user_role');
+      await _storage.delete('user_data');
+      // ✅ Keep: 'active_learning_session' for session persistence
+      
+      debugPrint('✅ AuthProvider: Logout successful - Session preserved');
     } catch (e) {
       debugPrint('❌ AuthProvider: Logout error - $e');
-      // Force clear even if error
-      await _clearAuth();
+      // Force clear auth data
+      _token = null;
+      _role = null;
+      _user = null;
+      _error = null;
     } finally {
       _isLoading = false;
       notifyListeners();
