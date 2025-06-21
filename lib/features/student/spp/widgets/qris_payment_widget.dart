@@ -286,21 +286,21 @@ class _QrisPaymentWidgetState extends State<QrisPaymentWidget> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _copyQrString,
-            icon: const Icon(Icons.copy, size: 18),
-            label: const Text('Salin Kode QR'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ),
+        // const SizedBox(height: 8),
+        // SizedBox(
+        //   width: double.infinity,
+        //   child: OutlinedButton.icon(
+        //     onPressed: _copyQrString,
+        //     icon: const Icon(Icons.copy, size: 18),
+        //     label: const Text('Salin Kode QR'),
+        //     style: OutlinedButton.styleFrom(
+        //       padding: const EdgeInsets.symmetric(vertical: 12),
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(8),
+        //       ),
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
@@ -380,9 +380,12 @@ class _QrisPaymentWidgetState extends State<QrisPaymentWidget> {
     );
   }
 
-  // ✅ Updated save QR code method using gal package
+  // ✅ ENHANCED: Save QR code method with proper orientation
   Future<void> _saveQrCode() async {
     try {
+      // Show loading
+      _showSnackBar('Menyimpan QR Code...', isError: false);
+      
       // Check if we have permission
       final hasAccess = await Gal.hasAccess();
       if (!hasAccess) {
@@ -393,21 +396,33 @@ class _QrisPaymentWidgetState extends State<QrisPaymentWidget> {
         }
       }
 
-      // Capture screenshot
-      final imageBytes = await _screenshotController.capture();
+      // ✅ Wait a bit for UI to settle
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // Capture screenshot with proper format
+      final imageBytes = await _screenshotController.capture(
+        delay: const Duration(milliseconds: 100), // ✅ ADD: Delay for rendering
+        pixelRatio: 2.0, // ✅ ADD: Higher quality
+      );
+      
       if (imageBytes == null) {
         _showSnackBar('Gagal mengambil screenshot', isError: true);
         return;
       }
 
+      // ✅ Generate timestamp for unique filename
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filename = 'qris_spp_${widget.qris.referenceId}_$timestamp';
+
       // Save to gallery using gal package
       await Gal.putImageBytes(
         imageBytes,
-        name: 'qris_spp_${widget.qris.referenceId}',
+        name: filename,
       );
 
       _showSnackBar('QR Code berhasil disimpan ke galeri');
     } catch (e) {
+      debugPrint('Error saving QR Code: $e');
       _showSnackBar('Error: $e', isError: true);
     }
   }
