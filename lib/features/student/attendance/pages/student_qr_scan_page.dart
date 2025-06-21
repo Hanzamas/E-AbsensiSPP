@@ -12,77 +12,130 @@ class StudentQrScanPage extends StatefulWidget {
   _StudentQrScanPageState createState() => _StudentQrScanPageState();
 }
 
-class _StudentQrScanPageState extends State<StudentQrScanPage> {
+class _StudentQrScanPageState extends State<StudentQrScanPage>
+    with TickerProviderStateMixin {
   final int _selectedIndex = 1;
   final String userRole = 'siswa';
-  final MobileScannerController cameraController = MobileScannerController(
-    facing: CameraFacing.back,
-    torchEnabled: false,
-  );
-
+  
+  late MobileScannerController cameraController;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+  
   double _zoom = 1.0;
   bool _isScanned = false;
   bool _isProcessing = false;
+  String? _lastScannedCode;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize camera controller
+    cameraController = MobileScannerController(
+      facing: CameraFacing.back,
+      torchEnabled: false,
+      returnImage: false,
+    );
+    
+    // Initialize animation
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _animationController.repeat(reverse: true);
+  }
 
   @override
   void dispose() {
+    _animationController.dispose();
     cameraController.dispose();
     super.dispose();
   }
 
-  // ✅ IMPROVED: Keep original logic with better error handling
   Future<void> _processBarcode(String code) async {
-    if (_isScanned || _isProcessing) return;
+    // Prevent duplicate processing
+    if (_isScanned || _isProcessing || code == _lastScannedCode) return;
+    
+    _lastScannedCode = code;
     
     setState(() {
       _isProcessing = true;
       _isScanned = true;
     });
     
-    // Hentikan kamera sementara
-    cameraController.stop();
+    // Stop camera while processing
+    await cameraController.stop();
     
     try {
       final provider = Provider.of<StudentAttendanceProvider>(context, listen: false);
       
-      // ✅ KEEP: Use original submitAttendance method (SUDAH PERFECT)
-      final success = await provider.submitAttendance(code);
+      print('🔍 Processing QR code: $code');
+      
+      // ✅ FIXED: Use scanQRCode method with qr_token
+      final success = await provider.scanQRCode(code);
       
       if (success && mounted) {
         final data = provider.getSubmissionData();
         
-        // ✅ KEEP: Navigate to success page with data (SUDAH BAGUS)
+        print('🔍 Scan successful, data: $data');
+        
+        // Navigate to success page
         context.go('/student/attendance/success', extra: {
-          'subject': data?['subject'] ?? data?['mapel'] ?? 'Mata Pelajaran',
-          'date': data?['date'] ?? data?['tanggal'] ?? _formatDate(DateTime.now()),
-          'time': data?['time'] ?? data?['waktu_scan'] ?? _formatTime(DateTime.now()),
+          'subject': data?['mapel'] ?? 'Mata Pelajaran',
+          'date': _formatDate(DateTime.now()),
+          'time': _formatTime(DateTime.now()),
           'status': data?['status'] ?? 'Hadir',
         });
         return;
       }
       
-      // ✅ IMPROVED: Better error handling
+      // Handle error
       if (mounted) {
-        final errorMessage = provider.error ?? 'QR Code tidak valid atau sudah pernah digunakan';
+        final errorMessage = provider.error ?? 'QR Code tidak valid';
+        _showErrorMessage(_getReadableError(errorMessage));
         
-        _showErrorMessage(errorMessage);
-        
-        // Reset dan restart camera setelah delay
-        await Future.delayed(const Duration(milliseconds: 1500));
+        await Future.delayed(const Duration(seconds: 2));
         _resetScanning();
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Terjadi kesalahan: $e');
+        _showErrorMessage('Terjadi kesalahan: ${_getReadableError(e.toString())}');
         
-        await Future.delayed(const Duration(milliseconds: 1500));
+        await Future.delayed(const Duration(seconds: 2));
         _resetScanning();
       }
     }
   }
 
-  // ✅ NEW: Better error message display
+  String _getReadableError(String error) {
+    if (error.contains('qr_token is required')) {
+      return 'QR Code tidak valid atau rusak';
+    } else if (error.contains('already used')) {
+      return 'QR Code sudah pernah digunakan';
+    } else if (error.contains('expired')) {
+      return 'QR Code sudah kadaluarsa';
+    } else if (error.contains('not found')) {
+      return 'QR Code tidak ditemukan';
+    } else if (error.contains('connection')) {
+      return 'Tidak ada koneksi internet';
+    } else if (error.contains('timeout')) {
+      return 'Koneksi timeout, coba lagi';
+    }
+    return 'QR Code tidak valid';
+  }
+
   void _showErrorMessage(String message) {
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -95,6 +148,8 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
         backgroundColor: Colors.red.shade600,
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         action: SnackBarAction(
           label: 'OK',
           textColor: Colors.white,
@@ -104,20 +159,22 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
     );
   }
 
-  // ✅ KEEP: Reset scanning state (SUDAH BAGUS)
   void _resetScanning() {
-    if (mounted) {
-      setState(() {
-        _isScanned = false;
-        _isProcessing = false;
-      });
-      cameraController.start();
-    }
+    if (!mounted) return;
+    
+    setState(() {
+      _isScanned = false;
+      _isProcessing = false;
+      _lastScannedCode = null;
+    });
+    
+    cameraController.start();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -127,7 +184,7 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
           onPressed: () => context.go('/student/attendance'),
         ),
         title: const Text(
-          'Scan QR Code', 
+          'Scan QR Code',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -137,14 +194,14 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
       ),
       body: Stack(
         children: [
-          // ✅ KEEP: Camera view (PERFECT)
+          // Camera view
           MobileScanner(
             controller: cameraController,
             fit: BoxFit.cover,
             onDetect: (capture) {
               for (final barcode in capture.barcodes) {
                 final code = barcode.rawValue;
-                if (code != null && !_isProcessing) {
+                if (code != null && code.isNotEmpty) {
                   _processBarcode(code);
                   break;
                 }
@@ -152,7 +209,7 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
             },
           ),
           
-          // ✅ IMPROVED: Better overlay design
+          // Overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -168,12 +225,12 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
             ),
           ),
           
-          // ✅ IMPROVED: Better UI Controls
+          // UI Controls
           Column(
             children: [
               const SizedBox(height: kToolbarHeight + 40),
               
-              // ✅ IMPROVED: Top controls with better design
+              // Top controls
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
@@ -186,6 +243,7 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
+                      // Flash toggle
                       IconButton(
                         icon: ValueListenableBuilder<TorchState>(
                           valueListenable: cameraController.torchState,
@@ -199,11 +257,14 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
                         ),
                         onPressed: _isProcessing ? null : () => cameraController.toggleTorch(),
                       ),
+                      
                       Container(
                         width: 1,
                         height: 24,
                         color: Colors.white.withOpacity(0.3),
                       ),
+                      
+                      // Camera switch
                       IconButton(
                         icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 24),
                         onPressed: _isProcessing ? null : () => cameraController.switchCamera(),
@@ -215,7 +276,7 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
               
               const SizedBox(height: 60),
               
-              // ✅ IMPROVED: Scanning area with animation
+              // Scanning area
               Expanded(
                 child: Center(
                   child: Padding(
@@ -225,9 +286,7 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: _isProcessing 
-                                ? Colors.orange 
-                                : Colors.white,
+                            color: _isProcessing ? Colors.orange : Colors.white,
                             width: 3,
                           ),
                           borderRadius: BorderRadius.circular(24),
@@ -239,63 +298,136 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
                             ),
                           ],
                         ),
-                        child: _isProcessing
-                            ? Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(21),
-                                ),
-                                child: const Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                        strokeWidth: 3,
-                                      ),
-                                      SizedBox(height: 20),
-                                      Text(
-                                        'Memproses QR Code...',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        'Mohon tunggu sebentar',
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(21),
-                                child: Container(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(21),
+                          child: _isProcessing
+                              ? Container(
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.white.withOpacity(0.1),
-                                        Colors.transparent,
+                                    color: Colors.black.withOpacity(0.8),
+                                    borderRadius: BorderRadius.circular(21),
+                                  ),
+                                  child: const Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          strokeWidth: 3,
+                                        ),
+                                        SizedBox(height: 20),
+                                        Text(
+                                          'Memproses QR Code...',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'Mohon tunggu sebentar',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 14,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
+                                )
+                              : Stack(
+                                  children: [
+                                    // Scanning line animation
+                                    AnimatedBuilder(
+                                      animation: _animation,
+                                      builder: (context, child) {
+                                        return Positioned(
+                                          top: _animation.value * 250,
+                                          left: 20,
+                                          right: 20,
+                                          child: Container(
+                                            height: 2,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.red.withOpacity(0.5),
+                                                  blurRadius: 10,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    
+                                    // Corner indicators
+                                    Positioned(
+                                      top: 10,
+                                      left: 10,
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            top: BorderSide(color: Colors.white, width: 3),
+                                            left: BorderSide(color: Colors.white, width: 3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 10,
+                                      right: 10,
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            top: BorderSide(color: Colors.white, width: 3),
+                                            right: BorderSide(color: Colors.white, width: 3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 10,
+                                      left: 10,
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(color: Colors.white, width: 3),
+                                            left: BorderSide(color: Colors.white, width: 3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 10,
+                                      right: 10,
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(color: Colors.white, width: 3),
+                                            right: BorderSide(color: Colors.white, width: 3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
               
-              // ✅ IMPROVED: Instruction text with better design
+              // Instruction text
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 padding: const EdgeInsets.all(16),
@@ -338,7 +470,7 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
                 ),
               ),
               
-              // ✅ IMPROVED: Zoom slider with better design
+              // Zoom slider
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 32),
                 padding: const EdgeInsets.all(16),
@@ -384,9 +516,12 @@ class _StudentQrScanPageState extends State<StudentQrScanPage> {
     );
   }
 
-  // ✅ KEEP: Helper methods (PERFECT)
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   String _formatTime(DateTime time) {

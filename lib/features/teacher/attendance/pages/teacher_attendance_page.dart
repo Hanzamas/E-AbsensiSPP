@@ -1350,22 +1350,21 @@ class _ScheduleTabState extends State<_ScheduleTab> {
                   ),
                   
                   if (widget.provider.todaySchedule.isNotEmpty)
-                    ...widget.provider.todaySchedule.map((schedule) {
-                      final isActive = _isScheduleActive(schedule);
-                      final isSessionStarted = _startedSessions.contains(schedule.id);
-                      return Container(
-                        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: _ScheduleCard(
-                          schedule: schedule,
-                          // PERBAIKAN: Selalu berikan fungsi, tapi cek active di dalam _ScheduleCard
-                          onStartSession: () => _startSession(context, schedule.id),
-                          isStartingSession: widget.provider.isCreatingSession,
-                          isSessionActive: isActive, // Tambahkan parameter baru
-                          isSessionStarted: isSessionStarted,
-                          showBorder: false,
-                        ),
-                      );
-                    })
+                  ...widget.provider.todaySchedule.map((schedule) {
+                    // ✅ Remove the old isActive check and use provider methods
+                    return Container(
+                      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: _ScheduleCard(
+                        schedule: schedule,
+                        onStartSession: () => _startSession(context, schedule.id),
+                        isStartingSession: widget.provider.isCreatingSession,
+                        // ✅ Remove these parameters as they're now handled inside _ScheduleCard
+                        // isSessionActive: isActive, 
+                        // isSessionStarted: isSessionStarted,
+                        showBorder: false,
+                      ),
+                    );
+                  })
                   else
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -1849,15 +1848,22 @@ Widget _buildWeeklyScheduleTabs() {
   }
   
 
+  // ✅ UPDATE: _startSession method in _ScheduleTabState
   void _startSession(BuildContext context, int idPengajaran) async {
+    // ✅ Add additional check to prevent multiple calls
+    if (widget.provider.isSessionActive(idPengajaran) || widget.provider.isCreatingSession) {
+      return;
+    }
+
     final success = await widget.provider.createLearningSession(idPengajaran);
     
     if (context.mounted) {
       if (success) {
-                // Tambahkan ID ke set sesi yang sudah dimulai
-        setState(() {
-          _startedSessions.add(idPengajaran);
-        });
+        // ✅ Remove manual state management since provider handles it now
+        // setState(() {
+        //   _startedSessions.add(idPengajaran);
+        // });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sesi pembelajaran berhasil dimulai'),
@@ -3883,21 +3889,229 @@ class _WeeklyScheduleCard extends StatelessWidget {
 }
 
 class _ScheduleCard extends StatelessWidget {
-  final dynamic schedule;
+  final TeachingScheduleModel schedule;
   final VoidCallback? onStartSession;
   final bool isStartingSession;
-  final bool isSessionActive; // Parameter baru
-  final bool isSessionStarted; // Parameter baru
-  final bool showBorder; // Parameter baru
+  final bool isSessionActive;
+  final bool isSessionStarted;
+  final bool showBorder;
 
   const _ScheduleCard({
     required this.schedule,
     this.onStartSession,
-    required this.isStartingSession,
-    this.isSessionActive = true, // Default true
-    this.isSessionStarted = false, // Default false
-    this.showBorder = true, // Default true untuk backward compatibility
+    this.isStartingSession = false,
+    this.isSessionActive = true,
+    this.isSessionStarted = false,
+    this.showBorder = true,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<TeacherAttendanceProvider>(context);
+    
+    // ✅ Check session states using provider methods
+    final sessionActive = provider.isSessionActive(schedule.id);
+    final sessionCompleted = provider.isSessionCompleted(schedule.id);
+    final isPassed = _isSchedulePassed();
+    final isNotStarted = _isScheduleNotStarted();
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: showBorder ? Border.all(color: const Color(0xFFE2E8F0)) : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header info
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(sessionActive, sessionCompleted, isPassed, isNotStarted).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getStatusIcon(sessionActive, sessionCompleted, isPassed, isNotStarted),
+                    color: _getStatusColor(sessionActive, sessionCompleted, isPassed, isNotStarted),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        schedule.namaMapel,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        schedule.namaKelas,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF718096),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      schedule.formattedTime,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF4A5568),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      schedule.tahunAjaran,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF718096),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // ✅ FIXED: Action button with proper state management
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _getButtonEnabled(sessionActive, sessionCompleted, isPassed, isNotStarted, isStartingSession) 
+                    ? onStartSession 
+                    : null,
+                icon: _getButtonIcon(sessionActive, sessionCompleted, isPassed, isNotStarted, isStartingSession),
+                label: Text(_getButtonText(sessionActive, sessionCompleted, isPassed, isNotStarted, isStartingSession)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getButtonColor(sessionActive, sessionCompleted, isPassed, isNotStarted),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: sessionActive 
+                      ? const Color(0xFF10B981) // Green for active session
+                      : Colors.grey.shade400,
+                  disabledForegroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ✅ Helper methods for button state
+  bool _getButtonEnabled(bool sessionActive, bool sessionCompleted, bool isPassed, bool isNotStarted, bool isStartingSession) {
+    if (isStartingSession) return false; // Disable when starting
+    if (sessionActive || sessionCompleted) return false; // ✅ Disable if session active or completed
+    if (isPassed || isNotStarted) return false; // Disable if time passed or not started
+    return true;
+  }
+
+  Widget _getButtonIcon(bool sessionActive, bool sessionCompleted, bool isPassed, bool isNotStarted, bool isStartingSession) {
+    if (isStartingSession) {
+      return const SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    } else if (sessionActive) {
+      return const Icon(Icons.play_circle_filled, size: 18);
+    } else if (sessionCompleted) {
+      return const Icon(Icons.check_circle, size: 18);
+    } else if (isPassed) {
+      return const Icon(Icons.timer_off, size: 18);
+    } else if (isNotStarted) {
+      return const Icon(Icons.schedule, size: 18);
+    } else {
+      return const Icon(Icons.play_arrow, size: 18);
+    }
+  }
+
+  String _getButtonText(bool sessionActive, bool sessionCompleted, bool isPassed, bool isNotStarted, bool isStartingSession) {
+    if (isStartingSession) {
+      return 'Memulai Sesi...';
+    } else if (sessionActive) {
+      return 'Sesi Berlangsung'; // ✅ Cannot be clicked
+    } else if (sessionCompleted) {
+      return 'Sesi Selesai';
+    } else if (isNotStarted) {
+      return 'Belum Waktunya';
+    } else if (isPassed) {
+      return 'Waktu Habis';
+    } else {
+      return 'Mulai Sesi';
+    }
+  }
+
+  Color _getButtonColor(bool sessionActive, bool sessionCompleted, bool isPassed, bool isNotStarted) {
+    if (sessionActive) {
+      return const Color(0xFF10B981); // Green for active
+    } else if (sessionCompleted || isPassed || isNotStarted) {
+      return Colors.grey.shade400; // Grey for disabled states
+    } else {
+      return const Color(0xFF2196F3); // Blue for available
+    }
+  }
+
+  Color _getStatusColor(bool sessionActive, bool sessionCompleted, bool isPassed, bool isNotStarted) {
+    if (sessionActive) {
+      return const Color(0xFF10B981); // Green
+    } else if (sessionCompleted) {
+      return Colors.grey;
+    } else if (isPassed) {
+      return Colors.red;
+    } else if (isNotStarted) {
+      return Colors.orange;
+    } else {
+      return const Color(0xFF2196F3); // Blue
+    }
+  }
+
+  IconData _getStatusIcon(bool sessionActive, bool sessionCompleted, bool isPassed, bool isNotStarted) {
+    if (sessionActive) {
+      return Icons.play_circle_filled;
+    } else if (sessionCompleted) {
+      return Icons.check_circle;
+    } else if (isPassed) {
+      return Icons.timer_off;
+    } else if (isNotStarted) {
+      return Icons.schedule;
+    } else {
+      return Icons.access_time_rounded;
+    }
+  }
 
   bool _isScheduleNotStarted() {
     try {
@@ -3914,141 +4128,18 @@ class _ScheduleCard extends StatelessWidget {
     }
   }
 
-    // Tambahkan metode untuk memeriksa apakah jadwal sudah lewat
   bool _isSchedulePassed() {
     try {
-      // Parse jam selesai dari jadwal
       final timeParts = schedule.jamSelesai.split(':');
       final hour = int.parse(timeParts[0]);
       final minute = int.parse(timeParts[1]);
       
-      // Buat DateTime untuk waktu selesai hari ini
       final now = DateTime.now();
-      final endTime = DateTime(
-        now.year, 
-        now.month, 
-        now.day,
-        hour,
-        minute,
-      );
+      final endTime = DateTime(now.year, now.month, now.day, hour, minute);
       
-      // Jadwal sudah lewat jika waktu sekarang lebih dari waktu selesai
       return now.isAfter(endTime);
     } catch (e) {
       return false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isPassed = _isSchedulePassed();
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: showBorder ? [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ] : null,
-        border: showBorder ? Border.all(color: Colors.grey.shade200) : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            schedule.namaMapel ?? 'Mata Pelajaran',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${schedule.namaKelas} • ${schedule.jamMulai} - ${schedule.jamSelesai}',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF718096),
-            ),
-          ),
-          if (onStartSession != null) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                // Disable tombol jika jadwal sudah lewat atau sedang memulai sesi
-                // Update kondisi onPressed di ElevatedButton yang sudah ada:
-                onPressed: (isPassed || !isSessionActive || isStartingSession || isSessionStarted || _isScheduleNotStarted())
-                    ? null 
-                    : onStartSession,
-                  icon: _buildButtonIcon(),
-                  label: Text(_getButtonText()),
-                  style: ElevatedButton.styleFrom(
-                  backgroundColor: _getButtonColor(isPassed),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-  // Update method _buildButtonIcon() yang sudah ada:
-  Widget _buildButtonIcon() {
-    if (isStartingSession) {
-      return const SizedBox(
-        width: 16,
-        height: 16,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      );
-    } else if (isSessionStarted) {
-      return const Icon(Icons.check_circle, size: 18);
-    } else if (_isScheduleNotStarted()) {
-      return const Icon(Icons.schedule, size: 18);
-    } else if (_isSchedulePassed()) {
-      return const Icon(Icons.timer_off, size: 18);
-    } else {
-      return const Icon(Icons.play_arrow, size: 18);
-    }
-  }
-  // Update method _getButtonText() yang sudah ada:
-  String _getButtonText() {
-    if (isStartingSession) {
-      return 'Memulai Sesi...';
-    } else if (isSessionStarted) {
-      return 'Sedang Berlangsung';
-    } else if (_isScheduleNotStarted()) {
-      return 'Belum Waktunya';
-    } else if (_isSchedulePassed()) {
-      return 'Waktu Habis';
-    } else {
-      return 'Mulai Sesi';
-    }
-  }
-
-  // Update method _getButtonColor() yang sudah ada:
-  Color _getButtonColor(bool isPassed) {
-    if (isPassed) {
-      return Colors.grey.shade400;
-    } else if (isSessionStarted) {
-      return const Color(0xFF2196F3); // Biru untuk sedang berlangsung
-    } else if (_isScheduleNotStarted()) {
-      return const Color(0xFFFF9800); // Orange untuk belum waktunya
-    } else {
-      return const Color(0xFF4CAF50); // Hijau untuk mulai sesi
     }
   }
 }

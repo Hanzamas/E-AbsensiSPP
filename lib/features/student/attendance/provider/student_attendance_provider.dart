@@ -90,13 +90,18 @@ class StudentAttendanceProvider extends ChangeNotifier {
     }
   }
 
-  // Scan QR Code
   Future<bool> scanQRCode(String qrToken) async {
     try {
       _setScanning(true);
       _error = null;
+      _submissionResult = null;
 
-      await _repository.scanQRCode(qrToken);
+      print('🔍 Provider: Scanning QR token: $qrToken');
+
+      final result = await _repository.scanQRCode(qrToken);
+      _submissionResult = result;
+      
+      print('🔍 Provider: Scan result: $result');
       
       // Refresh attendance history after successful scan
       await loadAttendanceHistory();
@@ -104,7 +109,7 @@ class StudentAttendanceProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _error = e.toString();
-      debugPrint('Error scanning QR code: $e');
+      print('🔍 Provider: Scan error: $e');
       return false;
     } finally {
       _setScanning(false);
@@ -358,28 +363,6 @@ class StudentAttendanceProvider extends ChangeNotifier {
   // }
 
   // Submit attendance
-  Future<bool> submitAttendance(String qrCode) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      _submissionResult = null;
-      notifyListeners();
-
-      final result = await _repository.submitAttendance(qrCode);
-      _submissionResult = result;
-      
-      // Refresh attendance history after successful submission
-      await loadAttendanceHistory();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      print('Error submitting attendance: $e');
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
 
   // Clear submission result
   void clearSubmissionResult() {
