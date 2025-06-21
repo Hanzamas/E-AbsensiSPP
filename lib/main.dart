@@ -4,6 +4,5 @@ import 'package:intl/intl.dart';
 
 
 void main() {
-  Intl.defaultLocale = 'id_ID';
   runApp(const MyApp());
 }

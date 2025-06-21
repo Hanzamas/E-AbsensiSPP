@@ -825,15 +825,31 @@ Widget _buildUnpaidBillsList(BuildContext context) {
   }
 
   String _formatCurrency(double amount) {
-    final format = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-    return format.format(amount);
+    // Manual format tanpa NumberFormat
+    String formatted = amount.toStringAsFixed(0);
+    
+    // Add thousand separators
+    String result = '';
+    int count = 0;
+    for (int i = formatted.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) {
+        result = '.' + result;
+      }
+      result = formatted[i] + result;
+      count++;
+    }
+    
+    return 'Rp $result';
   }
 
+// ✅ GANTI: Method _formatDate di line 839
   String _formatDate(DateTime date) {
-    return DateFormat('dd MMM yyyy', 'id_ID').format(date);
+    // Manual format tanpa locale
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
