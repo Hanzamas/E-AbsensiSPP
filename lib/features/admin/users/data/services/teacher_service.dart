@@ -5,6 +5,7 @@ import 'package:e_absensi/core/api/dio_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class TeacherService {
   final Dio _dio = DioClient().dio;
@@ -26,26 +27,35 @@ class TeacherService {
 
   Future<String> downloadTemplateExcel() async {
     // 1. Cek status izin penyimpanan saat ini
-    var status = await Permission.storage.status;
+    var status = await [Permission.storage, Permission.manageExternalStorage].request();
 
-    // 2. Jika izin belum diberikan, maka minta izin ke pengguna
-    if (!status.isGranted) {
-      status = await Permission.storage.request();
-    }
-
-    // 3. Lakukan pengecekan setelah meminta izin
-    if (status.isGranted) {
-      // Jika izin diberikan, lanjutkan proses unduh
-      final dir = await getExternalStorageDirectory();
-      if (dir == null) {
-        throw Exception('Gagal menemukan direktori penyimpanan.');
+    if (status[Permission.storage]!.isGranted || status[Permission.manageExternalStorage]!.isGranted) {
+      Directory? dir;
+      if (Platform.isAndroid) {
+        // Deteksi versi Android dengan device_info_plus
+        final deviceInfo = DeviceInfoPlugin();
+        final androidInfo = await deviceInfo.androidInfo;
+        final int sdkInt = androidInfo.version.sdkInt;
+        if (sdkInt <= 29) {
+          // Android 10 ke bawah
+          final String downloadPath = '/storage/emulated/0/Download';
+          dir = Directory(downloadPath);
+        } else {
+          // Android 11 ke atas, tetap gunakan Download jika permission diberikan
+          final String downloadPath = '/storage/emulated/0/Download';
+          dir = Directory(downloadPath);
+        }
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
+        }
+      } else {
+        dir = await getApplicationDocumentsDirectory();
       }
 
       final savePath = '${dir.path}/template_guru.xlsx';
 
       try {
-        final fullUrl =
-            '${_dio.options.baseUrl}${ApiEndpoints.getFormatDownloadTeacher}';
+        final fullUrl = '${_dio.options.baseUrl}${ApiEndpoints.getFormatDownloadTeacher}';
         print('Mencoba mengunduh dari URL: $fullUrl');
         await _dio.download(ApiEndpoints.getFormatDownloadTeacher, savePath);
         return savePath;
@@ -58,14 +68,11 @@ class TeacherService {
       } catch (e) {
         throw Exception('Gagal mengunduh file: $e');
       }
-    } else if (status.isPermanentlyDenied) {
-      // Jika izin ditolak permanen, lempar pesan error yang spesifik.
-      // Pesan ini akan ditangkap oleh UI dan ditampilkan di SnackBar.
+    } else if (status[Permission.storage]!.isPermanentlyDenied || status[Permission.manageExternalStorage]!.isPermanentlyDenied) {
       throw Exception(
         'Izin penyimpanan ditolak permanen. Harap aktifkan manual di Pengaturan Aplikasi.',
       );
     } else {
-      // Jika izin ditolak untuk sementara
       throw Exception(
         'Izin penyimpanan ditolak. Fitur ini memerlukan akses ke penyimpanan.',
       );
