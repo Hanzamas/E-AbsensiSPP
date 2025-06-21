@@ -47,12 +47,18 @@ class StudentAttendanceRepository {
     }
   }
 
-  // Scan QR Code
+  // ✅ FIXED: Scan QR Code method
   Future<Map<String, dynamic>> scanQRCode(String qrToken) async {
     try {
-      return await _service.scanQRCode(qrToken);
+      final response = await _service.scanQRCode(qrToken);
+      
+      if (response['status'] == true) {
+        return response;
+      } else {
+        throw Exception(response['message'] ?? 'Gagal melakukan absensi');
+      }
     } catch (e) {
-      throw Exception('Repository error: $e');
+      throw Exception('Gagal melakukan absensi: $e');
     }
   }
 
@@ -65,17 +71,4 @@ class StudentAttendanceRepository {
     }
   }
 
-  Future<Map<String, dynamic>> submitAttendance(String qrCode) async {
-    try {
-      final response = await _service.submitAttendance(qrCode);
-      
-      if (response['status'] == true) {
-        return response;
-      } else {
-        throw Exception(response['message'] ?? 'Gagal melakukan absensi');
-      }
-    } catch (e) {
-      throw Exception('Gagal melakukan absensi: $e');
-    }
-  }
 } 

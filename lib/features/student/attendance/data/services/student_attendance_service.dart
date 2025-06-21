@@ -79,29 +79,36 @@ class StudentAttendanceService {
     }
   }
 
-  // Scan QR Code
-  Future<Map<String, dynamic>> scanQRCode(String qrToken) async {
-    try {
-      final token = await _storage.read('token');
-      if (token == null) throw Exception('Token tidak ditemukan');
+// ✅ FIXED: Scan QR Code - gunakan qr_token sesuai dokumentasi API
+Future<Map<String, dynamic>> scanQRCode(String qrToken) async {
+  try {
+    final token = await _storage.read('token');
+    if (token == null) throw Exception('Token tidak ditemukan');
 
-      final response = await _dio.post(
-        ApiEndpoints.scanStudentAttendance,
-        data: {'qr_token': qrToken},
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-      );
+    print('🔍 Debug: Scanning QR with token: $qrToken');
 
-      if (response.statusCode == 200 && response.data['status'] == true) {
-        return response.data;
-      } else {
-        throw Exception(response.data['message'] ?? 'Gagal scan QR code');
-      }
-    } catch (e) {
-      throw Exception('Gagal scan QR code: $e');
+    final response = await _dio.post(
+      ApiEndpoints.scanStudentAttendance,
+      data: {
+        'qr_token': qrToken // ✅ FIXED: gunakan qr_token bukan qr_code
+      },
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+
+    print('🔍 Debug: Scan response: ${response.data}');
+
+    if (response.statusCode == 200 && response.data['status'] == true) {
+      return response.data;
+    } else {
+      throw Exception(response.data['message'] ?? 'Gagal scan QR code');
     }
+  } catch (e) {
+    print('🔍 Debug: Scan error: $e');
+    throw Exception('Gagal scan QR code: $e');
   }
+}
 
   // ✅ FIXED: Use correct endpoint from api_endpoints.dart
   Future<String> downloadAttendanceExcel() async {
@@ -192,39 +199,6 @@ class StudentAttendanceService {
     } catch (e) {
       print('🔍 Debug: General error: $e');
       throw Exception('Gagal download excel: $e');
-    }
-  }
-
-
-
-
-  Future<Map<String, dynamic>> submitAttendance(String qrCode) async {
-    try {
-      final token = await _storage.read('token');
-    if (token == null) throw Exception('Token tidak ditemukan');
-
-    final response = await _dio.post(
-      ApiEndpoints.scanStudentAttendance, // ✅ Use correct endpoint
-      options: Options(headers: { 'Authorization': 'Bearer $token' }),
-      data: { 'qr_code': qrCode }
-    );
-
-      if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception(response.data['message'] ?? 'Gagal submit absensi');
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        throw Exception(e.response?.data['message'] ?? 'QR Code tidak valid');
-      } else if (e.response?.statusCode == 404) {
-        throw Exception('Data absensi tidak ditemukan');
-      } else if (e.response?.statusCode == 500) {
-        throw Exception('Internal Server Error');
-      }
-      throw Exception('Gagal submit absensi: ${e.message}');
-    } catch (e) {
-      throw Exception('Gagal submit absensi: $e');
     }
   }
 } 
