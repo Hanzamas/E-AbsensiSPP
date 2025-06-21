@@ -173,55 +173,85 @@ class _QrisPaymentWidgetState extends State<QrisPaymentWidget> {
     );
   }
 
-  Widget _buildQrCode() {
-    return Screenshot(
-      controller: _screenshotController,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade300),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              'Scan QR Code untuk Pembayaran',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 16),
-            QrImageView(
-              data: widget.qris.qrString,
-              version: QrVersions.auto,
-              size: 200,
-              backgroundColor: Colors.white,
-              errorCorrectionLevel: QrErrorCorrectLevel.M,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              widget.qris.referenceId,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ],
-        ),
+Widget _buildQrCode() {
+  return Screenshot(
+    controller: _screenshotController,
+    child: Container(
+      constraints: const BoxConstraints(
+        maxWidth: 300,
+        minWidth: 280,
       ),
-    );
-  }
+      margin: const EdgeInsets.symmetric(horizontal: 20), // ✅ ADD: Margin
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Scan QR Code untuk Pembayaran',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          
+          // ✅ FIXED: AspectRatio untuk memastikan square
+          AspectRatio(
+            aspectRatio: 1.0, // Perfect square
+            child: Container(
+              constraints: const BoxConstraints(
+                maxWidth: 200,
+                maxHeight: 200,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200, width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: QrImageView(
+                  data: widget.qris.qrString,
+                  version: QrVersions.auto,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  errorCorrectionLevel: QrErrorCorrectLevel.M,
+                  gapless: true,
+                  semanticsLabel: 'QR Code SPP',
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          Text(
+            widget.qris.referenceId,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              fontFamily: 'monospace',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildTimer() {
     final minutes = widget.timeRemaining.inMinutes;
