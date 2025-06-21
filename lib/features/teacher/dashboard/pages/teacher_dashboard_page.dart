@@ -293,22 +293,19 @@ Widget _buildAttendanceStats(TeacherDashboardProvider provider) {
           ),
           const SizedBox(height: 16),
           
-          // Class filter dropdown
+          // ✅ FIX: Class filter dropdown dengan null safety
           if (todayClasses.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white, // Ubah warna background menjadi putih
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFBBDEFB)), // Border warna biru muda
+                border: Border.all(color: const Color(0xFFBBDEFB)),
               ),
               child: Theme(
-                // Terapkan tema untuk dropdown yang muncul
                 data: Theme.of(context).copyWith(
-                  // Warna popup menu
                   canvasColor: Colors.white,
-                  // Warna saat item dipilih
                   highlightColor: const Color(0xFFE3F2FD),
                 ),
                 child: DropdownButtonHideUnderline(
@@ -322,16 +319,15 @@ Widget _buildAttendanceStats(TeacherDashboardProvider provider) {
                     icon: const Icon(
                       Icons.filter_list,
                       size: 18,
-                      color: Color(0xFF2196F3), // Ikon biru
+                      color: Color(0xFF2196F3),
                     ),
-                    // Mengatur popup menu dengan border radius
                     menuMaxHeight: 300,
                     dropdownColor: Colors.white,
-                    // Tambahkan border radius pada dropdown button
                     borderRadius: BorderRadius.circular(8),
-                    // Styling untuk item yang dipilih
+                    
+                    // ✅ FIX: Safe selectedItemBuilder
                     selectedItemBuilder: (context) {
-                      return [
+                      final items = <Widget>[
                         const Center(
                           child: Text(
                             'Semua Kelas',
@@ -341,29 +337,61 @@ Widget _buildAttendanceStats(TeacherDashboardProvider provider) {
                             ),
                           ),
                         ),
-                        ...todayClasses.map((classData) => Center(
-                          child: Text(
-                            '${classData.namaMapel} - ${classData.namaKelas}',
-                            style: const TextStyle(
-                              color: Color(0xFF2196F3),
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )),
                       ];
+                      
+                      // ✅ ADD: Safe mapping dengan null check
+                      for (final classData in todayClasses) {
+                        if (classData.namaMapel != null && classData.namaKelas != null) {
+                          items.add(
+                            Center(
+                              child: Text(
+                                '${classData.namaMapel} - ${classData.namaKelas}',
+                                style: const TextStyle(
+                                  color: Color(0xFF2196F3),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                      
+                      return items;
                     },
+                    
+                    // ✅ FIX: Safe items generation
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,
                         child: Text('Semua Kelas'),
                       ),
-                      ...todayClasses.map((classData) => DropdownMenuItem<int?>(
-                        value: classData.idKelas,
-                        child: Text('${classData.namaMapel} - ${classData.namaKelas}'),
-                      )),
+                      // ✅ Safe mapping dengan where filter
+                      ...todayClasses
+                          .where((classData) => 
+                              classData.namaMapel != null && 
+                              classData.namaKelas != null &&
+                              classData.idKelas != null)
+                          .map((classData) => DropdownMenuItem<int?>(
+                            value: classData.idKelas,
+                            child: Text(
+                              '${classData.namaMapel ?? 'Unknown'} - ${classData.namaKelas ?? 'Unknown'}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )),
                     ],
-                    onChanged: (value) => provider.selectClass(value),
+                    
+                    // ✅ FIX: Safe onChanged dengan null check
+                    onChanged: (value) {
+                      try {
+                        provider.selectClass(value);
+                      } catch (e) {
+                        debugPrint('Error selecting class: $e');
+                        // Reset to null if error
+                        provider.selectClass(null);
+                      }
+                    },
+                    
                     style: const TextStyle(
                       color: Color(0xFF2D3748),
                       fontSize: 14,
