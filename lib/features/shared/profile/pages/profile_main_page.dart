@@ -248,20 +248,20 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
                                   //   title: 'Tutorial',
                                   //   onTap: () {},
                                   // ),
-                                  _buildDivider(),
-                                  _buildMenuItem(
-                                    icon: Icons.settings,
-                                    iconColor: Colors.purple,
-                                    title: 'Pengaturan',
-                                    onTap: () {
-                                      // Ganti dari bottom sheet ke navigasi halaman Settings
-                                      context.push('/${widget.userRole}/settings');
-                                    },
-                                  ),  
+                                  // _buildDivider(),
+                                  // _buildMenuItem(
+                                  //   icon: Icons.settings,
+                                  //   iconColor: Colors.purple,
+                                  //   title: 'Pengaturan',
+                                  //   onTap: () {
+                                  //     // Ganti dari bottom sheet ke navigasi halaman Settings
+                                  //     context.push('/${widget.userRole}/settings');
+                                  //   },
+                                  // ),  
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 50),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
@@ -296,7 +296,11 @@ class _ProfileMainPageState extends State<ProfileMainPage> {
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3,
+        currentIndex: widget.userRole == 'siswa'
+            ? 3
+            : widget.userRole == 'guru'
+                ? 2
+                : 0,
         userRole: widget.userRole,
         context: context,
       ),

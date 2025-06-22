@@ -10,7 +10,7 @@ class StudentDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Siswa'),
+        title: const Text('Detail Siswa', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

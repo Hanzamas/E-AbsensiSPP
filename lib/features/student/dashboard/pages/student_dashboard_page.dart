@@ -431,7 +431,7 @@ Widget _buildScheduleSection() {
           items: [
             const DropdownMenuItem(
               value: 'semua',
-              child: Text('Semua hari'),
+              child: Text('All'),
             ),
             ...hariList.map((day) => DropdownMenuItem(
               value: day,
