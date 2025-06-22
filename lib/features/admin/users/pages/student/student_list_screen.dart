@@ -44,11 +44,14 @@ class _StudentListScreenState extends State<StudentListScreen> {
             ElevatedButton(
               child: const Text('Hapus'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () {
-                Provider.of<StudentProvider>(context, listen: false)
-                    .deleteStudent(student.id)
-                    .then((_) => Navigator.of(ctx).pop())
-                    .catchError((_) => Navigator.of(ctx).pop());
+              onPressed: () async {
+                final provider = Provider.of<StudentProvider>(context, listen: false);
+                await provider.deleteStudent(student.id);
+                if (mounted) {
+                  Navigator.of(ctx).pop();
+                  // Reload data setelah hapus
+                  Provider.of<StudentProvider>(context, listen: false).fetchStudents();
+                }
               },
             ),
           ],
@@ -61,8 +64,9 @@ class _StudentListScreenState extends State<StudentListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Siswa'),
+        title: const Text('Daftar Siswa', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<StudentProvider>(
         builder: (context, provider, child) {

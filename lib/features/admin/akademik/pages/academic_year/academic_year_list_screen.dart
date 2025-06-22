@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../provider/academic_year_provider.dart';
 import '../../data/models/academic_year_model.dart';
 import '../../widgets/academic_date_picker_helper.dart';
-import 'add_academic_year_screen.dart';
 import 'edit_academic_year_screen.dart';
 
 class AcademicYearListScreen extends StatefulWidget {
@@ -22,25 +21,6 @@ class _AcademicYearListScreenState extends State<AcademicYearListScreen> {
     });
   }
 
-  // ====== PERBAIKAN DI SINI ======
-  void _navigateToAdd() {
-    // Ambil provider dari context saat ini (AcademicYearListScreen)
-    final provider = Provider.of<AcademicYearProvider>(context, listen: false);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        // Berikan instance provider yang sudah ada ke halaman baru
-        builder: (_) => ChangeNotifierProvider.value(
-          value: provider,
-          child: const AddAcademicYearScreen(),
-        ),
-      ),
-    ).then((isSuccess) {
-      if (isSuccess == true) {
-        provider.fetchAcademicYears();
-      }
-    });
-  }
 
   // ====== PERBAIKAN DI SINI ======
   void _navigateToEdit(AcademicYearModel year) {
@@ -96,8 +76,9 @@ class _AcademicYearListScreenState extends State<AcademicYearListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Tahun Ajaran'),
+        title: const Text('Daftar Tahun Ajaran',style: TextStyle(color: Colors.white),),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<AcademicYearProvider>(
         builder: (context, provider, child) {
@@ -152,11 +133,6 @@ class _AcademicYearListScreenState extends State<AcademicYearListScreen> {
             ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAdd,
-        backgroundColor: const Color(0xFF2196F3),
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

@@ -11,17 +11,10 @@ class TeacherDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Guru'),
+        title: const Text('Detail Guru',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navigasi ke halaman edit guru
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => EditTeacherScreen(teacher: teacher)));
-            },
-          ),
-        ],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

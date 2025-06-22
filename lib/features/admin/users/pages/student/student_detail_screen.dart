@@ -12,14 +12,7 @@ class StudentDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Detail Siswa'),
         backgroundColor: const Color(0xFF2196F3),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navigate to an edit screen
-            },
-          ),
-        ],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

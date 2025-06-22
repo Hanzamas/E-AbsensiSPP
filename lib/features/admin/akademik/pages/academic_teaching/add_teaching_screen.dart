@@ -180,8 +180,9 @@ class _AddTeachingScreenState extends State<AddTeachingScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Assign Guru ke Kelas'),
+        title: const Text('Assign Guru ke Kelas', style: TextStyle(color: Colors.white),),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<TeachingProvider>(
         builder: (context, provider, child) {
