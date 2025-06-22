@@ -121,8 +121,9 @@ class _AddTeacherScreenState extends State<AddTeacherScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Tambah Guru'),
-          backgroundColor: const Color(0xFF2196F3)),
+          title: const Text('Tambah Guru', style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color(0xFF2196F3),
+          iconTheme: const IconThemeData(color: Colors.white),),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(

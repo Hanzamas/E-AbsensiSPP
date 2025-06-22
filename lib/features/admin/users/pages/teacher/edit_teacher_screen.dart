@@ -169,8 +169,9 @@ class _EditTeacherScreenState extends State<EditTeacherScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit ${widget.teacher.namaLengkap}'),
+        title: Text('Edit ${widget.teacher.namaLengkap}',style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

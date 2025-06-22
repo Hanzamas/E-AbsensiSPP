@@ -29,6 +29,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
     if (result == true && mounted) {
       // Provider akan handle update list
+      Provider.of<ClassProvider>(context, listen: false).loadClasses();
     }
   }
 

@@ -49,10 +49,16 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                 // Memanggil provider untuk menghapus data
                 Provider.of<TeacherProvider>(context, listen: false)
                     .deleteTeacher(teacher.idUsers)
-                    .then((_) => Navigator.of(ctx).pop())
-                    .catchError(
-                      (_) => Navigator.of(ctx).pop(), // Tutup dialog jika terjadi error
-                    );
+                    .then((_) {
+                      Navigator.of(ctx).pop();
+                      // Reload data setelah hapus
+                      Provider.of<TeacherProvider>(context, listen: false)
+                          .fetchTeachers();
+                    })
+                    .catchError((_) {
+                      Navigator.of(ctx).pop(); // Tutup dialog jika terjadi error
+                      // Tidak perlu return apa pun di sini
+                    });
               },
             ),
           ],
@@ -65,8 +71,9 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Guru'),
+        title: const Text('Daftar Guru', style: TextStyle(color: Colors.white),),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<TeacherProvider>(
         builder: (context, provider, child) {

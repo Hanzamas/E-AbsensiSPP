@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/teaching_provider.dart';
 import '../../data/models/teaching_model.dart';
-import 'add_teaching_screen.dart';
 import 'edit_teaching_screen.dart'; 
 import '../../widgets/teaching_filter_widget.dart'; // Ganti import ke widget filter yang baru
 
@@ -41,21 +40,7 @@ class _TeachingListScreenState extends State<TeachingListScreen> {
     });
   }
   
-  void _navigateToAdd(BuildContext context) {
-     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: Provider.of<TeachingProvider>(context, listen: false),
-          child: const AddTeachingScreen(),
-        ),
-      ),
-    ).then((isSuccess) {
-      if (isSuccess == true) {
-        Provider.of<TeachingProvider>(context, listen: false).loadAllTeachings();
-      }
-    });
-  }
+
 
   void _showDeleteConfirmation(BuildContext context, TeachingModel teaching) {
     showDialog(
@@ -91,8 +76,9 @@ class _TeachingListScreenState extends State<TeachingListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Pengajaran'),
+        title: const Text('Daftar Pengajaran', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<TeachingProvider>(
         builder: (context, provider, child) {
@@ -194,12 +180,6 @@ class _TeachingListScreenState extends State<TeachingListScreen> {
             ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToAdd(context),
-        backgroundColor: const Color(0xFF2196F3),
-        tooltip: 'Tambah Pengajaran',
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

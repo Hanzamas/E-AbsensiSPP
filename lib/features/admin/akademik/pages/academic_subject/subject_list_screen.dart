@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/subject_model.dart';
 import '../../provider/subject_provider.dart';
-import './add_subject_screen.dart';
 import './edit_subject_screen.dart';
 import '../../../users/widgets/filter_and_sort_widget.dart';
 
@@ -139,26 +138,6 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
         backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              icon: const Icon(Icons.add_rounded),
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddSubjectScreen(),
-                  ),
-                );
-                if (result == true && mounted) {
-                  Provider.of<SubjectProvider>(context, listen: false)
-                      .loadSubjects();
-                }
-              },
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [

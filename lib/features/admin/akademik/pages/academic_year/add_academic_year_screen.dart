@@ -94,8 +94,9 @@ class _AddAcademicYearScreenState extends State<AddAcademicYearScreen> {
       // Atur background color agar kartu terlihat menonjol
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Tambah Tahun Ajaran'),
+        title: const Text('Tambah Tahun Ajaran', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),

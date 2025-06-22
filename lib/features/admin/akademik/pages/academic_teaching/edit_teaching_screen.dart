@@ -134,8 +134,9 @@ class _EditTeachingScreenState extends State<EditTeachingScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Edit Pengajaran'),
+        title: const Text('Edit Pengajaran', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2196F3),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<TeachingProvider>(
         builder: (context, provider, child) {
